@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String        @id @default(uuid())
+  name             String?     @unique
+  email            String?     @unique
+  registeredWebsites Website[]
+  LayoutsAvailabe  UserLayouts[]
+  previousAlerts    Alerts[]
+  plan             PlanStatus     @default(FREE)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+model Website {
+  id         String      @id @default(uuid())
+  name       String 
+  URL        String     @db.VarChar(2048)@unique  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Alerts{
+  id  String  @id@default(uuid())
+  title String
+  description String
+  layoutId  String
+  Layout  Layout    @relation(fields: [layoutId],references: [id])
+  userId    String
+  user    User   @relation(fields: [userId],references: [id])
+}
+
+model Layout {
+  id          String           @id @default(uuid())
+  name        String
+  description String
+  category    LayoutDivision @default(DEFAULT)
+  style       Json
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  users       UserLayouts[]
+  alerts      Alerts[]
+}
+
+model UserLayouts{
+  id      String     @id@default(uuid())
+  userId  String
+  user    User    @relation(fields: [userId],references: [id])
+  layoutId  String
+  layout   Layout @relation(fields: [layoutId],references: [id])  
+
+  @@unique([layoutId,userId])
+}
+
+enum LayoutDivision {
+  DEFAULT
+  ALERT
+  NOTIFICATION
+  UPDATE
+}
+
+
+enum PlanStatus {
+  FREE
+  PREMIUM
+  ENTERPRISE
+}
