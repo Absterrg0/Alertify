@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1024">
+  <defs>
+    <!-- Enhanced gradients with more sophisticated color stops -->
+    <linearGradient id="bg_gradient" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#064E3B"/>
+      <stop offset="50%" stop-color="#065F5F"/>
+      <stop offset="100%" stop-color="#164E63"/>
+    </linearGradient>
+    
+    <linearGradient id="wave_gradient1" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="50%" stop-color="#0D9488"/>
+      <stop offset="100%" stop-color="#0891B2"/>
+    </linearGradient>
+    
+    <linearGradient id="wave_gradient2" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="50%" stop-color="#14B8A6"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    
+    <linearGradient id="wave_gradient3" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="50%" stop-color="#2DD4BF"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+
+    <!-- Radial gradient for bubbles -->
+    <radialGradient id="bubble_gradient" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#A5F3FC" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#A5F3FC" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Base background -->
+  <rect width="1440" height="1024" fill="url(#bg_gradient)"/>
+
+  <!-- Decorative seaweed-like elements -->
+  <g opacity="0.15">
+    <path d="M100,800 Q150,700 100,600 Q50,500 100,400" 
+          stroke="#34D399" 
+          stroke-width="8" 
+          fill="none">
+      <animate attributeName="d" 
+               dur="8s" 
+               repeatCount="indefinite"
+               values="M100,800 Q150,700 100,600 Q50,500 100,400;
+                       M100,800 Q130,680 100,600 Q70,520 100,400;
+                       M100,800 Q150,700 100,600 Q50,500 100,400"/>
+    </path>
+    <path d="M200,900 Q250,800 200,700 Q150,600 200,500" 
+          stroke="#2DD4BF" 
+          stroke-width="6" 
+          fill="none">
+      <animate attributeName="d" 
+               dur="7s" 
+               repeatCount="indefinite"
+               values="M200,900 Q250,800 200,700 Q150,600 200,500;
+                       M200,900 Q230,780 200,700 Q170,620 200,500;
+                       M200,900 Q250,800 200,700 Q150,600 200,500"/>
+    </path>
+  </g>
+
+  <!-- Main waves -->
+  <g>
+    <!-- Bottom wave -->
+    <path d="M-100,700 
+             C200,650 400,750 600,700 
+             S1000,650 1200,700 
+             S1600,750 1800,700
+             V1024 H-100 Z" 
+          fill="url(#wave_gradient1)" 
+          opacity="0.7">
+      <animate attributeName="d" 
+               dur="20s" 
+               repeatCount="indefinite"
+               values="M-100,700 C200,650 400,750 600,700 S1000,650 1200,700 S1600,750 1800,700 V1024 H-100 Z;
+                       M-100,700 C200,680 400,720 600,700 S1000,680 1200,700 S1600,720 1800,700 V1024 H-100 Z;
+                       M-100,700 C200,650 400,750 600,700 S1000,650 1200,700 S1600,750 1800,700 V1024 H-100 Z"/>
+    </path>
+
+    <!-- Middle wave -->
+    <path d="M-200,800 
+             C100,750 300,850 500,800 
+             S900,750 1100,800 
+             S1500,850 1700,800
+             V1024 H-200 Z" 
+          fill="url(#wave_gradient2)" 
+          opacity="0.5">
+      <animate attributeName="d" 
+               dur="15s" 
+               repeatCount="indefinite"
+               values="M-200,800 C100,750 300,850 500,800 S900,750 1100,800 S1500,850 1700,800 V1024 H-200 Z;
+                       M-200,800 C100,780 300,820 500,800 S900,780 1100,800 S1500,820 1700,800 V1024 H-200 Z;
+                       M-200,800 C100,750 300,850 500,800 S900,750 1100,800 S1500,850 1700,800 V1024 H-200 Z"/>
+    </path>
+
+    <!-- Top wave -->
+    <path d="M-300,900 
+             C0,850 200,950 400,900 
+             S800,850 1000,900 
+             S1400,950 1600,900
+             V1024 H-300 Z" 
+          fill="url(#wave_gradient3)" 
+          opacity="0.3">
+      <animate attributeName="d" 
+               dur="12s" 
+               repeatCount="indefinite"
+               values="M-300,900 C0,850 200,950 400,900 S800,850 1000,900 S1400,950 1600,900 V1024 H-300 Z;
+                       M-300,900 C0,880 200,920 400,900 S800,880 1000,900 S1400,920 1600,900 V1024 H-300 Z;
+                       M-300,900 C0,850 200,950 400,900 S800,850 1000,900 S1400,950 1600,900 V1024 H-300 Z"/>
+    </path>
+  </g>
+
+  <!-- Floating bubbles -->
+  <g>
+    <circle cx="300" cy="200" r="40" fill="url(#bubble_gradient)">
+      <animate attributeName="cy" 
+               dur="15s" 
+               values="800;100;800" 
+               repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1100" cy="400" r="30" fill="url(#bubble_gradient)">
+      <animate attributeName="cy" 
+               dur="12s" 
+               values="900;200;900" 
+               repeatCount="indefinite"/>
+    </circle>
+    <circle cx="700" cy="300" r="25" fill="url(#bubble_gradient)">
+      <animate attributeName="cy" 
+               dur="18s" 
+               values="1000;300;1000" 
+               repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

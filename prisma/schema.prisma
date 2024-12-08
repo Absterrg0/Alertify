@@ -11,6 +11,7 @@ model User {
   id               String        @id @default(uuid())
   name             String?     @unique
   email            String?     @unique
+  apiKey           String      @default(uuid())
   registeredWebsites Website[]
   LayoutsAvailabe  UserLayouts[]
   previousAlerts    Alerts[]
