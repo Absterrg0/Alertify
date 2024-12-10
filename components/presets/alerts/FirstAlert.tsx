@@ -1,66 +1,83 @@
-import React, { useEffect } from 'react'
-import { X } from 'lucide-react'
-import { cva, type VariantProps } from 'class-variance-authority'
+'use client'
 
-const alertVariants = cva(
-  "fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md mx-auto rounded-lg border p-4 shadow-lg transition-all duration-300",
-  {
-    variants: {
-      variant: {
-        info: "bg-blue-50 border-blue-500 text-blue-700",
-        success: "bg-green-50 border-green-500 text-green-700",
-        warning: "bg-yellow-50 border-yellow-500 text-yellow-700",
-        error: "bg-red-50 border-red-500 text-red-700"
-      }
-    },
-    defaultVariants: {
-      variant: "info"
-    }
-  }
-)
+import * as React from 'react'
+import { X, Bell } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { motion, AnimatePresence } from 'framer-motion'
 
-interface AlertProps extends VariantProps<typeof alertVariants> {
+export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
   description: string
   onClose?: () => void
-  autoClose?: boolean
-  duration?: number
+  backgroundColor: string
+  textColor:string
+  borderColor:string
 }
 
-const Alert = ({
-  title,
-  description,
-  variant,
-  onClose,
-  autoClose = true,
-  duration = 5000
-}: AlertProps) => {
-  useEffect(() => {
-    if (autoClose && onClose) {
-      const timer = setTimeout(onClose, duration)
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
+  ({ className, title, description,textColor,borderColor, onClose, backgroundColor, ...props }, ref) => {
+    const [isVisible, setIsVisible] = React.useState(true)
+
+    React.useEffect(() => {
+      const timer = setTimeout(() => {
+        setIsVisible(false)
+        onClose?.()
+      }, 100000)
+
       return () => clearTimeout(timer)
-    }
-  }, [autoClose, duration, onClose])
+    }, [onClose])
 
-  return (
-    <div className={alertVariants({ variant })}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-sm mb-1 truncate">{title}</h3>
-          <p className="text-xs opacity-90 line-clamp-2">{description}</p>
-        </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="flex-shrink-0 p-1 rounded-full hover:bg-black/5 transition-colors"
-            aria-label="Close alert"
+    return (
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            ref={ref}
+            role="alert"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.3 }}
+            //@ts-ignore            
+            className={cn(
+              "transform -translate-x-1/2 w-full max-w-md mx-auto z-50 rounded-lg p-4 shadow-md",
+              "flex items-start ",
+              className
+            )}
+            style={{ backgroundColor,borderColor:borderColor }}
+            {...props}
           >
-            <X size={14} />
-          </button>
+            <div className="flex-1">
+              <div className='flex items-center justify-center mb-3'>
+                <Bell style={{color:textColor}} className="mr-2" />
+                <h5 className="font-medium leading-none tracking-tight"
+                style={{color:textColor}}>
+                  {title}
+                </h5>
+              </div>
+              {description && (
+                <div style={{color:textColor}} className="text-sm text-center mt-2 opacity-90">
+                  {description}
+                </div>
+              )}
+            </div>
+            {onClose && (
+              <button
+                onClick={() => {
+                  setIsVisible(false)
+                  onClose()
+                }}
+                className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full opacity-50 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            )}
+          </motion.div>
         )}
-      </div>
-    </div>
-  )
-}
+      </AnimatePresence>
+    )
+  }
+)
+Alert.displayName = "Alert"
 
-export default Alert
+export { Alert }
