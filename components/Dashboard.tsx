@@ -8,16 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Alert } from './presets/alerts/FirstAlert'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { AlertDialog } from './presets/alert-dialog/FirstAlertDialog'
 import { Toaster } from '@/components/ui/toaster'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -39,8 +30,8 @@ export default function OceanicNotificationDashboard() {
   const [gradientColor, setGradientColor] = React.useState('linear-gradient(135deg, #1a4b6e, #38bdf8)')
   const [showPreview, setShowPreview] = React.useState(false)
   const [textColor, setTextColor] = React.useState('black')
-  const [borderColor,setBorderColor]=React.useState(calmWatersColor)
-  const [matchBorderColor,setMatchBorderColor]=React.useState(false)
+  const [borderColor, setBorderColor] = React.useState(calmWatersColor)
+  const [matchBorderColor, setMatchBorderColor] = React.useState(false)
   const { toast } = useToast()
 
   const toggleTextColor = () => {
@@ -50,7 +41,7 @@ export default function OceanicNotificationDashboard() {
   const matchColor = () => {
     setMatchBorderColor((prevState) => {
       const newState = !prevState;
-      setBorderColor(newState ? calmWatersColor: 'black');
+      setBorderColor(newState ? calmWatersColor : 'black');
       return newState;
     });
   };
@@ -67,10 +58,13 @@ export default function OceanicNotificationDashboard() {
   }
 
   const handlePreview = () => {
+    setShowPreview(true);
     switch (selectedType) {
       case 'alert':
-        setShowPreview(true)
         setTimeout(() => setShowPreview(false), 3000)
+        break
+      case 'alert-dialog':
+        setTimeout(() => setShowPreview(false), 1000000)
         break
       case 'toast':
         toast({
@@ -78,10 +72,52 @@ export default function OceanicNotificationDashboard() {
           description,
           className: cn("backdrop-blur-md", getStyleClasses(selectedStyle)),
         })
+        setShowPreview(false)
         break
+    }
+  }
+
+  const handleCloseDialog = () => {
+    setIsAlertDialogOpen(false)
+  }
+
+  const renderPreview = () => {
+    switch (selectedType) {
+      case 'alert':
+        return (
+          <Alert
+            title={title}
+            description={description}
+            backgroundColor={calmWatersColor}
+            borderColor={borderColor}
+            textColor={textColor}
+            onClose={() => {}}
+            className="border-amber-900 border pointer-events-none"
+          />
+        )
       case 'alert-dialog':
-        setIsAlertDialogOpen(true)
-        break
+        return (
+          <AlertDialog
+            isOpen={false}
+            onClose={() => {}}
+            title={title}
+            description={description}
+            backgroundColor={calmWatersColor}
+            textColor={textColor}
+            borderColor={borderColor}
+            preview={true}
+          />
+        )
+      case 'toast':
+        return (
+          <div 
+            className="border border-amber-900 rounded-lg p-4"
+            style={{ backgroundColor: calmWatersColor, color: textColor }}
+          >
+            <h3 className="text-lg font-semibold mb-2">{title}</h3>
+            <p>{description}</p>
+          </div>
+        )
     }
   }
 
@@ -94,7 +130,7 @@ export default function OceanicNotificationDashboard() {
       </div>
 
       {/* Preview Alert */}
-      {showPreview && (
+      {showPreview && selectedType === 'alert' && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md">
           <Alert
             title={title}
@@ -106,6 +142,20 @@ export default function OceanicNotificationDashboard() {
             className="border-amber-900 border shadow-lg"
           />
         </div>
+      )}
+
+      {/* Preview Alert Dialog */}
+      {showPreview && selectedType === 'alert-dialog' && (
+        <AlertDialog
+          isOpen={true}
+          onClose={() => setShowPreview(false)}
+          title={title}
+          description={description}
+          backgroundColor={calmWatersColor}
+          textColor={textColor}
+          borderColor={borderColor}
+          preview={false}
+        />
       )}
 
       {/* Main Content */}
@@ -231,46 +281,45 @@ export default function OceanicNotificationDashboard() {
 
                   {/* Color Configuration */}
                   <div className="space-y-6">
-  {/* Style Selector */}
-  {selectedStyle === 'native' && (
-    <>
-      <div className="space-y-8">
-        {/* Background Color Controls */}
-        <div className="flex items-center justify-between px-6">
-          <h3 className="text-lg font-medium text-cyan-100">Background Color</h3>
-          <div className="flex gap-4">
-            <Button
-              onClick={toggleTextColor}
-              className="flex items-center bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2 rounded-md shadow-md"
-            >
-              <Type className="mr-2" />
-            </Button>
-            <Button
-              onClick={matchColor}
-              className="flex items-center bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-md shadow-md"
-            >
-              <Type className="mr-2" />
-            </Button>
-          </div>
-        </div>
+                    {/* Style Selector */}
+                    {selectedStyle === 'native' && (
+                      <>
+                        <div className="space-y-8">
+                          {/* Background Color Controls */}
+                          <div className="flex items-center justify-between px-6">
+                            <h3 className="text-lg font-medium text-cyan-100">Background Color</h3>
+                            <div className="flex gap-4">
+                              <Button
+                                onClick={toggleTextColor}
+                                className="flex items-center bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2 rounded-md shadow-md"
+                              >
+                                <Type className="mr-2" />
+                              </Button>
+                              <Button
+                                onClick={matchColor}
+                                className="flex items-center bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-md shadow-md"
+                              >
+                                <Type className="mr-2" />
+                              </Button>
+                            </div>
+                          </div>
 
-        {/* Color Picker */}
-        <div className="flex justify-center">
-          <ColorPicker onColorChange={setCalmWatersColor} />
-        </div>
-      </div>
-    </>
-  )}
+                          {/* Color Picker */}
+                          <div className="flex justify-center">
+                            <ColorPicker onColorChange={setCalmWatersColor} />
+                          </div>
+                        </div>
+                      </>
+                    )}
 
-  {/* Gradient Theme Section */}
-  {selectedStyle === 'gradient' && (
-    <div>
-      <h3 className="text-lg font-medium text-cyan-100 mb-4">Gradient Theme</h3>
-      <GradientColorPicker onColorChange={setGradientColor} />
-    </div>
-  )}
-</div>
-
+                    {/* Gradient Theme Section */}
+                    {selectedStyle === 'gradient' && (
+                      <div>
+                        <h3 className="text-lg font-medium text-cyan-100 mb-4">Gradient Theme</h3>
+                        <GradientColorPicker onColorChange={setGradientColor} />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Preview Section */}
@@ -278,7 +327,7 @@ export default function OceanicNotificationDashboard() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium text-cyan-100">Preview</h3>
                     <Button
-                      onClick={() => handlePreview()}
+                      onClick={handlePreview}
                       variant="outline"
                       className="bg-cyan-600 hover:bg-cyan-700 text-white border-none"
                     >
@@ -286,15 +335,7 @@ export default function OceanicNotificationDashboard() {
                       Show Preview
                     </Button>
                   </div>
-                  <Alert
-                    title={title}
-                    description={description}
-                    backgroundColor={calmWatersColor}
-                    borderColor={borderColor}
-                    textColor={textColor}
-                    onClose={() => {}}
-                    className="border-amber-900 border pointer-events-none"
-                  />
+                  {renderPreview()}
                 </div>
 
                 {/* Action Button */}
@@ -312,20 +353,7 @@ export default function OceanicNotificationDashboard() {
       </div>
 
       <Toaster />
-
-      {/* Alert Dialog */}
-      <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{title}</AlertDialogTitle>
-            <AlertDialogDescription>{description}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction>Acknowledge</AlertDialogAction>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
+

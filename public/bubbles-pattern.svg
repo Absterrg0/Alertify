@@ -1,0 +1,21 @@
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="20" fill="currentColor">
+    <animate attributeName="cy" dur="3s" values="50;350;50" repeatCount="indefinite" />
+  </circle>
+  <circle cx="150" cy="150" r="15" fill="currentColor">
+    <animate attributeName="cy" dur="4s" values="150;380;150" repeatCount="indefinite" />
+  </circle>
+  <circle cx="250" cy="80" r="25" fill="currentColor">
+    <animate attributeName="cy" dur="5s" values="80;320;80" repeatCount="indefinite" />
+  </circle>
+  <circle cx="350" cy="200" r="18" fill="currentColor">
+    <animate attributeName="cy" dur="6s" values="200;400;200" repeatCount="indefinite" />
+  </circle>
+  <circle cx="100" cy="250" r="12" fill="currentColor">
+    <animate attributeName="cy" dur="4.5s" values="250;420;250" repeatCount="indefinite" />
+  </circle>
+  <circle cx="300" cy="300" r="22" fill="currentColor">
+    <animate attributeName="cy" dur="3.5s" values="300;450;300" repeatCount="indefinite" />
+  </circle>
+</svg>
+
