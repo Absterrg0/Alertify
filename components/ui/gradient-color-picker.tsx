@@ -10,14 +10,6 @@ interface ColorPickerProps {
   onColorChange: (gradient: string) => void
 }
 
-const gradientPresets = {
-  sunset: ['#FF512F', '#F09819'],
-  ocean: ['#2193b0', '#6dd5ed'],
-  purple: ['#834d9b', '#d04ed6'],
-  forest: ['#134E5E', '#71B280'],
-  cherry: ['#EB3349', '#F45C43']
-}
-
 export const GradientColorPicker: React.FC<ColorPickerProps> = ({ onColorChange }) => {
   const [startColor, setStartColor] = useState('#2193b0')
   const [endColor, setEndColor] = useState('#6dd5ed')
@@ -26,11 +18,6 @@ export const GradientColorPicker: React.FC<ColorPickerProps> = ({ onColorChange 
   const [showStartPicker, setShowStartPicker] = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
 
-  const handlePresetSelect = (preset: keyof typeof gradientPresets) => {
-    setStartColor(gradientPresets[preset][0])
-    setEndColor(gradientPresets[preset][1])
-    updateGradient(gradientPresets[preset][0], gradientPresets[preset][1], direction)
-  }
 
   const updateGradient = (start: string, end: string, dir: string) => {
     const gradient = `linear-gradient(${dir}, ${start}, ${end})`
@@ -49,22 +36,6 @@ export const GradientColorPicker: React.FC<ColorPickerProps> = ({ onColorChange 
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Preset Gradients</Label>
-        <Select onValueChange={handlePresetSelect}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a preset" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.keys(gradientPresets).map(preset => (
-              <SelectItem key={preset} value={preset}>
-                {preset.charAt(0).toUpperCase() + preset.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="space-y-2">
         <Label>Direction</Label>
         <Select onValueChange={handleDirectionChange}>

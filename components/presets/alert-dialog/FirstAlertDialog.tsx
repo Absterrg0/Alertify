@@ -36,7 +36,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
           "flex flex-col items-center border-black border pointer-events-none",
           className
         )}
-        style={{ backgroundColor,
+        style={{ background:backgroundColor,
             color:textColor,
             borderColor:borderColor
          }}
@@ -44,7 +44,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
         <h2 className="text-2xl font-bold mb-4">{title}</h2>
         <p className="text-center mb-6">{description}</p>
         <button
-          className="px-4 py-2 bg-gray-200 rounded-md"
+          className="px-4 py-2 bg-zinc-300 text-black rounded-md"
         >
           Close
         </button>
@@ -75,7 +75,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
               "flex flex-col items-center border-black border",
               className
             )}
-            style={{ backgroundColor,
+            style={{ background:backgroundColor,
                 color:textColor,
                 borderColor:borderColor
              }}
@@ -84,7 +84,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
             <p className="text-center mb-6">{description}</p>
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors duration-200"
+              className="px-4 py-2 bg-zinc-300 hover:bg-zinc-500 text-black rounded-md transition-colors duration-200"
             >
               Close
             </button>

@@ -11,49 +11,43 @@ import { Alert } from './presets/alerts/FirstAlert'
 import { AlertDialog } from './presets/alert-dialog/FirstAlertDialog'
 import { Toaster } from '@/components/ui/toaster'
 import { cn } from '@/lib/utils'
-import { useToast } from '@/hooks/use-toast'
 import { GradientColorPicker } from './ui/gradient-color-picker'
 import { ColorPicker } from './ui/color-picker'
-
 type NotificationType = 'alert' | 'alert-dialog' | 'toast'
 type StyleType = 'native' | 'gradient' | 'logo'
-
+import { Toast } from './presets/toasts/FirstToast'
 const isPremium = true
-
+import { SelectTrigger,SelectValue,SelectItem,SelectContent,Select } from './ui/select'
 export default function OceanicNotificationDashboard() {
   const [selectedType, setSelectedType] = React.useState<NotificationType>('alert')
   const [selectedStyle, setSelectedStyle] = React.useState<StyleType>('native')
   const [title, setTitle] = React.useState('Oceanic Notification')
+  const [startColor, setStartColor] = React.useState('#3B82F6');
+  const [endColor, setEndColor] = React.useState('#2563EB');
+  const [gradientDirection, setGradientDirection] = React.useState('to right');
   const [description, setDescription] = React.useState('Dive into the depths of our new features!')
-  const [isAlertDialogOpen, setIsAlertDialogOpen] = React.useState(false)
-  const [calmWatersColor, setCalmWatersColor] = React.useState('#E0F2FE')
-  const [gradientColor, setGradientColor] = React.useState('linear-gradient(135deg, #1a4b6e, #38bdf8)')
+  const [backgroundColor, setBackgroundColor] = React.useState('#E0F2FE')
   const [showPreview, setShowPreview] = React.useState(false)
   const [textColor, setTextColor] = React.useState('black')
-  const [borderColor, setBorderColor] = React.useState(calmWatersColor)
   const [matchBorderColor, setMatchBorderColor] = React.useState(false)
-  const { toast } = useToast()
-
+  const [activeTab,setActiveTab]= React.useState('start')
   const toggleTextColor = () => {
     setTextColor(prevColor => prevColor === 'black' ? 'white' : 'black')
   }
 
-  const matchColor = () => {
-    setMatchBorderColor((prevState) => {
-      const newState = !prevState;
-      setBorderColor(newState ? calmWatersColor : 'black');
-      return newState;
-    });
-  };
-  
+  const matchColor = ()=>{
+    setMatchBorderColor((prevState)=>!prevState)
+  }
+  const gradientBackground = `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`;
+
   const getStyleClasses = (style: StyleType) => {
     switch (style) {
       case 'gradient':
-        return gradientColor
+        return gradientBackground
       case 'logo':
         return 'bg-blue-600 text-white'
       default:
-        return `background-color: ${calmWatersColor}; color: ${textColor};`
+        return `background-color: ${backgroundColor}; color: ${textColor};`
     }
   }
 
@@ -66,20 +60,12 @@ export default function OceanicNotificationDashboard() {
       case 'alert-dialog':
         setTimeout(() => setShowPreview(false), 1000000)
         break
-      case 'toast':
-        toast({
-          title,
-          description,
-          className: cn("backdrop-blur-md", getStyleClasses(selectedStyle)),
-        })
-        setShowPreview(false)
+        case 'toast':
+        setTimeout(() => setShowPreview(false), 1000000)
         break
     }
   }
 
-  const handleCloseDialog = () => {
-    setIsAlertDialogOpen(false)
-  }
 
   const renderPreview = () => {
     switch (selectedType) {
@@ -88,8 +74,8 @@ export default function OceanicNotificationDashboard() {
           <Alert
             title={title}
             description={description}
-            backgroundColor={calmWatersColor}
-            borderColor={borderColor}
+            backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
+            borderColor={matchBorderColor ? backgroundColor : 'black'}
             textColor={textColor}
             onClose={() => {}}
             className="border-amber-900 border pointer-events-none"
@@ -97,25 +83,32 @@ export default function OceanicNotificationDashboard() {
         )
       case 'alert-dialog':
         return (
-          <AlertDialog
+            <div className='ml-56'>
+             <AlertDialog
             isOpen={false}
             onClose={() => {}}
             title={title}
             description={description}
-            backgroundColor={calmWatersColor}
+            backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
             textColor={textColor}
-            borderColor={borderColor}
+            borderColor={matchBorderColor ? backgroundColor : 'black'}
             preview={true}
           />
+            </div>
         )
       case 'toast':
         return (
-          <div 
-            className="border border-amber-900 rounded-lg p-4"
-            style={{ backgroundColor: calmWatersColor, color: textColor }}
-          >
-            <h3 className="text-lg font-semibold mb-2">{title}</h3>
-            <p>{description}</p>
+            <div className="pointer-events-none ml-60">
+            <Toast
+              isOpen={false}
+              title={title}
+              description={description}
+              backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
+              textColor={textColor}
+              borderColor={matchBorderColor ? backgroundColor : "black"}
+              onClose={() => {}}
+              preview={true}
+            />
           </div>
         )
     }
@@ -135,8 +128,8 @@ export default function OceanicNotificationDashboard() {
           <Alert
             title={title}
             description={description}
-            backgroundColor={calmWatersColor}
-            borderColor={borderColor}
+            backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
+            borderColor={matchBorderColor ? backgroundColor : 'black'}
             textColor={textColor}
             onClose={() => setShowPreview(false)}
             className="border-amber-900 border shadow-lg"
@@ -151,11 +144,25 @@ export default function OceanicNotificationDashboard() {
           onClose={() => setShowPreview(false)}
           title={title}
           description={description}
-          backgroundColor={calmWatersColor}
+          backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
           textColor={textColor}
-          borderColor={borderColor}
+          borderColor={matchBorderColor ? backgroundColor : 'black'}
           preview={false}
         />
+    
+      )}
+
+      {showPreview && selectedType==='toast' && (
+        <Toast
+        isOpen={true}
+        title={title}
+        description={description}
+        backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
+        textColor={textColor}
+        borderColor={matchBorderColor ? backgroundColor : "black"}
+        onClose={() => setShowPreview(false)}
+        preview={false}
+                  />
       )}
 
       {/* Main Content */}
@@ -163,7 +170,7 @@ export default function OceanicNotificationDashboard() {
         <div className="flex items-center justify-center mb-12 space-x-4">
           <Waves className="h-12 w-12 text-cyan-400" />
           <h1 className="text-5xl font-bold text-white tracking-tight">
-            Oceanic Notifications
+            Droplert
           </h1>
         </div>
 
@@ -217,7 +224,7 @@ export default function OceanicNotificationDashboard() {
                   {[
                     { type: 'native', label: 'Calm Waters', description: 'Clean, minimal design' },
                     { type: 'gradient', label: 'Deep Ocean', description: 'Rich gradient effect', premium: true },
-                    { type: 'logo', label: 'Coral Theme', description: 'Brand-focused style', premium: true },
+                    { type: 'logo', label: 'Coral Theme(Coming Soon)', description: 'Brand-focused style', premium: true },
                   ].map(({ type, label, description, premium }) => (
                     <button
                       key={type}
@@ -249,7 +256,7 @@ export default function OceanicNotificationDashboard() {
           <div className="col-span-12 lg:col-span-8">
             <Card className="bg-white/5 backdrop-blur-lg border-cyan-500/20">
               <div className="p-8">
-                <div className="flex items-center space-x-3 mb-8">
+                <div className="flex items-center space-x-3 mb-4">
                   <Anchor className="h-6 w-6 text-cyan-400" />
                   <h2 className="text-2xl font-semibold text-white">Customize Your Message</h2>
                 </div>
@@ -277,6 +284,25 @@ export default function OceanicNotificationDashboard() {
                         className="mt-2 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-400 h-32"
                       />
                     </div>
+                    {selectedStyle==='gradient' &&(
+                            <div className="mt-6 space-y-3">
+                            <Label className='text-lg text-cyan-100 '>Gradient Direction</Label>
+                            <Select
+                              value={gradientDirection}
+                              onValueChange={setGradientDirection}
+                            >
+                              <SelectTrigger className='text-lg text-cyan-100'>
+                                <SelectValue placeholder="Select direction" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="to right">Horizontal</SelectItem>
+                                <SelectItem value="to bottom">Vertical</SelectItem>
+                                <SelectItem value="45deg">Diagonal ↘</SelectItem>
+                                <SelectItem value="-45deg">Diagonal ↗</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                    )}
                   </div>
 
                   {/* Color Configuration */}
@@ -288,37 +314,78 @@ export default function OceanicNotificationDashboard() {
                           {/* Background Color Controls */}
                           <div className="flex items-center justify-between px-6">
                             <h3 className="text-lg font-medium text-cyan-100">Background Color</h3>
-                            <div className="flex gap-4">
-                              <Button
+                            
+                          </div>
+                          
+
+                          {/* Color Picker */}
+                          <div className="flex justify-center">
+                            <ColorPicker onColorChange={setBackgroundColor} />
+                          </div>
+                          <div className='flex justify-between w-full'>
+                          <Button
                                 onClick={toggleTextColor}
                                 className="flex items-center bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2 rounded-md shadow-md"
                               >
                                 <Type className="mr-2" />
+                                Toggle Text Color
                               </Button>
                               <Button
                                 onClick={matchColor}
                                 className="flex items-center bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-md shadow-md"
                               >
-                                <Type className="mr-2" />
+                                Toggle Border
                               </Button>
-                            </div>
                           </div>
-
-                          {/* Color Picker */}
-                          <div className="flex justify-center">
-                            <ColorPicker onColorChange={setCalmWatersColor} />
-                          </div>
+                        
                         </div>
                       </>
                     )}
 
                     {/* Gradient Theme Section */}
                     {selectedStyle === 'gradient' && (
-                      <div>
-                        <h3 className="text-lg font-medium text-cyan-100 mb-4">Gradient Theme</h3>
-                        <GradientColorPicker onColorChange={setGradientColor} />
-                      </div>
-                    )}
+            <div>
+              <h3 className="text-lg font-medium text-cyan-100">Gradient Theme</h3>
+              <div className="flex border-b border-gray-700 mb-4">
+                <button
+                  className={`py-2 px-4 ${
+                    activeTab === 'start' ? 'border-b-2 border-cyan-500 text-cyan-100' : 'text-gray-400'
+                  }`}
+                  onClick={() => setActiveTab('start')}
+                >
+                  Start Color
+                </button>
+                <button
+                  className={`py-2 px-4 ${
+                    activeTab === 'end' ? 'border-b-2 border-cyan-500 text-cyan-100' : 'text-gray-400'
+                  }`}
+                  onClick={() => setActiveTab('end')}
+                >
+                  End Color
+                </button>
+              </div>
+              <div className="mt-4">
+                {activeTab === 'start' && <ColorPicker onColorChange={setStartColor} />}
+                {activeTab === 'end' && <ColorPicker onColorChange={setEndColor} />}
+              </div>
+              <div className="flex justify-between mt-6">
+                <Button
+                  onClick={toggleTextColor}
+                  className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2 rounded-md shadow-md"
+                >
+                  <Type className="mr-2" />
+                  Toggle Text Color
+                </Button>
+                <Button
+                  onClick={matchColor}
+                  className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-md shadow-md"
+                >
+                  Toggle Border
+                </Button>
+              </div>
+            </div>
+          )}
+
                   </div>
                 </div>
 

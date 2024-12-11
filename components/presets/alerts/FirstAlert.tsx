@@ -43,7 +43,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
               "flex items-start ",
               className
             )}
-            style={{ backgroundColor,borderColor:borderColor }}
+            style={{ background:backgroundColor,borderColor:borderColor }}
             {...props}
           >
             <div className="flex-1">
