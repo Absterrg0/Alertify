@@ -18,14 +18,18 @@ export async function POST(req:NextRequest){
     try{
         const body = await req.json();
         const parsedBody = alertSchema.parse(body)
-        const {title,description,layoutId}=parsedBody;
+        const {title,description,type,style,backgroundColor,textColor,borderColor,}=parsedBody;
 
-        await prisma?.alerts.create({
+        await prisma?.alert.create({
             data:{
                 title,
                 description,
-                layoutId,
-                userId:session.user.id
+                userId:session.user.id,
+                type,
+                style,
+                backgroundColor,
+                textColor,
+                borderColor
             }
         })
         return NextResponse.json({

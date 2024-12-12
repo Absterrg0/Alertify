@@ -18,7 +18,7 @@ type StyleType = 'native' | 'gradient' | 'logo'
 import { Toast } from './presets/toasts/FirstToast'
 const isPremium = true
 import { SelectTrigger,SelectValue,SelectItem,SelectContent,Select } from './ui/select'
-export default function OceanicNotificationDashboard() {
+export default function AlertBoard() {
   const [selectedType, setSelectedType] = React.useState<NotificationType>('alert')
   const [selectedStyle, setSelectedStyle] = React.useState<StyleType>('native')
   const [title, setTitle] = React.useState('Oceanic Notification')
@@ -39,31 +39,8 @@ export default function OceanicNotificationDashboard() {
     setMatchBorderColor((prevState)=>!prevState)
   }
   const gradientBackground = `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`;
-
-  const getStyleClasses = (style: StyleType) => {
-    switch (style) {
-      case 'gradient':
-        return gradientBackground
-      case 'logo':
-        return 'bg-blue-600 text-white'
-      default:
-        return `background-color: ${backgroundColor}; color: ${textColor};`
-    }
-  }
-
   const handlePreview = () => {
     setShowPreview(true);
-    switch (selectedType) {
-      case 'alert':
-        setTimeout(() => setShowPreview(false), 3000)
-        break
-      case 'alert-dialog':
-        setTimeout(() => setShowPreview(false), 1000000)
-        break
-        case 'toast':
-        setTimeout(() => setShowPreview(false), 1000000)
-        break
-    }
   }
 
 
@@ -78,7 +55,7 @@ export default function OceanicNotificationDashboard() {
             borderColor={matchBorderColor ? backgroundColor : 'black'}
             textColor={textColor}
             onClose={() => {}}
-            className="border-amber-900 border pointer-events-none"
+            className="pointer-events-none border"
           />
         )
       case 'alert-dialog':
@@ -93,6 +70,7 @@ export default function OceanicNotificationDashboard() {
             textColor={textColor}
             borderColor={matchBorderColor ? backgroundColor : 'black'}
             preview={true}
+            className='pointer-events-none'
           />
             </div>
         )
@@ -166,7 +144,7 @@ export default function OceanicNotificationDashboard() {
       )}
 
       {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-4 py-12">
+      <div className="relative z-10 container mx-auto px-4 py-5">
         <div className="flex items-center justify-center mb-12 space-x-4">
           <Waves className="h-12 w-12 text-cyan-400" />
           <h1 className="text-5xl font-bold text-white tracking-tight">
@@ -393,6 +371,7 @@ export default function OceanicNotificationDashboard() {
                 <div className="mt-8">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium text-cyan-100">Preview</h3>
+                    
                     <Button
                       onClick={handlePreview}
                       variant="outline"
@@ -411,7 +390,7 @@ export default function OceanicNotificationDashboard() {
                   className="w-full mt-8 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/20 transform transition-all duration-200 hover:scale-[1.02]"
                 >
                   <Waves className="mr-2 h-5 w-5" />
-                  Release the Wave
+                  Select the websites
                 </Button>
               </div>
             </Card>

@@ -16,7 +16,7 @@ export async function PUT(req:NextRequest,{params}:{params:{id:string}}){
         const id = params.id;
         const body = await req.json();
         const parsedBody = websiteSchema.parse(body)
-        const {name,URL} = parsedBody;
+        const {name} = parsedBody;
         const response = await prisma.website.update({
             where:{
                 id,
@@ -56,14 +56,17 @@ export async function DELETE(req:NextRequest,{params}:{params:{id:string}}){
 
         try{
             const id = params.id;
-            await prisma.website.delete({
+            await prisma.website.update({
                 where:{
                     id,
                     userId:session.user.id
+                },
+                data:{
+                    status:"DEACTIVATED"
                 }
             })
             return NextResponse.json({
-                msg:"Website successfully deleted"
+                msg:"Website successfully deactivated"
             },{
                 status:201
             })

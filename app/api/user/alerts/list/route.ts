@@ -15,7 +15,7 @@ export async function GET(){
     }
 
     try{
-        const response = await prisma.alerts.findMany({
+        const response = await prisma.alert.findMany({
             where:{
                 userId:session.user.id
             }

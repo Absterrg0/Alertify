@@ -2,6 +2,18 @@ import GitHub from "next-auth/providers/github";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import prisma from "@/db";
+import { v4 } from "uuid";
+import { User } from "next-auth";
+
+declare module "next-auth" {
+  interface User{
+    id?:string,
+    email?:string | null
+    name?:string | null
+    apiKey?:string
+
+  }
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -24,6 +36,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
+        token.apiKey = user.apiKey;
       }
       if (account) {
         token.provider = account.provider;
@@ -35,6 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
+        session.user.apiKey = token.apiKey as string;
       }
       return session;
     },
@@ -53,12 +67,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (existingUser) {
           return `${process.env.NEXTAUTH_URL}/dashboard`;
         }
+        const apiKey = `dl_${v4()}`
         await prisma.user.create({
-          data:{
-            name:user.name
+          data: {
+            name: user.name,
+            apiKey
           }
         })
-        return `${process.env.NEXTAUTH_URL}/auth/onboarding`;
+        return `${process.env.NEXTAUTH_URL}/onboarding`;
       }
       return false;
     },

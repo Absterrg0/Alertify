@@ -8,70 +8,83 @@ datasource db {
 }
 
 model User {
-  id               String        @id @default(uuid())
-  name             String?     @unique
-  email            String?     @unique
-  apiKey           String      @default(uuid())
+  id                String     @id @default(uuid())
+  name              String?    @unique
+  email             String?    @unique
+  apiKey            String?     @unique
   registeredWebsites Website[]
-  LayoutsAvailabe  UserLayouts[]
-  previousAlerts    Alerts[]
-  plan             PlanStatus     @default(FREE)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  alerts            Alert[]    // Changed name for consistency
+  plan              PlanStatus @default(FREE)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  apiRequests     ApiRequest[]
 }
 
 model Website {
-  id         String      @id @default(uuid())
-  name       String 
-  URL        String     @db.VarChar(2048)@unique  
+  id         String   @id @default(uuid())
+  name       String   
+  isVerified Boolean  @default(false)
+  url        String   @db.VarChar(2048) @unique
+  status     WebsiteStatus  @default(ACTIVE)
   userId     String
   user       User     @relation(fields: [userId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([userId])
 }
 
-model Alerts{
-  id  String  @id@default(uuid())
-  title String
-  description String
-  layoutId  String
-  Layout  Layout    @relation(fields: [layoutId],references: [id])
-  userId    String
-  user    User   @relation(fields: [userId],references: [id])
+model Alert {
+  id              String     @id @default(uuid())
+  title           String
+  description     String
+  type            LayoutType // Changed to match enum name
+  style           StyleType  // Changed to match enum name
+  backgroundColor String
+  textColor       String
+  borderColor     String
+  imageUrl        String?    // Made optional and renamed for clarity
+  userId          String
+  user            User       @relation(fields: [userId], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([userId])
 }
 
-model Layout {
-  id          String           @id @default(uuid())
-  name        String
-  description String
-  category    LayoutDivision @default(DEFAULT)
-  style       Json
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  users       UserLayouts[]
-  alerts      Alerts[]
-}
 
-model UserLayouts{
-  id      String     @id@default(uuid())
+model ApiRequest{
+  id    String    @id@default(uuid())
   userId  String
   user    User    @relation(fields: [userId],references: [id])
-  layoutId  String
-  layout   Layout @relation(fields: [layoutId],references: [id])  
+  timestamp DateTime  @default(now())
+  endpoint  String
+  success Boolean
 
-  @@unique([layoutId,userId])
+
+  @@index([userId,timestamp])
 }
 
-enum LayoutDivision {
-  DEFAULT
+
+enum LayoutType {
   ALERT
-  NOTIFICATION
-  UPDATE
+  ALERT_DIALOG
+  TOAST
 }
 
+enum StyleType {
+  NATIVE
+  GRADIENT
+  LOGO
+}
 
 enum PlanStatus {
   FREE
   PREMIUM
   ENTERPRISE
+}
+
+enum WebsiteStatus { 
+  ACTIVE
+  DEACTIVATED
 }

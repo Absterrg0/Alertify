@@ -11,7 +11,9 @@ import { motion } from "framer-motion"
 import { CopyIcon, CheckIcon, KeyIcon, RocketIcon, GlobeIcon, UserIcon, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Dialog,DialogContent,DialogDescription,DialogTitle } from "./ui/dialog"
-
+import {v4} from 'uuid';
+import { getSession } from "next-auth/react"
+import { auth } from "@/lib/auth"
 const steps = [
   { title: "Personal Info", icon: UserIcon },
   { title: "Choose Plan", icon: RocketIcon },
@@ -63,20 +65,20 @@ const pricingPlans = [
   }
 ]
 
-export default function OnboardingComponent() {
+export default async function OnboardingComponent() {
+  const session = await auth();
   const [currentStep, setCurrentStep] = useState(0)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
-  const [apiKey, setApiKey] = useState("")
+  const [apiKey, setApiKey] = useState(`${session?.user?.apiKey}`)
   const [copied, setCopied] = useState(false)
   const progress = (currentStep / (steps.length - 1)) * 100
   const router=useRouter();
   const [isDialogOpen,setDialogOpen]=useState(false)
 
-  useEffect(()=>{
-    generateApiKey()
-  },[])
-
+  const generateApiKey = ()=>{
+    const key = `dl_${v4()}`
+  }
   const handleDashBoard = ()=>{
     router.push('/dashboard')
   }
@@ -91,10 +93,7 @@ export default function OnboardingComponent() {
   const handleViewEnterprisePlan = ()=>{
     router.push('/')
   }
-  const generateApiKey = () => {
-    const key = `sk_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
-    setApiKey(key)
-  }
+
 
   const copyApiKey = () => {
     navigator.clipboard.writeText(apiKey)

@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import websiteSchema from "@/types/WebsiteSchema";
 import prisma from "@/db";
 
+const PLAN_LIMITS={
+    FREE : 2,
+    PREMIUM : 8,
+    ENTERPRISE : 100
+}
 
 export async function POST(req:NextRequest){
 
@@ -18,30 +23,55 @@ export async function POST(req:NextRequest){
     try{
         const body = await req.json();
         const parsedBody = websiteSchema.parse(body)
-        const {name,URL}=parsedBody;
-        const checkExistingUrl= await prisma.website.findFirst({
+        const {name,url}=parsedBody;
+        const checkExistingUrl= await prisma.website.findUnique({
             where:{
-                URL
+                url
             }
         })
+
+        const user = await prisma.user.findUnique({
+            where:{
+                id:session.user.id
+            },
+            include:{
+                _count:{
+                    select:{
+                        registeredWebsites:true
+                    }
+                }
+            }
+        })
+
+        if(!user){
+            return NextResponse.json({
+                msg:"No user found"
+            })
+        }
+
+        const websiteLimit = PLAN_LIMITS[user.plan]
+        if(user._count.registeredWebsites>=websiteLimit){
+            return NextResponse.json({
+                msg:`You have reached the maximum limits of ${websiteLimit} for your ${user.plan} plan `
+            })
+        }
+
         if(checkExistingUrl){
             return NextResponse.json({
                 msg:"Website with this URL already exists"
             })
         }
-        //CHECK IF THE USER WHO IS ADDING THE WEBSITE IS THE OWNER OF THE WEBSITE OR NOT
-        const checkValidity=2;
-
         const response = await prisma.website.create({
             data:{
                 name,
-                URL,
+                url,
                 userId:session.user.id,
             }
         })
 
         return NextResponse.json({
-            msg:"Website added successfully"
+            msg:"Website added successfully",
+            response
         },{
             status:201
         })
