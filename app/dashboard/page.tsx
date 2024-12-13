@@ -1,7 +1,6 @@
-import {WebsiteManager} from "@/components/WebsiteManager"
-
+import DashboardPage from "@/components/Dashboard"
 export default function DashBoard(){
     return <div>
-        <WebsiteManager></WebsiteManager>
+        <DashboardPage></DashboardPage>
     </div>
 }
