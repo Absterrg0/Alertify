@@ -14,7 +14,7 @@ export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   borderColor:string
 }
 
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
+const MyAlert = React.forwardRef<HTMLDivElement, AlertProps>(
   ({ className, title, description,textColor,borderColor, onClose, backgroundColor, ...props }, ref) => {
     const [isVisible, setIsVisible] = React.useState(true)
 
@@ -78,6 +78,6 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     )
   }
 )
-Alert.displayName = "Alert"
+MyAlert.displayName = "Alert"
 
-export { Alert }
+export { MyAlert }

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Alert } from './presets/alerts/FirstAlert'
-import { AlertDialog } from './presets/alert-dialog/FirstAlertDialog'
+import { MyAlertDialog } from './presets/alert-dialog/FirstAlertDialog'
 import { Toaster } from '@/components/ui/toaster'
 import { cn } from '@/lib/utils'
 import { GradientColorPicker } from './ui/gradient-color-picker'
@@ -61,7 +61,7 @@ export default function AlertBoard() {
       case 'alert-dialog':
         return (
             <div className='ml-56'>
-             <AlertDialog
+             <MyAlertDialog
             isOpen={false}
             onClose={() => {}}
             title={title}
@@ -117,7 +117,7 @@ export default function AlertBoard() {
 
       {/* Preview Alert Dialog */}
       {showPreview && selectedType === 'alert-dialog' && (
-        <AlertDialog
+        <MyAlertDialog
           isOpen={true}
           onClose={() => setShowPreview(false)}
           title={title}

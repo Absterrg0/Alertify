@@ -17,7 +17,7 @@ export interface AlertDialogProps {
   borderColor:string
 }
 
-export const AlertDialog: React.FC<AlertDialogProps> = ({
+export const MyAlertDialog: React.FC<AlertDialogProps> = ({
   className,
   title,
   description,
