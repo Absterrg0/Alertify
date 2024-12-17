@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowUpDown, ExternalLink } from 'lucide-react';
 
 type ApiRequest = {
   id: string;
@@ -59,6 +60,7 @@ const defaultRequests = [
 export default function ApiRequestManager({ onRequestsChange, initialData }: ApiRequestManagerProps) {
   const [mounted, setMounted] = useState(false);
   const [requests, setRequests] = useState<ApiRequest[]>([]);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof ApiRequest; direction: 'asc' | 'desc' } | null>(null);
   
   useEffect(() => {
     setMounted(true);
@@ -70,50 +72,91 @@ export default function ApiRequestManager({ onRequestsChange, initialData }: Api
     }
   }, [initialData, mounted, onRequestsChange]);
 
-  const filteredRequests = requests.map(request => ({
-    ...request,
-    endpoint: new URL(request.endpoint).origin
-  }));
+  const sortedRequests = React.useMemo(() => {
+    let sortableRequests = [...requests];
+    if (sortConfig !== null) {
+      sortableRequests.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableRequests;
+  }, [requests, sortConfig]);
+
+  const requestSort = (key: keyof ApiRequest) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   return (
-    <Card className="bg-gradient-to-b from-gray-900 to-gray-800 shadow-lg border border-gray-700/50 transition-all duration-300 max-w-3xl mx-auto rounded-lg overflow-hidden backdrop-blur-md">
-      <CardHeader className="p-6 border-b bg-gradient-to-r from-gray-800 to-gray-700 text-white">
-        <h2 className="text-2xl font-semibold">API Requests</h2>
+    <Card className="bg-gradient-to-br from-white to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700/50 transition-all duration-300 max-w-4xl mx-auto rounded-xl overflow-hidden backdrop-blur-md">
+      <CardHeader className="p-6 border-b border-gray-200 dark:border-zinc-700/50 bg-gradient-to-r from-gray-50 to-white dark:from-zinc-800 dark:to-zinc-900">
+        <CardTitle className="text-2xl font-bold text-gray-800 dark:text-zinc-200">
+          API Requests
+        </CardTitle>
       </CardHeader>
 
       <CardContent className="p-6">
-        <div className="rounded-lg border border-gray-700/50 overflow-hidden bg-white/20 dark:bg-gray-800/20 backdrop-blur-md">
+        <div className="rounded-lg border border-gray-200 dark:border-zinc-700/50 overflow-hidden bg-white dark:bg-zinc-900/50 backdrop-blur-md">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
-                <TableHead>Endpoint</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Timestamp</TableHead>
+              <TableRow className="bg-gray-50 dark:bg-gradient-to-r dark:from-zinc-800 dark:to-zinc-900 hover:bg-gray-100 dark:hover:bg-zinc-800/50">
+                <TableHead className="text-gray-600 dark:text-zinc-300 cursor-pointer" onClick={() => requestSort('endpoint')}>
+                  <div className="flex items-center">
+                    Endpoint
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </div>
+                </TableHead>
+                <TableHead className="text-gray-600 dark:text-zinc-300 cursor-pointer" onClick={() => requestSort('success')}>
+                  <div className="flex items-center">
+                    Status
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </div>
+                </TableHead>
+                <TableHead className="text-gray-600 dark:text-zinc-300 cursor-pointer" onClick={() => requestSort('timestamp')}>
+                  <div className="flex items-center">
+                    Timestamp
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRequests.map(request => (
+              {sortedRequests.map(request => (
                 <TableRow
                   key={request.id}
-                  className={`
-                    transition-colors duration-200
-                  `}
+                  className="bg-white dark:bg-zinc-800/30 hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors duration-200"
                 >
-                  <TableCell>{request.endpoint}</TableCell>
+                  <TableCell className="font-medium text-gray-900 dark:text-zinc-300">
+                    <div className="flex items-center space-x-2">
+                      <span>{new URL(request.endpoint).origin}</span>
+                      <a href={request.endpoint} target="_blank" rel="noopener noreferrer" className="text-blue-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-zinc-200">
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge 
                       variant="outline" 
                       className={`
                         ${request.success 
-                          ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' 
-                          : 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'}
+                          ? 'bg-green-100 dark:bg-gradient-to-r dark:from-emerald-500/20 dark:to-emerald-600/20 text-green-800 dark:text-emerald-400 border-green-300 dark:border-emerald-600' 
+                          : 'bg-red-100 dark:bg-gradient-to-r dark:from-red-500/20 dark:to-red-600/20 text-red-800 dark:text-red-400 border-red-300 dark:border-red-600'}
                       `}
                     >
                       {request.success ? 'Success' : 'Failure'}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-gray-500 dark:text-zinc-400">
                       {new Date(request.timestamp).toLocaleString()}
                     </span>
                   </TableCell>
@@ -126,3 +169,4 @@ export default function ApiRequestManager({ onRequestsChange, initialData }: Api
     </Card>
   );
 }
+

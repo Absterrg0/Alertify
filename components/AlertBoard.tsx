@@ -1,150 +1,97 @@
 'use client'
 
 import * as React from 'react'
-import { AlertCircle, Bell, MessageSquare, Lock, Waves, Droplet, Shell, Anchor, Play, Type } from 'lucide-react'
-import { Card } from '@/components/ui/card'
+import { AlertCircle, Bell, MessageSquare, Lock, Waves, Droplet, Shell, Anchor, Play, Type, ChevronRight } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { Alert } from './presets/alerts/FirstAlert'
+import { MyAlert } from './presets/alerts/FirstAlert'
 import { MyAlertDialog } from './presets/alert-dialog/FirstAlertDialog'
 import { Toaster } from '@/components/ui/toaster'
 import { cn } from '@/lib/utils'
-import { GradientColorPicker } from './ui/gradient-color-picker'
 import { ColorPicker } from './ui/color-picker'
+import { Toast } from './presets/toasts/FirstToast'
+import { SelectTrigger, SelectValue, SelectItem, SelectContent, Select } from './ui/select'
+
 type NotificationType = 'alert' | 'alert-dialog' | 'toast'
 type StyleType = 'native' | 'gradient' | 'logo'
-import { Toast } from './presets/toasts/FirstToast'
+
 const isPremium = true
-import { SelectTrigger,SelectValue,SelectItem,SelectContent,Select } from './ui/select'
-export default function AlertBoard() {
+
+export default function EnhancedAlertBoard() {
   const [selectedType, setSelectedType] = React.useState<NotificationType>('alert')
   const [selectedStyle, setSelectedStyle] = React.useState<StyleType>('native')
   const [title, setTitle] = React.useState('Oceanic Notification')
-  const [startColor, setStartColor] = React.useState('#3B82F6');
-  const [endColor, setEndColor] = React.useState('#2563EB');
-  const [gradientDirection, setGradientDirection] = React.useState('to right');
+  const [startColor, setStartColor] = React.useState('#3B82F6')
+  const [endColor, setEndColor] = React.useState('#2563EB')
+  const [gradientDirection, setGradientDirection] = React.useState('to right')
   const [description, setDescription] = React.useState('Dive into the depths of our new features!')
   const [backgroundColor, setBackgroundColor] = React.useState('#E0F2FE')
   const [showPreview, setShowPreview] = React.useState(false)
   const [textColor, setTextColor] = React.useState('black')
   const [matchBorderColor, setMatchBorderColor] = React.useState(false)
-  const [activeTab,setActiveTab]= React.useState('start')
+  const [activeTab, setActiveTab] = React.useState('start')
+
   const toggleTextColor = () => {
     setTextColor(prevColor => prevColor === 'black' ? 'white' : 'black')
   }
 
-  const matchColor = ()=>{
-    setMatchBorderColor((prevState)=>!prevState)
-  }
-  const gradientBackground = `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`;
-  const handlePreview = () => {
-    setShowPreview(true);
+  const matchColor = () => {
+    setMatchBorderColor((prevState) => !prevState)
   }
 
+  const gradientBackground = `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`
+
+  const handlePreview = () => {
+    setShowPreview(true)
+  }
 
   const renderPreview = () => {
+    const commonProps = {
+      title,
+      description,
+      backgroundColor: selectedStyle === 'native' ? backgroundColor : gradientBackground,
+      textColor,
+      borderColor: matchBorderColor ? backgroundColor : 'transparent',
+      onClose: () => {},
+    }
+
     switch (selectedType) {
       case 'alert':
         return (
-          <Alert
-            title={title}
-            description={description}
-            backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
-            borderColor={matchBorderColor ? backgroundColor : 'black'}
-            textColor={textColor}
-            onClose={() => {}}
-            className="pointer-events-none border"
-          />
+          <MyAlert {...commonProps} className="pointer-events-none border shadow-lg" />
         )
       case 'alert-dialog':
         return (
-            <div className='ml-56'>
-             <MyAlertDialog
-            isOpen={false}
-            onClose={() => {}}
-            title={title}
-            description={description}
-            backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
-            textColor={textColor}
-            borderColor={matchBorderColor ? backgroundColor : 'black'}
-            preview={true}
-            className='pointer-events-none'
-          />
-            </div>
+          <div className="flex justify-center items-center">
+            <MyAlertDialog
+              {...commonProps}
+              isOpen={false}
+              preview={true}
+              className="pointer-events-none max-w-md w-full"
+            />
+          </div>
         )
       case 'toast':
         return (
-            <div className="pointer-events-none ml-60">
-            <Toast
-              isOpen={false}
-              title={title}
-              description={description}
-              backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
-              textColor={textColor}
-              borderColor={matchBorderColor ? backgroundColor : "black"}
-              onClose={() => {}}
-              preview={true}
-            />
+          <div className="flex justify-end">
+            <Toast {...commonProps} isOpen={false} preview={true} className="pointer-events-none" />
           </div>
         )
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-cyan-900 to-blue-900 relative overflow-hidden">
-      {/* Animated Ocean Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[url('/waves-pattern.svg')] opacity-10 animate-wave"></div>
-        <div className="absolute inset-0 bg-[url('/bubbles-pattern.svg')] opacity-5 animate-float"></div>
+    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 relative overflow-hidden p-8">
+      {/* Subtle Background Pattern */}
+      <div className="absolute inset-0 z-0 opacity-5">
+        <div className="absolute inset-0 bg-[url('/subtle-pattern.svg')] bg-repeat"></div>
       </div>
 
-      {/* Preview Alert */}
-      {showPreview && selectedType === 'alert' && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md">
-          <Alert
-            title={title}
-            description={description}
-            backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
-            borderColor={matchBorderColor ? backgroundColor : 'black'}
-            textColor={textColor}
-            onClose={() => setShowPreview(false)}
-            className="border-amber-900 border shadow-lg"
-          />
-        </div>
-      )}
-
-      {/* Preview Alert Dialog */}
-      {showPreview && selectedType === 'alert-dialog' && (
-        <MyAlertDialog
-          isOpen={true}
-          onClose={() => setShowPreview(false)}
-          title={title}
-          description={description}
-          backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
-          textColor={textColor}
-          borderColor={matchBorderColor ? backgroundColor : 'black'}
-          preview={false}
-        />
-    
-      )}
-
-      {showPreview && selectedType==='toast' && (
-        <Toast
-        isOpen={true}
-        title={title}
-        description={description}
-        backgroundColor={selectedStyle==='native'? backgroundColor : gradientBackground}
-        textColor={textColor}
-        borderColor={matchBorderColor ? backgroundColor : "black"}
-        onClose={() => setShowPreview(false)}
-        preview={false}
-                  />
-      )}
-
       {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-4 py-5">
+      <div className="relative z-10 container mx-auto">
         <div className="flex items-center justify-center mb-12 space-x-4">
           <Waves className="h-12 w-12 text-cyan-400" />
           <h1 className="text-5xl font-bold text-white tracking-tight">
@@ -156,8 +103,8 @@ export default function AlertBoard() {
           {/* Left Sidebar */}
           <div className="col-span-12 lg:col-span-4 space-y-8">
             {/* Notification Types */}
-            <Card className="bg-white/5 backdrop-blur-lg border-cyan-500/20 overflow-hidden">
-              <div className="p-6">
+            <Card className="bg-zinc-800/50 backdrop-blur-lg border-zinc-700/50 overflow-hidden">
+              <CardContent className="p-6">
                 <div className="flex items-center space-x-3 mb-6">
                   <Shell className="h-6 w-6 text-cyan-400" />
                   <h2 className="text-2xl font-semibold text-white">Notification Types</h2>
@@ -172,10 +119,10 @@ export default function AlertBoard() {
                       key={type}
                       onClick={() => setSelectedType(type as NotificationType)}
                       className={cn(
-                        "w-full p-4 rounded-lg transition-all duration-200 border border-cyan-500/20",
+                        "w-full p-4 rounded-lg transition-all duration-200 border border-zinc-600/50",
                         selectedType === type 
                           ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/20" 
-                          : "bg-white/5 hover:bg-white/10 text-white"
+                          : "bg-zinc-700/50 hover:bg-zinc-600/50 text-white"
                       )}
                     >
                       <div className="flex items-start">
@@ -188,12 +135,12 @@ export default function AlertBoard() {
                     </button>
                   ))}
                 </div>
-              </div>
+              </CardContent>
             </Card>
 
             {/* Style Options */}
-            <Card className="bg-white/5 backdrop-blur-lg border-cyan-500/20">
-              <div className="p-6">
+            <Card className="bg-zinc-800/50 backdrop-blur-lg border-zinc-700/50">
+              <CardContent className="p-6">
                 <div className="flex items-center space-x-3 mb-6">
                   <Droplet className="h-6 w-6 text-cyan-400" />
                   <h2 className="text-2xl font-semibold text-white">Style Options</h2>
@@ -202,17 +149,17 @@ export default function AlertBoard() {
                   {[
                     { type: 'native', label: 'Calm Waters', description: 'Clean, minimal design' },
                     { type: 'gradient', label: 'Deep Ocean', description: 'Rich gradient effect', premium: true },
-                    { type: 'logo', label: 'Coral Theme(Coming Soon)', description: 'Brand-focused style', premium: true },
+                    { type: 'logo', label: 'Coral Theme', description: 'Brand-focused style', premium: true },
                   ].map(({ type, label, description, premium }) => (
                     <button
                       key={type}
                       onClick={() => isPremium || !premium ? setSelectedStyle(type as StyleType) : null}
                       disabled={premium && !isPremium}
                       className={cn(
-                        "w-full p-4 rounded-lg transition-all duration-200 border border-cyan-500/20",
+                        "w-full p-4 rounded-lg transition-all duration-200 border border-zinc-600/50",
                         selectedStyle === type 
                           ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/20" 
-                          : "bg-white/5 hover:bg-white/10 text-white",
+                          : "bg-zinc-700/50 hover:bg-zinc-600/50 text-white",
                         premium && !isPremium && "opacity-50 cursor-not-allowed"
                       )}
                     >
@@ -226,15 +173,15 @@ export default function AlertBoard() {
                     </button>
                   ))}
                 </div>
-              </div>
+              </CardContent>
             </Card>
           </div>
 
           {/* Main Content Area */}
           <div className="col-span-12 lg:col-span-8">
-            <Card className="bg-white/5 backdrop-blur-lg border-cyan-500/20">
-              <div className="p-8">
-                <div className="flex items-center space-x-3 mb-4">
+            <Card className="bg-zinc-800/50 backdrop-blur-lg border-zinc-700/50">
+              <CardContent className="p-8">
+                <div className="flex items-center space-x-3 mb-8">
                   <Anchor className="h-6 w-6 text-cyan-400" />
                   <h2 className="text-2xl font-semibold text-white">Customize Your Message</h2>
                 </div>
@@ -249,7 +196,7 @@ export default function AlertBoard() {
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Enter notification title"
-                        className="mt-2 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-400"
+                        className="mt-2 bg-zinc-700/50 border-zinc-600/50 text-white placeholder:text-gray-400"
                       />
                     </div>
                     <div>
@@ -259,111 +206,105 @@ export default function AlertBoard() {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Enter notification message"
-                        className="mt-2 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-400 h-32"
+                        className="mt-2 bg-zinc-700/50 border-zinc-600/50 text-white placeholder:text-gray-400 h-32"
                       />
                     </div>
-                    {selectedStyle==='gradient' &&(
-                            <div className="mt-6 space-y-3">
-                            <Label className='text-lg text-cyan-100 '>Gradient Direction</Label>
-                            <Select
-                              value={gradientDirection}
-                              onValueChange={setGradientDirection}
-                            >
-                              <SelectTrigger className='text-lg text-cyan-100'>
-                                <SelectValue placeholder="Select direction" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="to right">Horizontal</SelectItem>
-                                <SelectItem value="to bottom">Vertical</SelectItem>
-                                <SelectItem value="45deg">Diagonal ↘</SelectItem>
-                                <SelectItem value="-45deg">Diagonal ↗</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                    {selectedStyle === 'gradient' && (
+                      <div className="mt-6 space-y-3">
+                        <Label className='text-lg text-cyan-100'>Gradient Direction</Label>
+                        <Select
+                          value={gradientDirection}
+                          onValueChange={setGradientDirection}
+                        >
+                          <SelectTrigger className='text-lg text-cyan-100 bg-zinc-700/50 border-zinc-600/50'>
+                            <SelectValue placeholder="Select direction" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="to right">Horizontal</SelectItem>
+                            <SelectItem value="to bottom">Vertical</SelectItem>
+                            <SelectItem value="45deg">Diagonal ↘</SelectItem>
+                            <SelectItem value="-45deg">Diagonal ↗</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     )}
                   </div>
 
                   {/* Color Configuration */}
                   <div className="space-y-6">
-                    {/* Style Selector */}
                     {selectedStyle === 'native' && (
                       <>
                         <div className="space-y-8">
-                          {/* Background Color Controls */}
                           <div className="flex items-center justify-between px-6">
                             <h3 className="text-lg font-medium text-cyan-100">Background Color</h3>
-                            
                           </div>
-                          
 
                           {/* Color Picker */}
                           <div className="flex justify-center">
                             <ColorPicker onColorChange={setBackgroundColor} />
                           </div>
                           <div className='flex justify-between w-full'>
-                          <Button
-                                onClick={toggleTextColor}
-                                className="flex items-center bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2 rounded-md shadow-md"
-                              >
-                                <Type className="mr-2" />
-                                Toggle Text Color
-                              </Button>
-                              <Button
-                                onClick={matchColor}
-                                className="flex items-center bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-md shadow-md"
-                              >
-                                Toggle Border
-                              </Button>
+                            <Button
+                              onClick={toggleTextColor}
+                              className="flex items-center bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200"
+                            >
+                              <Type className="mr-2" />
+                              Toggle Text Color
+                            </Button>
+                            <Button
+                              onClick={matchColor}
+                              className="flex items-center bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200"
+                            >
+                              Toggle Border
+                            </Button>
                           </div>
-                        
                         </div>
                       </>
                     )}
 
                     {/* Gradient Theme Section */}
                     {selectedStyle === 'gradient' && (
-            <div>
-              <h3 className="text-lg font-medium text-cyan-100">Gradient Theme</h3>
-              <div className="flex border-b border-gray-700 mb-4">
-                <button
-                  className={`py-2 px-4 ${
-                    activeTab === 'start' ? 'border-b-2 border-cyan-500 text-cyan-100' : 'text-gray-400'
-                  }`}
-                  onClick={() => setActiveTab('start')}
-                >
-                  Start Color
-                </button>
-                <button
-                  className={`py-2 px-4 ${
-                    activeTab === 'end' ? 'border-b-2 border-cyan-500 text-cyan-100' : 'text-gray-400'
-                  }`}
-                  onClick={() => setActiveTab('end')}
-                >
-                  End Color
-                </button>
-              </div>
-              <div className="mt-4">
-                {activeTab === 'start' && <ColorPicker onColorChange={setStartColor} />}
-                {activeTab === 'end' && <ColorPicker onColorChange={setEndColor} />}
-              </div>
-              <div className="flex justify-between mt-6">
-                <Button
-                  onClick={toggleTextColor}
-                  className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2 rounded-md shadow-md"
-                >
-                  <Type className="mr-2" />
-                  Toggle Text Color
-                </Button>
-                <Button
-                  onClick={matchColor}
-                  className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-md shadow-md"
-                >
-                  Toggle Border
-                </Button>
-              </div>
-            </div>
-          )}
-
+                      <div>
+                        <h3 className="text-lg font-medium text-cyan-100 mb-4">Gradient Theme</h3>
+                        <div className="flex border-b border-zinc-600 mb-4">
+                          <button
+                            className={`py-2 px-4 ${
+                              activeTab === 'start' ? 'border-b-2 border-cyan-500 text-cyan-100' : 'text-gray-400'
+                            }`}
+                            onClick={() => setActiveTab('start')}
+                          >
+                            Start Color
+                          </button>
+                          <button
+                            className={`py-2 px-4 ${
+                              activeTab === 'end' ? 'border-b-2 border-cyan-500 text-cyan-100' : 'text-gray-400'
+                            }`}
+                            onClick={() => setActiveTab('end')}
+                          >
+                            End Color
+                          </button>
+                        </div>
+                        <div className="mt-4">
+                          {activeTab === 'start' && <ColorPicker onColorChange={setStartColor} />}
+                          {activeTab === 'end' && <ColorPicker onColorChange={setEndColor} />}
+                        </div>
+                        <div className="flex justify-between mt-6">
+                          <Button
+                            onClick={toggleTextColor}
+                            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200"
+                          >
+                            <Type className="mr-2" />
+                            Toggle Text Color
+                          </Button>
+                          <Button
+                            onClick={matchColor}
+                            className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200"
+                          >
+                            Toggle Border
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -371,28 +312,30 @@ export default function AlertBoard() {
                 <div className="mt-8">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium text-cyan-100">Preview</h3>
-                    
                     <Button
                       onClick={handlePreview}
                       variant="outline"
-                      className="bg-cyan-600 hover:bg-cyan-700 text-white border-none"
+                      className="bg-cyan-600 hover:bg-cyan-700 text-white border-none transition-colors duration-200"
                     >
                       <Play className="mr-2 h-4 w-4" />
                       Show Preview
                     </Button>
                   </div>
-                  {renderPreview()}
+                  <div className="bg-zinc-900/50 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
+                    {renderPreview()}
+                  </div>
                 </div>
 
                 {/* Action Button */}
                 <Button
                   onClick={handlePreview}
-                  className="w-full mt-8 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/20 transform transition-all duration-200 hover:scale-[1.02]"
+                  className="w-full mt-8 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/20 transition-colors duration-200"
                 >
                   <Waves className="mr-2 h-5 w-5" />
                   Select the websites
+                  <ChevronRight className="ml-2 h-5 w-5" />
                 </Button>
-              </div>
+              </CardContent>
             </Card>
           </div>
         </div>
