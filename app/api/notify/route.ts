@@ -25,55 +25,55 @@ interface InputProps {
 }
 
 export async function POST(req: NextRequest) {
-    const session = await auth();
-    if (!session || !session.user) {
-        return NextResponse.json(
-            {
-                msg: "Unauthorized",
-            },
-            {
-                status: 403,
-            }
-        );
-    }
-
     try {
-        const user = await prisma?.user.findUnique({
-            where: {
-                id: session.user.id,
-            },
-            include: {
-                registeredWebsites: true,
-            },
-        });
+        // const session = await auth();
+        // if (!session || !session.user) {
+        //     return NextResponse.json(
+        //         {
+        //             msg: "Unauthorized",
+        //         },
+        //         {
+        //             status: 403,
+        //         }
+        //     );
+        // }
 
-        if (!user) {
-            return NextResponse.json(
-                {
-                    msg: "User not found",
-                },
-                {
-                    status: 404,
-                }
-            );
-        }
+        // const user = await prisma?.user.findUnique({
+        //     where: {
+        //         id: session.user.id,
+        //     },
+        //     include: {
+        //         registeredWebsites: true,
+        //     },
+        // });
+
+        // if (!user) {
+        //     return NextResponse.json(
+        //         {
+        //             msg: "User not found",
+        //         },
+        //         {
+        //             status: 404,
+        //         }
+        //     );
+        // }
 
         const body: InputProps = await req.json();
         const { payload, websites } = body;
 
         // Check rate limit for the user
-        const rateLimit = await CheckRateLimit(user.id,user.plan);
-        if (!rateLimit) {
-            await logApiRequest(user.id, `RateLimitExceeded`, false);
-            return NextResponse.json(
-                {
-                    msg: "Rate limit exceeded, please try again tomorrow",
-                },
-                {
-                    status: 429,
-                }
-            );
-        }
+        // const rateLimit = await CheckRateLimit(user.id, user.plan);
+        // if (!rateLimit) {
+        //     await logApiRequest(user.id, `RateLimitExceeded`, false);
+        //     return NextResponse.json(
+        //         {
+        //             msg: "Rate limit exceeded, please try again tomorrow",
+        //         },
+        //         {
+        //             status: 429,
+        //         }
+        //     );
+        // }
 
         // Process each website individually
         const results = [];
@@ -83,10 +83,10 @@ export async function POST(req: NextRequest) {
                     `${website.url}/api/droplert/notify`,
                     payload,
                     {
-                        headers: {
-                            Authorization: `Bearer ${user.apiKey}`,
-                            "Content-Type": "application/json",
-                        },
+                        // headers: {
+                        //     Authorization: `Bearer ${user.apiKey}`,
+                        //     "Content-Type": "application/json",
+                        // },
                     }
                 );
 
@@ -96,14 +96,14 @@ export async function POST(req: NextRequest) {
                         status: "success",
                         message: "Notification sent successfully",
                     });
-                    await logApiRequest(user.id, `${website.url}/api/droplert/notify`, true);
+                    // await logApiRequest(user.id, `${website.url}/api/droplert/notify`, true);
                 } else {
                     results.push({
                         website: website.name,
                         status: "failed",
                         message: "Failed to send notification",
                     });
-                    await logApiRequest(user.id, `${website.url}/api/droplert/notify`, false);
+                    // await logApiRequest(user.id, `${website.url}/api/droplert/notify`, false);
                 }
             } catch (error) {
                 results.push({
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
                     status: "error",
                     message: error || "Unknown error occurred",
                 });
-                await logApiRequest(user.id, `${website.url}/api/droplert/notify`, false);
+                // await logApiRequest(user.id, `${website.url}/api/droplert/notify`, false);
             }
         }
 
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
             results,
         });
     } catch (e) {
-        console.error(e);
+        console.error('Error:', e);
         return NextResponse.json(
             {
                 msg: "Error while processing notifications",

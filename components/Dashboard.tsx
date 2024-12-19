@@ -104,14 +104,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-ocean-50 to-ocean-100 dark:bg-[#0e0e0f] text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
+    <div className={`min-h-screen bg-white dark:bg-[#0e0e0f]  text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
       <div className="container mx-auto p-6 space-y-6">
         {/* Navigation */}
         <nav className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-[#0e0e0f] shadow-lg transition-all duration-300">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <Anchor className="h-6 w-6 text-ocean-600 dark:text-ocean-400" />
-              <h1 className="text-2xl font-bold text-ocean-600 dark:text-ocean-400">Droplert</h1>
+              <Anchor className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+              <h1 className="text-2xl font-bold text-teal-600 dark:text-teal-400">Droplert</h1>
             </div>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <div className="text-gray-600 dark:text-gray-300">
@@ -125,7 +125,7 @@ export default function DashboardPage() {
               checked={isDark}
               onCheckedChange={setIsDark}
               id="dark-mode"
-              className="data-[state=checked]:bg-indigo-800"
+              className="data-[state=checked]:bg-teal-600"
             />
             <Label htmlFor="dark-mode" className="cursor-pointer">
               {isDark ? 
@@ -140,7 +140,7 @@ export default function DashboardPage() {
               className="flex items-center gap-2 hover:bg-ocean-50 dark:hover:bg-gray-700 p-2 rounded-full"
             >
               <div className="w-8 h-8 rounded-full bg-ocean-100 dark:bg-ocean-800 flex items-center justify-center">
-                <User className="h-4 w-4 text-ocean-600 dark:text-ocean-400" />
+                <User className="h-4 w-4 text-teal-600 dark:text-teal-400" />
               </div>
             </Button>
           </div>
@@ -218,8 +218,8 @@ export default function DashboardPage() {
             className={cn(
               "p-6 rounded-lg transition-all duration-300 flex flex-col items-center justify-center",
               selectedType === type
-                ? "bg-ocean-100 dark:bg-zinc-700 text-ocean-600 dark:text-zinc-300 shadow-md"
-                : "bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:scale-105"
+                ? "bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 shadow-md"
+                : "bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:scale-105 hover:border-teal-300 dark:hover:border-teal-700"
             )}
           >
             <Icon className="h-10 w-10 mb-3" />
@@ -246,8 +246,8 @@ export default function DashboardPage() {
       disabled={premium && !isPremium}
       className={`p-6 rounded-lg transition-all duration-300 flex flex-col items-center justify-center text-center ${
         selectedStyle === type
-          ? 'bg-ocean-100 dark:bg-zinc-700 text-ocean-600 dark:text-zinc-300 shadow-md'
-          : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:scale-105'
+          ? 'bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 shadow-md'
+          : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:scale-105 hover:border-teal-300 dark:hover:border-teal-700'
       } ${premium && !isPremium ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <span className="text-base font-medium mb-2">{label}</span>
@@ -396,10 +396,10 @@ export default function DashboardPage() {
       <div className="space-x-4">
         <Button
           onClick={() => {}}
-          className="relative inline-flex items-center bg-blue-500 dark:bg-blue-600 text-white
-            hover:bg-blue-600 dark:hover:bg-blue-700
-            focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-offset-2
-            active:bg-blue-700 dark:active:bg-blue-800
+          className="relative inline-flex items-center bg-teal-500 dark:bg-teal-600 text-white
+            hover:bg-teal-600 dark:hover:bg-teal-700
+            focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-600 focus:ring-offset-2
+            active:bg-teal-700 dark:active:bg-teal-800
             disabled:opacity-50 disabled:cursor-not-allowed
             group transition-all duration-200"
         >
@@ -409,10 +409,10 @@ export default function DashboardPage() {
 
         <Button
           onClick={handlePreview}
-          className="relative inline-flex items-center bg-blue-500 dark:bg-blue-600 text-white
-            hover:bg-blue-600 dark:hover:bg-blue-700
-            focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-offset-2
-            active:bg-blue-700 dark:active:bg-blue-800
+          className="relative inline-flex items-center bg-teal-500 dark:bg-teal-600 text-white
+            hover:bg-teal-600 dark:hover:bg-teal-700
+            focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-600 focus:ring-offset-2
+            active:bg-teal-700 dark:active:bg-teal-800
             disabled:opacity-50 disabled:cursor-not-allowed
             group transition-all duration-200"
         >
