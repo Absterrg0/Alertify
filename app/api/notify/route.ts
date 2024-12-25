@@ -3,7 +3,7 @@ import {logApiRequest } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
 import axios from "axios";
 import { Website } from "@/components/Dashboard";
-
+import prisma from "@/db";
 enum AlertType {
     ALERT = "ALERT",
     ALERT_DIALOG = "ALERT_DIALOG",
