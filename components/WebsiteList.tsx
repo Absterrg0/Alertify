@@ -29,7 +29,7 @@ export default function VerifiedWebsiteManager({
 
   const handleVerify = async (url: string) => {
     try {
-      const response = await axios.post('/droplert/notify/verify', { url });
+      const response = await axios.post('/api/notify/verify', { url });
       if (response.status === 200) {
         console.log('URL verification successful:', response.data);
         const updatedWebsites:Website[] = websites.map(site =>

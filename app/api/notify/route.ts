@@ -64,13 +64,13 @@ export async function POST(req: NextRequest) {
         }
 
         // 3. Rate limiting
-        const rateLimit = await CheckRateLimit(user.id, user.plan);
-        if (!rateLimit) {
-            return NextResponse.json(
-                { msg: "Rate limit exceeded, please try again tomorrow" },
-                { status: 429 }
-            );
-        }
+        // const rateLimit = await CheckRateLimit(user.id, user.plan);
+        // if (!rateLimit) {
+        //     return NextResponse.json(
+        //         { msg: "Rate limit exceeded, please try again tomorrow" },
+        //         { status: 429 }
+        //     );
+        // }
 
         // 4. Parse request body
         const body: InputProps = await req.json();
