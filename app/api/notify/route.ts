@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CheckRateLimit, logApiRequest } from "@/lib/rate-limit";
+import {logApiRequest } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
 import axios from "axios";
 import { Website } from "@/components/Dashboard";
