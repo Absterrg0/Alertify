@@ -4,28 +4,52 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import axios from "axios"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Bell, Moon, Sun, Lock, MessageSquare, AlertCircle, Anchor, Waves, User } from 'lucide-react'
-
+import { toast } from '@/hooks/use-toast'
 import { Input } from "./ui/input"
 import ApiRequestManager from "./ApiLogs"
 import { ColorPicker } from "./ui/color-picker"
-import WebsiteManager from "./WebsiteList"
+import VerifiedWebsiteManager from "./WebsiteList"
 import NotificationPage from "./RecentAlerts"
 import { cn } from "@/lib/utils"
 import { Textarea } from "./ui/textarea"
 import { Toast } from "./presets/toasts/FirstToast"
 import { MyAlertDialog } from "./presets/alert-dialog/FirstAlertDialog"
 import { MyAlert } from "./presets/alerts/FirstAlert"
-type NotificationType = 'alert' | 'alert-dialog' | 'toast'
-type StyleType = 'native' | 'gradient' | 'logo'
+import OnboardingModal from "./OnboardingModal"
+import { useSession } from "next-auth/react"
+
+type NotificationType = 'ALERT' | 'ALERT_DIALOG' | 'TOAST'
+type StyleType = 'NATIVE' | 'GRADIENT' | 'LOGO'
 const isPremium = true
 
+export type Website = {
+  id: string;
+  name: string;
+  url: string;
+  isVerified: boolean;
+  status: 'PENDING' | 'ACTIVE' | 'DEACTIVATED';
+};
+
+export type Alert ={
+  id:string;
+  title:string;
+  description:string;
+  backgroundColor:string;
+  type: "ALERT" | "ALERT_DIALOG" | "TOAST"
+  textColor:string;
+  borderColor:string;
+}
 export default function DashboardPage() {
+  const {data:session}=useSession()
   const [isDark, setIsDark] = useState(true)
-  const [selectedType, setSelectedType] = useState<NotificationType>('alert')
-  const [selectedStyle, setSelectedStyle] = useState<StyleType>('native')
+  const [selectedType, setSelectedType] = useState<NotificationType>('ALERT')
+  const [selectedStyle, setSelectedStyle] = useState<StyleType>('NATIVE')
+  const [alerts, setAlerts] = useState<Alert[]>()
+
   const [title, setTitle] = useState('Oceanic Notification')
   const [startColor, setStartColor] = useState('#3B82F6')
   const [endColor, setEndColor] = useState('#2563EB')
@@ -35,11 +59,20 @@ export default function DashboardPage() {
   const [showPreview, setShowPreview] = useState(false)
   const [textColor, setTextColor] = useState('black')
   const [matchBorderColor, setMatchBorderColor] = useState(false)
+  const [websites, setWebsites] = useState<Website[]>([]);
+  const [selectedWebsites, setSelectedWebsites] = useState<Website[]>([]);
   const [activeTab, setActiveTab] = useState('start')
   useEffect(() => {
     const root = window.document.documentElement
     root.classList.toggle('dark', isDark)
   }, [isDark])
+
+  useEffect(() => {
+    fetchWebsites()
+    fetchAlerts()
+  }, [])
+
+
 
   const toggleTextColor = () => {
     setTextColor(prevColor => prevColor === 'black' ? 'white' : 'black')
@@ -49,27 +82,133 @@ export default function DashboardPage() {
     setMatchBorderColor((prevState) => !prevState)
   }
 
-  const gradientBackground = `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`
+   const gradientBackground = `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`
+
+   const color = selectedStyle === "GRADIENT" ? gradientBackground : backgroundColor;
+   const handleSendAlert = async () => {
+    try {
+      if(selectedWebsites.length===0){
+        toast({
+          title:"Select at minimum 1 website",
+          variant:"destructive"
+        })
+        return
+      }
+      for (const website of selectedWebsites) {
+        if (website.status !== 'ACTIVE') {
+          toast({
+            title: "Please verify the websites first",
+            variant: "destructive",
+          });
+          return; // Stop further execution if any website is not active
+        }
+      }
+            const borderColor = matchBorderColor ? textColor : 'black';
+      
+      // Send the POST request to send the alert
+      const response = await axios.post('/api/notify', {
+        payload: {
+          title,
+          description,
+          selectedType,
+          style: selectedStyle,
+          backgroundColor: color,
+          textColor,
+          borderColor,
+        },
+        websites: selectedWebsites,
+      });
+      
+      // Check the response status
+      if (response.status === 200) {
+        console.log("Alert sent successfully");
+  
+        // Show success toast
+        toast({
+          title: "Notification has been sent successfully",
+        });
+  
+        // Call getAlert to fetch the latest alerts
+        await fetchAlerts()
+      }
+    } catch (error) {
+      console.error("Error sending alert:", error);
+  
+      // Optional: Show error toast
+      toast({
+        title: "Failed to send the notification",
+        variant: "destructive",
+      });
+    }
+  };
+  
+
+ 
 
   const handlePreview = () => {
     setShowPreview(true)
   }
 
+  
+ 
+  
+    useEffect(()=>{
+    },[])
+  
+    const fetchAlerts = async()=>{
+      const response = await axios.get('/api/user/alerts/list')
+      setAlerts(response?.data?.response)
+    }
+  
+
+  const sortWebsites = (websites: Website[]) => {
+    return websites.sort((a, b) => {
+      const order = { ACTIVE: 0, PENDING: 1, DEACTIVATED: 2 };
+      return (order[a.status] || 3) - (order[b.status] || 3);
+    });
+  };
+
+  const fetchWebsites = async () => {
+    try {
+      const response = await axios.get<{ websites: Website[] }>("/api/user/websites/list");
+      if (response.status === 201) {
+        setWebsites(sortWebsites(response.data.websites || []));
+        toast({
+          title: 'Websites successfully fetched'
+        })
+      }
+    } catch (err) {
+      toast({
+        title: 'Error fetching websites'
+      })
+      console.error("Error fetching websites:", err);
+    } finally {
+    }
+  };
+
+  const handleWebsitesChange = (updatedWebsites: Website[]) => {
+    setWebsites(sortWebsites(updatedWebsites));
+  };
+  const handleSelectedWebsitesChange = (updatedSelectedWebsites: Website[]) => {
+    setSelectedWebsites(updatedSelectedWebsites);
+  };
+
   const renderPreview = () => {
     switch (selectedType) {
-      case 'alert':
+      case 'ALERT':
         return (
           <MyAlert
+          preview={true}
             title={title}
             description={description}
-            backgroundColor={selectedStyle === 'native' ? backgroundColor : gradientBackground}
+            backgroundColor={selectedStyle === 'NATIVE' ? backgroundColor : gradientBackground}
             borderColor={matchBorderColor ? backgroundColor : 'black'}
             textColor={textColor}
             onClose={() => {}}
             className="pointer-events-none border"
           />
         )
-      case 'alert-dialog':
+      case 'ALERT_DIALOG':
         return (
           <div className='ml-56'>
             <MyAlertDialog
@@ -77,7 +216,7 @@ export default function DashboardPage() {
               onClose={() => {}}
               title={title}
               description={description}
-              backgroundColor={selectedStyle === 'native' ? backgroundColor : gradientBackground}
+              backgroundColor={selectedStyle === 'NATIVE' ? backgroundColor : gradientBackground}
               textColor={textColor}
               borderColor={matchBorderColor ? backgroundColor : 'black'}
               preview={true}
@@ -85,14 +224,14 @@ export default function DashboardPage() {
             />
           </div>
         )
-      case 'toast':
+      case 'TOAST':
         return (
           <div className="pointer-events-none ml-60">
             <Toast
               isOpen={false}
               title={title}
               description={description}
-              backgroundColor={selectedStyle === 'native' ? backgroundColor : gradientBackground}
+              backgroundColor={selectedStyle === 'NATIVE' ? backgroundColor : gradientBackground}
               textColor={textColor}
               borderColor={matchBorderColor ? backgroundColor : "black"}
               onClose={() => {}}
@@ -104,7 +243,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-white dark:bg-[#0e0e0f]  text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
+    <div className={`min-h-screen bg-white dark:bg-[#0e0e0f] text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
       <div className="container mx-auto p-6 space-y-6">
         {/* Navigation */}
         <nav className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-[#0e0e0f] shadow-lg transition-all duration-300">
@@ -116,7 +255,7 @@ export default function DashboardPage() {
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <div className="text-gray-600 dark:text-gray-300">
               <span className="text-md">Hello,</span>
-              <span className="font-semibold text-lg ml-1">John Doe</span>
+              <span className="font-semibold text-lg ml-1">{session?.user?.name}</span>
             </div>
           </div>
           
@@ -146,12 +285,13 @@ export default function DashboardPage() {
           </div>
         </nav>
 
-        {showPreview && selectedType === 'alert' && (
+        {showPreview && selectedType === 'ALERT' && (
           <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md">
             <MyAlert
+            preview={false}
               title={title}
               description={description}
-              backgroundColor={selectedStyle === 'native' ? backgroundColor : gradientBackground}
+              backgroundColor={selectedStyle === 'NATIVE' ? backgroundColor : gradientBackground}
               borderColor={matchBorderColor ? backgroundColor : 'black'}
               textColor={textColor}
               onClose={() => setShowPreview(false)}
@@ -160,25 +300,25 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {showPreview && selectedType === 'alert-dialog' && (
+        {showPreview && selectedType === 'ALERT_DIALOG' && (
           <MyAlertDialog
             isOpen={true}
             onClose={() => setShowPreview(false)}
             title={title}
             description={description}
-            backgroundColor={selectedStyle === 'native' ? backgroundColor : gradientBackground}
+            backgroundColor={selectedStyle === 'NATIVE' ? backgroundColor : gradientBackground}
             textColor={textColor}
             borderColor={matchBorderColor ? backgroundColor : 'black'}
             preview={false}
           />
         )}
 
-        {showPreview && selectedType === 'toast' && (
+        {showPreview && selectedType === 'TOAST' && (
           <Toast
             isOpen={true}
             title={title}
             description={description}
-            backgroundColor={selectedStyle === 'native' ? backgroundColor : gradientBackground}
+            backgroundColor={selectedStyle === 'NATIVE' ? backgroundColor : gradientBackground}
             textColor={textColor}
             borderColor={matchBorderColor ? backgroundColor : "black"}
             onClose={() => setShowPreview(false)}
@@ -191,7 +331,12 @@ export default function DashboardPage() {
           {/* Left Column - Websites List and Configuration */}
           <div className="lg:col-span-2 space-y-6">
 
-            <WebsiteManager></WebsiteManager>
+            <VerifiedWebsiteManager 
+              websites={websites} 
+              selectedWebsites={selectedWebsites}
+              onWebsitesChange={handleWebsitesChange}
+              onSelectedWebsitesChange={handleSelectedWebsitesChange}
+            />
 
             {/* Alert Configuration */}
             <Card className="bg-gradient-to-b from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700 rounded-xl transition-all duration-300">
@@ -208,9 +353,9 @@ export default function DashboardPage() {
       </h3>
       <div className="grid grid-cols-3 gap-6">
         {[
-          { type: 'alert', icon: AlertCircle, label: 'Alert' },
-          { type: 'alert-dialog', icon: MessageSquare, label: 'Alert Dialog' },
-          { type: 'toast', icon: Bell, label: 'Toast' },
+          { type: 'ALERT', icon: AlertCircle, label: 'Alert' },
+          { type: 'ALERT_DIALOG', icon: MessageSquare, label: 'Alert Dialog' },
+          { type: 'TOAST', icon: Bell, label: 'Toast' },
         ].map(({ type, icon: Icon, label }) => (
           <button
             key={type}
@@ -236,9 +381,9 @@ export default function DashboardPage() {
       </h3>
 <div className="grid grid-cols-3 gap-6">
   {[
-    { type: 'native', label: 'Native', description: 'Solid background color' },
-    { type: 'gradient', label: 'Gradients', description: 'Great gradient background color with multiple variants', premium: true },
-    { type: 'logo', label: 'Personalised Logo', description: 'Brand-focused Logo as the background to personalise the notification', premium: true },
+    { type: 'NATIVE', label: 'Native', description: 'Solid background color' },
+    { type: 'GRADIENT', label: 'Gradients', description: 'Great gradient background color with multiple variants', premium: true },
+    { type: 'LOGO', label: 'Personalised Logo', description: 'Brand-focused Logo as the background to personalise the notification', premium: true },
   ].map(({ type, label, description, premium }) => (
     <button
       key={type}
@@ -299,7 +444,7 @@ export default function DashboardPage() {
         <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-200 mb-6">
           Color Configuration
         </h3>
-        {selectedStyle === 'native' ? (
+        {selectedStyle === 'NATIVE' ? (
           <div className="space-y-6">
             <div className="flex justify-center">
               <ColorPicker onColorChange={setBackgroundColor} />
@@ -312,7 +457,7 @@ export default function DashboardPage() {
   className={cn(
     "py-2 px-4 rounded-lg transition-colors duration-300",
     activeTab === 'start'
-      ? "bg-dark-gray-800 text-white shadow-lg"
+      ? "bg-dark-gray-800 text-black shadow-lg"
       : "bg-white dark:bg-zinc-800 text-dark-gray-500 dark:text-dark-gray-400 border border-gray-200 dark:border-zinc-700"
   )}
   onClick={() => setActiveTab('start')}
@@ -323,7 +468,7 @@ export default function DashboardPage() {
   className={cn(
     "py-2 px-4 rounded-lg transition-colors duration-300",
     activeTab === 'end'
-      ? "bg-dark-gray-800 text-white shadow-md"
+      ? "bg-dark-gray-800 text-black shadow-md"
       : "bg-white dark:bg-zinc-800 text-dark-gray-500 dark:text-dark-gray-400 border border-gray-200 dark:border-zinc-700"
   )}
   onClick={() => setActiveTab('end')}
@@ -395,7 +540,7 @@ export default function DashboardPage() {
 
       <div className="space-x-4">
         <Button
-          onClick={() => {}}
+          onClick={handleSendAlert}
           className="relative inline-flex items-center bg-teal-500 dark:bg-teal-600 text-white
             hover:bg-teal-600 dark:hover:bg-teal-700
             focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-600 focus:ring-offset-2
@@ -430,8 +575,10 @@ export default function DashboardPage() {
 
           {/* Right Column - Recent Alerts and API Logs */}
           <div className="space-y-6">
-                <NotificationPage></NotificationPage>
+          <OnboardingModal></OnboardingModal>
+                <NotificationPage alerts={alerts ?? []}></NotificationPage>
                  <ApiRequestManager></ApiRequestManager>
+
           </div>
         </div>
       </div>

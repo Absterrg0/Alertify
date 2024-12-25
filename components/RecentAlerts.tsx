@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React from "react"
 import { useRouter } from "next/navigation"
 import { MyAlert } from "./presets/alerts/FirstAlert"
 import { MyAlertDialog } from "./presets/alert-dialog/FirstAlertDialog"
@@ -9,64 +9,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Bell, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from "framer-motion"
+import { Alert } from "./Dashboard"
 
-const alertData = [
-  {
-    id: "1",
-    title: "Info Alert",
-    description: "This is an informational alert.",
-    website: "example.com",
-    backgroundColor: "#1e2a3a",
-    type: "ALERT",
-    textColor: "#a0b4c8",
-    borderColor: "#364759",
-  },
-  {
-    id: "2",
-    title: "Warning Dialog",
-    description: "This is a warning dialog notification.",
-    website: "mywebsite.com",
-    backgroundColor: "#2a2620",
-    type: "ALERT_DIALOG",
-    textColor: "#d0b88f",
-    borderColor: "#4d4639",
-  },
-  {
-    id: "3",
-    title: "Success Toast",
-    description: "Operation completed successfully!",
-    website: "services.com",
-    backgroundColor: "#1e2e2a",
-    type: "TOAST",
-    textColor: "#a0c8b4",
-    borderColor: "#365947",
-  },
-]
 
-export default function NotificationPage() {
-  const [alerts, setAlerts] = useState(alertData)
-  const router = useRouter()
+interface InputProps{
+  alerts:Alert[]
+}
 
-  const handleNotificationClose = (id: string) => {
-    setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id))
-  }
+
+
+
+export default function NotificationPage({alerts}:InputProps) {
+
+  const router = useRouter();
 
   const handleShowAll = () => {
     router.push("/all-notifications")
   }
 
-  const renderNotification = (alert: any) => {
+  const renderNotification = (alert: Alert) => {
     switch (alert.type) {
       case "ALERT":
         return (
           <MyAlert
+          preview={true}
             key={alert.id}
             title={alert.title}
             description={alert.description}
             backgroundColor={alert.backgroundColor}
             textColor={alert.textColor}
             borderColor={alert.borderColor}
-            onClose={() => handleNotificationClose(alert.id)}
+            onClose={() =>{}}
           />
         )
       case "ALERT_DIALOG":
@@ -80,7 +53,7 @@ export default function NotificationPage() {
             backgroundColor={alert.backgroundColor}
             textColor={alert.textColor}
             borderColor={alert.borderColor}
-            onClose={() => handleNotificationClose(alert.id)}
+            onClose={() =>{}}
           />
         )
       case "TOAST":
@@ -94,13 +67,14 @@ export default function NotificationPage() {
             backgroundColor={alert.backgroundColor}
             textColor={alert.textColor}
             borderColor={alert.borderColor}
-            onClose={() => handleNotificationClose(alert.id)}
+            onClose={() => {}}
           />
         )
       default:
         return null
     }
   }
+
 
   return (
     <Card className="bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700 max-w-3xl mx-auto rounded-xl overflow-hidden transition-all duration-300 relative">
@@ -130,25 +104,45 @@ export default function NotificationPage() {
       {/* Notifications */}
       <CardContent className="p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white dark:from-zinc-900 dark:to-zinc-800">
         <AnimatePresence>
-          {alerts.slice(0, 2).map((alert, index) => (
+          {alerts.length === 0 ? (
             <motion.div
-              key={alert.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ 
-                duration: 0.4, 
-                delay: index * 0.1,
-                ease: [0.4, 0, 0.2, 1] 
-              }}
-              className="group relative"
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-200/20 to-gray-100/20 dark:from-zinc-700/20 dark:to-zinc-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative p-4 bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-zinc-900/70 transition-all duration-300 ease-out">
-                {renderNotification(alert)}
-              </div>
-            </motion.div>
-          ))}
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="mb-4 rounded-full bg-blue-100 p-3 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+        <Bell className="h-8 w-8" />
+      </div>
+      <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">No Alerts Yet</h3>
+      <p className="mb-6 max-w-sm text-gray-600 dark:text-gray-400">
+        Your alert feed is currently empty. New alerts will appear here as they come in.
+      </p>
+    </div>            
+    </motion.div>
+          ) : (
+            alerts.slice(0, 2).map((alert, index) => (
+              <motion.div
+                key={alert.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ 
+                  duration: 0.4, 
+                  delay: index * 0.1,
+                  ease: [0.4, 0, 0.2, 1] 
+                }}
+              >
+                <div className="group relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-200/20 to-gray-100/20 dark:from-zinc-700/20 dark:to-zinc-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative p-4 bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-700 group-hover:border-gray-300 dark:group-hover:border-zinc-600 group-hover:shadow-lg dark:group-hover:shadow-zinc-900/70 transition-all duration-300 ease-out">
+                    {renderNotification(alert)}
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          )}
         </AnimatePresence>
       </CardContent>
     </Card>

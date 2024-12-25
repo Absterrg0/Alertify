@@ -1,14 +1,13 @@
 
 import prisma from "@/db"
-import { NextResponse } from "next/server";
 
 
 type PlanStatus = "FREE" | "PREMIUM" | "ENTERPRISE";
 
 const DAILY_LIMIT={
-    FREE:2,
-    PREMIUM:10,
-    ENTERPRISE:1000
+    FREE:5,
+    PREMIUM:5,
+    ENTERPRISE:5
 }
 
 
@@ -32,18 +31,28 @@ export async function CheckRateLimit(userId:string | undefined,plan:PlanStatus |
 }
 
 
-
-export async function logApiRequest(userId:string | undefined,endpoint:string,success:boolean){
-
-    if(!userId){
-        return
-    }
-    await prisma.apiRequest.create({
-        data:{
-            userId,
-            success,
-            endpoint
+export async function logApiRequest(
+    userId: string | undefined, 
+    endpoint: string, 
+    success: boolean
+): Promise<boolean> {
+    try {
+        if (!userId) {
+            return false;
         }
-    })
+        
+        const response = await prisma.apiRequest.create({
+            data: {
+                userId,
+                success,
+                endpoint
+            }
+        });
 
+        console.log('API Request logged:', response);
+        return true;
+    } catch (e) {
+        console.error('Error logging API request:', e);
+        return false;
+    }
 }

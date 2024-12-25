@@ -60,7 +60,7 @@ export const MyAlertDialog: React.FC<AlertDialogProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            //@ts-ignore
+            //@ts-expect-error Motion div doesnt have a classname prop i guess?
             className="fixed inset-0 bg-black bg-opacity-50"
             onClick={onClose}
           />
@@ -69,7 +69,7 @@ export const MyAlertDialog: React.FC<AlertDialogProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            //@ts-ignore
+            //@ts-expect-error Motion div doesnt have a classname prop i guess?
             className={cn(
               "relative w-full max-w-md mx-auto z-50 rounded-lg p-6 shadow-xl",
               "flex flex-col items-center border-black border",

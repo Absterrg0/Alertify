@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { HexColorPicker, HexColorInput } from 'react-colorful'
+import { HexColorPicker } from 'react-colorful'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -14,7 +14,6 @@ export const GradientColorPicker: React.FC<ColorPickerProps> = ({ onColorChange 
   const [startColor, setStartColor] = useState('#2193b0')
   const [endColor, setEndColor] = useState('#6dd5ed')
   const [direction, setDirection] = useState('to right')
-  const [textColor, setTextColor] = useState('#FFFFFF')
   const [showStartPicker, setShowStartPicker] = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
 
@@ -28,10 +27,6 @@ export const GradientColorPicker: React.FC<ColorPickerProps> = ({ onColorChange 
     const dir = newDirection === 'horizontal' ? 'to right' : 'to bottom'
     setDirection(dir)
     updateGradient(startColor, endColor, dir)
-  }
-
-  const toggleTextColor = () => {
-    setTextColor(prev => prev === '#FFFFFF' ? '#000000' : '#FFFFFF')
   }
 
   return (

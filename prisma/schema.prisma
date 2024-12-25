@@ -1,44 +1,89 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
+ 
+generator client {
+  provider = "prisma-client-js"
+}
+ 
 model User {
-  id                String     @id @default(uuid())
-  name              String?    @unique
-  email             String?    @unique
-  apiKey            String?     @unique
-  registeredWebsites Website[]
-  alerts            Alert[]    // Changed name for consistency
-  plan              PlanStatus @default(FREE)
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-  apiRequests     ApiRequest[]
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  apiKey        String         @default(uuid())
+  plan          UserPlan        @default(FREE)
+  websites      Website[]
+  recentAlerts  Alert[]
+  apiHistory    ApiRequest[]
+  accounts      Account[]
+  sessions      Session[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
-
-model Website {
-  id         String   @id @default(uuid())
-  name       String   
-  isVerified Boolean  @default(false)
-  url        String   @db.VarChar(2048) @unique
-  status     WebsiteStatus  @default(ACTIVE)
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([userId])
+ 
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([provider, providerAccountId])
 }
+ 
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@id([identifier, token])
+}
+ 
 
-model Alert {
-  id              String     @id @default(uuid())
+
+
+ model Website{
+  id    String      @id@default(cuid())
+  name  String  
+  url   String      @unique
+  isVerified  Boolean @default(false)
+  status  websiteStatus     @default(PENDING)
+  userId  String
+  user  User        @relation(fields: [userId],references: [id])
+ }
+
+
+
+
+ model Alert {
+  id              String     @id @default(cuid())
   title           String
   description     String
-  type            LayoutType // Changed to match enum name
+  type            AlertType // Changed to match enum name
   style           StyleType  // Changed to match enum name
   backgroundColor String
   textColor       String
@@ -53,8 +98,9 @@ model Alert {
 }
 
 
+
 model ApiRequest{
-  id    String    @id@default(uuid())
+  id     String     @id @default(cuid())
   userId  String
   user    User    @relation(fields: [userId],references: [id])
   timestamp DateTime  @default(now())
@@ -66,25 +112,29 @@ model ApiRequest{
 }
 
 
-enum LayoutType {
+ enum AlertType {
   ALERT
   ALERT_DIALOG
   TOAST
-}
+ }
 
-enum StyleType {
+
+ enum StyleType {
   NATIVE
   GRADIENT
   LOGO
-}
+ }
 
-enum PlanStatus {
+
+
+ enum websiteStatus {
+  PENDING
+  ACTIVE
+  DEACTIVATED
+ }
+
+ enum UserPlan {
   FREE
   PREMIUM
   ENTERPRISE
-}
-
-enum WebsiteStatus { 
-  ACTIVE
-  DEACTIVATED
-}
+ }

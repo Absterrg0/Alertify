@@ -1,39 +1,38 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import prisma from "@/db";
+
 
 
 
 
 export async function GET(){
     const session = await auth();
-    if(!session?.user||!session?.user?.id){
+    if(!session||!session.user){
         return NextResponse.json({
             msg:"Unauthorized"
         },{
             status:403
         })
     }
+
     try{
 
-        const websites = await prisma?.website.findMany({
+
+        const logs = await prisma?.apiRequest.findMany({
             where:{
                 userId:session.user.id
             }
         })
-
-
         return NextResponse.json({
-            websites
+            logs
         },{
-            status:201
+            status:200
         })
-        
     }
     catch(e){
         console.error(e);
         return NextResponse.json({
-            msg:"Error while fetching the websites"
+            msg:"Error while fetching the API requests"
         },{
             status:500
         })

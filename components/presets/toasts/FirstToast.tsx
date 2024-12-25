@@ -68,8 +68,8 @@ export const Toast :React.FC<ToastProps>=(
                 animate={{ opacity: 1, y: 0, x: 0 }}
                 exit={{ opacity: 0, y: 50, x: 50 }}
                 transition={{ type: "spring", stiffness: 500, damping: 40 }}
-                //@ts-ignore
-                className={cn(
+            //@ts-expect-error Motion div doesnt have a classname prop i guess?
+            className={cn(
                   "fixed bottom-4 right-4 w-full max-w-sm z-50 rounded-lg p-4 shadow-lg",
                   "flex items-start border-l-4",
                   className

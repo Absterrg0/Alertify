@@ -1,136 +1,139 @@
 'use client'
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, CheckCircle, Plus, ExternalLink, Search } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Globe,  ExternalLink, Search, X } from 'lucide-react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-
-type Website = {
-  id: number;
-  name: string;
-  url: string;
-  verified: boolean;
-  deactivated: boolean;
-  lastChecked?: string;
-};
+import axios from "axios";
+import { WebsiteAddition } from "./Website-stack";
+import { toast } from '@/hooks/use-toast'
+import { Website } from "./Dashboard";
 
 interface VerifiedWebsiteManagerProps {
-  onWebsitesChange?: (websites: Website[]) => void;
-  initialData?: Website[];
+  websites: Website[];
+  selectedWebsites: Website[];
+  onWebsitesChange: (websites: Website[]) => void;
+  onSelectedWebsitesChange: (selectedWebsites: Website[]) => void;
 }
 
-const defaultWebsites: Website[] = [
-  { 
-    id: 1, 
-    name: "Main Website", 
-    url: "https://example.com", 
-    verified: true, 
-    deactivated: false,
-    lastChecked: "2024-12-14T10:30:00Z"
-  },
-  { 
-    id: 2, 
-    name: "Blog", 
-    url: "https://blog.example.com", 
-    verified: false, 
-    deactivated: false,
-    lastChecked: "2024-12-14T11:45:00Z"
-  },
-  { 
-    id: 3, 
-    name: "Support Portal", 
-    url: "https://support.example.com", 
-    verified: true, 
-    deactivated: false,
-    lastChecked: "2024-12-14T09:15:00Z"
-  },
-  { 
-    id: 4, 
-    name: "Legacy Site", 
-    url: "https://old.example.com", 
-    verified: false, 
-    deactivated: true,
-    lastChecked: "2024-12-13T16:20:00Z"
-  },
-];
-
-export default function VerifiedWebsiteManager({ onWebsitesChange, initialData }: VerifiedWebsiteManagerProps) {
-  const [mounted, setMounted] = useState(false);
-  const [websites, setWebsites] = useState<Website[]>([]);
-  const [selectedWebsites, setSelectedWebsites] = useState<number[]>([]);
+export default function VerifiedWebsiteManager({ 
+  websites, 
+  selectedWebsites, 
+  onWebsitesChange, 
+  onSelectedWebsitesChange 
+}: VerifiedWebsiteManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [newWebsiteName, setNewWebsiteName] = useState("");
-  const [newWebsiteUrl, setNewWebsiteUrl] = useState("");
 
-  useEffect(() => {
-    setMounted(true);
-    setWebsites(initialData || defaultWebsites);
-  }, [initialData]);
-
-  useEffect(() => {
-    if (mounted && onWebsitesChange) {
-      onWebsitesChange(websites);
+  const handleVerify = async (url: string) => {
+    try {
+      const response = await axios.post('/droplert/notify/verify', { url });
+      if (response.status === 200) {
+        console.log('URL verification successful:', response.data);
+        const updatedWebsites:Website[] = websites.map(site =>
+          site.url === url
+            ? { ...site, status: 'ACTIVE', isVerified: true }
+            : site
+        );
+        onWebsitesChange(sortWebsites(updatedWebsites));
+        toast({
+          title: "Website Verified",
+          description: "The website has been successfully verified.",
+        });
+      } else {
+        console.error('Verification failed:', response.data);
+        toast({
+          title: "Verification Failed",
+          description: "There was an error verifying the website.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error during verification:', error);
+      toast({
+        title: "Verification Error",
+        description: "An unexpected error occurred during verification.",
+        variant: "destructive",
+      });
     }
-  }, [websites, mounted, onWebsitesChange]);
-
-  const handleAddWebsite = () => {
-    const newWebsite: Website = {
-      id: Math.max(...websites.map(w => w.id)) + 1,
-      name: newWebsiteName,
-      url: newWebsiteUrl,
-      verified: false,
-      deactivated: false,
-      lastChecked: new Date().toISOString()
-    };
-    setWebsites(prev => [...prev, newWebsite]);
-    setNewWebsiteName("");
-    setNewWebsiteUrl("");
   };
-
-  const handleVerify = (id: number) => {
-    setWebsites(prev =>
-      prev.map(site => (site.id === id ? { ...site, verified: true } : site))
-    );
+  
+  const handleDeactivate = async (id: string) => {
+    try {
+      const response = await axios.post(`/api/user/websites/update/${id}`);
+      if (response.status === 200) {
+        const updatedWebsites:Website[] = websites.map(site =>
+          site.id === id
+            ? { ...site, status: 'DEACTIVATED', isVerified: false }  // Type-casting to 'DEACTIVATED'
+            : site
+        );
+        onWebsitesChange(sortWebsites(updatedWebsites));
+        toast({
+          title: "Website Deactivated",
+          description: "The website has been successfully deactivated.",
+        });
+      }
+    } catch (error) {
+      console.error('Error deactivating website:', error);
+      toast({
+        title: "Deactivation Error",
+        description: "An error occurred while deactivating the website.",
+        variant: "destructive",
+      });
+    }
   };
+  
 
-  const handleDeactivate = (id: number) => {
-    setWebsites(prev =>
-      prev.map(site =>
-        site.id === id ? { ...site, deactivated: true, verified: false } : site
-      )
-    );
+// const handleReactivate = async (id: string) => {
+//   try {
+//     const response = await axios.post(`/api/user/websites/${id}/reactivate`);
+//     if (response.status === 200) {
+//       const updatedWebsites = websites.map(site =>
+//         site.id === id 
+//           ? { ...site, status: 'PENDING' as 'PENDING', isVerified: false }  // Type-casting to match the expected status type
+//           : site
+//       );
+//       onWebsitesChange(sortWebsites(updatedWebsites));
+//       toast({
+//         title: "Website Reactivated",
+//         description: "The website has been successfully reactivated.",
+//       });
+//     }
+//   } catch (error) {
+//     console.error('Error reactivating website:', error);
+//     toast({
+//       title: "Reactivation Error",
+//       description: "An error occurred while reactivating the website.",
+//       variant: "destructive",
+//     });
+//   }
+// };
+
+
+  const handleSelect = (website: Website) => {
+    const updatedSelectedWebsites = selectedWebsites.some(site => site.id === website.id)
+      ? selectedWebsites.filter(site => site.id !== website.id)  // Remove the website from the array
+      : [...selectedWebsites, website];  // Add the complete website object to the array
+  
+    onSelectedWebsitesChange(updatedSelectedWebsites);
   };
-
-  const handleSelect = (id: number) => {
-    setSelectedWebsites(prev =>
-      prev.includes(id) ? prev.filter(selectedId => selectedId !== id) : [...prev, id]
-    );
+  
+  const sortWebsites = (websitesToSort: Website[]) => {
+    return websitesToSort.sort((a, b) => {
+      const order = { ACTIVE: 0, PENDING: 1, DEACTIVATED: 2 };
+      return (order[a.status] || 3) - (order[b.status] || 3);
+    });
   };
-
-  if (!mounted) {
-    return null;
-  }
 
   const filteredWebsites = websites.filter(site =>
-    site.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    site.url.toLowerCase().includes(searchTerm.toLowerCase())
+    site && site.name && site.url && (
+      site.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      site.url.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
-
+  
   return (
     <Card className="bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 backdrop-blur-sm border border-zinc-300/50 dark:border-zinc-700/50 shadow-xl">
       <CardHeader className="border-b border-zinc-200/50 dark:border-zinc-700/50 bg-gradient-to-r from-zinc-50/50 to-zinc-100/50 dark:from-zinc-800/50 dark:to-zinc-900/50 p-6">
@@ -152,54 +155,7 @@ export default function VerifiedWebsiteManager({ onWebsitesChange, initialData }
               </span>
             )}
             
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Website
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 backdrop-blur-sm border-zinc-200/50 dark:border-zinc-700/50">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-100 dark:to-zinc-300 bg-clip-text text-transparent">
-                    Add New Website
-                  </AlertDialogTitle>
-                  <div className="space-y-4 mt-4">
-                      <div>
-                        <Label htmlFor="website-name" className="text-zinc-700 dark:text-zinc-300">Website Name</Label>
-                        <Input 
-                          id="website-name" 
-                          value={newWebsiteName}
-                          onChange={(e) => setNewWebsiteName(e.target.value)}
-                          placeholder="Enter website name"
-                          className="mt-1 bg-white/80 dark:bg-zinc-900/80 border-zinc-300/50 dark:border-zinc-600/50"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="website-url" className="text-zinc-700 dark:text-zinc-300">Website URL</Label>
-                        <Input 
-                          id="website-url" 
-                          value={newWebsiteUrl}
-                          onChange={(e) => setNewWebsiteUrl(e.target.value)}
-                          placeholder="https://example.com"
-                          className="mt-1 bg-white/80 dark:bg-zinc-900/80 border-zinc-300/50 dark:border-zinc-600/50"
-                        />
-                      </div>
-                    </div>
-                </AlertDialogHeader>
-                <AlertDialogFooter className="mt-6">
-                  <AlertDialogCancel className="bg-zinc-200/50 hover:bg-zinc-300/50 dark:bg-zinc-700/50 dark:hover:bg-zinc-600/50">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleAddWebsite}
-                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white"
-                  >
-                    Add Website
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <WebsiteAddition onAddition={(newWebsite:Website) => onWebsitesChange([...websites, newWebsite])} />
           </div>
         </div>
       </CardHeader>
@@ -214,14 +170,14 @@ export default function VerifiedWebsiteManager({ onWebsitesChange, initialData }
                     type="checkbox"
                     className="rounded border-zinc-300 dark:border-zinc-600"
                     onChange={e => {
-                      setSelectedWebsites(e.target.checked ? filteredWebsites.map(w => w.id) : []);
+                      onSelectedWebsitesChange(e.target.checked ? filteredWebsites : []);
                     }}
                     checked={selectedWebsites.length === filteredWebsites.length && filteredWebsites.length > 0}
                   />
                 </TableHead>
                 <TableHead>Website</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Verified</TableHead>
-                <TableHead>Last Checked</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -231,17 +187,20 @@ export default function VerifiedWebsiteManager({ onWebsitesChange, initialData }
                   key={site.id}
                   className={`
                     transition-colors duration-200
-                    ${selectedWebsites.includes(site.id) ? "bg-emerald-50/50 dark:bg-emerald-900/20" : ""}
-                    ${site.deactivated ? "opacity-60" : ""}
+                    ${selectedWebsites.some(s => s.id === site.id) ? "bg-emerald-50/50 dark:bg-emerald-900/20" : ""}
+                    ${site.status === 'DEACTIVATED' ? "opacity-60" : ""}
                     hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50
                   `}
                 >
                   <TableCell>
                     <input
                       type="checkbox"
-                      checked={selectedWebsites.includes(site.id)}
-                      onChange={() => handleSelect(site.id)}
-                      className="rounded border-zinc-300 dark:border-zinc-600"
+                      checked={selectedWebsites.some(s => s.id === site.id)}
+                      onChange={() => handleSelect(site)}
+                      disabled={site.status === 'DEACTIVATED'}
+                      className={`rounded border-zinc-300 dark:border-zinc-600 ${
+                        site.status === 'DEACTIVATED' ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     />
                   </TableCell>
                   <TableCell>
@@ -253,6 +212,7 @@ export default function VerifiedWebsiteManager({ onWebsitesChange, initialData }
                       <a 
                         href={site.url} 
                         target="_blank" 
+                        rel="noopener noreferrer"
                         className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 mt-1 flex items-center gap-1"
                       >
                         {site.url}
@@ -264,35 +224,39 @@ export default function VerifiedWebsiteManager({ onWebsitesChange, initialData }
                     <Badge 
                       variant="outline" 
                       className={`
-                        ${site.verified
+                        ${site.status === 'ACTIVE'
                           ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' 
+                          : site.status === 'PENDING'
+                          ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                           : 'bg-gradient-to-r from-zinc-500/20 to-zinc-600/20 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800'}
                       `}
                     >
-                      {site.verified ? 'Yes' : 'No'}
+                      {site.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {site.lastChecked 
-                        ? new Date(site.lastChecked).toLocaleString() 
-                        : 'Never'
-                      }
-                    </span>
+                    <Badge 
+                      variant="outline" 
+                      className={`
+                        ${site.isVerified
+                          ? 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' 
+                          : 'bg-gradient-to-r from-zinc-500/20 to-zinc-600/20 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800'}
+                      `}
+                    >
+                      {site.isVerified ? 'Yes' : 'No'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    {site.deactivated ? (
+                    {site.status === 'DEACTIVATED' ? (
                       <Button
                         variant="outline"
                         size="sm"
                         className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:from-emerald-500/20 hover:to-emerald-600/20"
-                        onClick={() => setWebsites(prev =>
-                          prev.map(s => s.id === site.id ? { ...s, deactivated: false } : s)
-                        )}
+                        onClick={() =>{}}
                       >
-                        Reactivate
+                        <X></X>
                       </Button>
-                    ) : site.verified ? (
+                    ) : site.status === 'ACTIVE' ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -306,7 +270,7 @@ export default function VerifiedWebsiteManager({ onWebsitesChange, initialData }
                         variant="outline"
                         size="sm"
                         className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:from-emerald-500/20 hover:to-emerald-600/20"
-                        onClick={() => handleVerify(site.id)}
+                        onClick={() => handleVerify(site.url)}
                       >
                         Verify
                       </Button>

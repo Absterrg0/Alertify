@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/db";
 import userSchema from "@/types/UserUpdate";
-import crypto, { randomBytes } from 'crypto'
+import { randomBytes } from 'crypto'
 
 export async function PUT(req:NextRequest){
     const session = await auth();
@@ -20,7 +20,7 @@ export async function PUT(req:NextRequest){
         const parsedBody = userSchema.parse(body)
         const {email,name} = parsedBody;
         const apiKey = randomBytes(32).toString('hex');
-        const response = await prisma.user.update({
+        await prisma.user.update({
             where:{
                 id:session.user.id
             },
