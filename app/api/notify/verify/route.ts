@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import prisma from "@/db";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -36,7 +37,6 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = validWebsite.user.apiKey;
-
     // Verify the user's website API
     let response;
     try {

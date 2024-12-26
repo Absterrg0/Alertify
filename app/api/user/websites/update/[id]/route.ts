@@ -62,9 +62,9 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    // Extracting ID from URL parameters
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id'); // Assuming ID is passed as a query parameter
+    // Extracting ID from URL path
+    const { pathname } = new URL(req.url);
+    const id = pathname.split('/').pop(); // Get the last segment of the path
 
     if (!id) {
         return NextResponse.json(
