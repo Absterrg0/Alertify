@@ -5,7 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpDown, Box, ExternalLink, Rocket } from 'lucide-react';
-import axios from 'axios'
+import axios from 'axios';
+import { Skeleton } from "@/components/ui/skeleton";
+
 type ApiRequest = {
   id: string;
   userId: string;
@@ -19,26 +21,35 @@ interface ApiRequestManagerProps {
   initialData?: ApiRequest[];
 }
 
-
-
-export default function ApiRequestManager({ onRequestsChange, initialData }: ApiRequestManagerProps) {
+export default function ApiRequestManager({ onRequestsChange }: ApiRequestManagerProps) {
   const [mounted, setMounted] = useState(false);
   const [requests, setRequests] = useState<ApiRequest[]>([]);
   const [sortConfig, setSortConfig] = useState<{ key: keyof ApiRequest; direction: 'asc' | 'desc' } | null>(null);
-  
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
-    fetchApliLogs()
-    
+    fetchApiLogs();
+  }, []);
+
+  useEffect(() => {
     if (mounted && onRequestsChange) {
       onRequestsChange(requests);
     }
-  }, [initialData, mounted, onRequestsChange]);
-  const fetchApliLogs = async ()=>{
-      const response = await axios.get('/api/user/getApiLogs')
-      setRequests(response.data.logs)
-  }
+  }, [requests, mounted, onRequestsChange]);
+
+  const fetchApiLogs = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get('/api/user/getApiLogs');
+      setRequests(response.data.logs);
+    } catch (error) {
+      console.error("Error fetching API logs:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const sortedRequests = React.useMemo(() => {
     const sortableRequests = [...requests];
     if (sortConfig !== null) {
@@ -63,6 +74,18 @@ export default function ApiRequestManager({ onRequestsChange, initialData }: Api
     setSortConfig({ key, direction });
   };
 
+  const ApiRequestsSkeleton = () => (
+    <div className="space-y-2">
+      {[...Array(5)].map((_, index) => (
+        <div key={index} className="flex items-center space-x-4">
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-1/4" />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <Card className="bg-gradient-to-br from-white to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700/50 transition-all duration-300 max-w-4xl mx-auto rounded-xl overflow-hidden backdrop-blur-md">
       <CardHeader className="p-6 border-b border-gray-200 dark:border-zinc-700/50 bg-gradient-to-r from-gray-50 to-white dark:from-zinc-800 dark:to-zinc-900">
@@ -73,20 +96,24 @@ export default function ApiRequestManager({ onRequestsChange, initialData }: Api
 
       <CardContent className="p-6">
         <div className="rounded-lg border border-gray-200 dark:border-zinc-700/50 overflow-hidden bg-white dark:bg-zinc-900/50 backdrop-blur-md">
-          {sortedRequests.length === 0 ? (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-4 rounded-full bg-blue-100 p-3 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-        <Rocket className="h-8 w-8" />
-      </div>
-      <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">No API Requests Yet</h3>
-      <p className="mb-6 max-w-sm text-gray-600 dark:text-gray-400">
-        Start making API requests to see them appear here. Your journey begins with the first call!
-      </p>
-      <div className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400">
-        <Box className="h-4 w-4" />
-        <span>Send your first request to get started</span>
-      </div>
-    </div>
+          {isLoading ? (
+            <div className="p-6">
+              <ApiRequestsSkeleton />
+            </div>
+          ) : sortedRequests.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="mb-4 rounded-full bg-blue-100 p-3 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                <Rocket className="h-8 w-8" />
+              </div>
+              <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">No API Requests Yet</h3>
+              <p className="mb-6 max-w-sm text-gray-600 dark:text-gray-400">
+                Start making API requests to see them appear here. Your journey begins with the first call!
+              </p>
+              <div className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400">
+                <Box className="h-4 w-4" />
+                <span>Send your first request to get started</span>
+              </div>
+            </div>
           ) : (
             <Table>
               <TableHeader>

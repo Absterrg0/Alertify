@@ -1,13 +1,12 @@
 "use client"
 
 import React from "react"
-import { useRouter } from "next/navigation"
+// import { useRouter } from "next/navigation"
 import { MyAlert } from "./presets/alerts/FirstAlert"
 import { MyAlertDialog } from "./presets/alert-dialog/FirstAlertDialog"
 import { Toast } from "./presets/toasts/FirstToast"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
-import { Button } from "./ui/button"
-import { Bell, ChevronRight } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { motion, AnimatePresence } from "framer-motion"
 import { Alert } from "./Dashboard"
 
@@ -21,11 +20,11 @@ interface InputProps{
 
 export default function NotificationPage({alerts}:InputProps) {
 
-  const router = useRouter();
+  // const router = useRouter();
 
-  const handleShowAll = () => {
-    router.push("/all-notifications")
-  }
+  // const handleShowAll = () => {
+  //   router.push("/all-notifications")
+  // }
 
   const renderNotification = (alert: Alert) => {
     switch (alert.type) {
@@ -90,7 +89,7 @@ export default function NotificationPage({alerts}:InputProps) {
             </CardTitle>
           </div>
         </div>
-        <Button
+        {/* <Button
           onClick={handleShowAll}
           variant="outline"
           size="sm"
@@ -98,7 +97,7 @@ export default function NotificationPage({alerts}:InputProps) {
         >
           See All
           <ChevronRight className="h-3 w-3 ml-1" />
-        </Button>
+        </Button> */}
       </CardHeader>
 
       {/* Notifications */}

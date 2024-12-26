@@ -21,6 +21,7 @@ import { MyAlertDialog } from "./presets/alert-dialog/FirstAlertDialog"
 import { MyAlert } from "./presets/alerts/FirstAlert"
 import OnboardingModal from "./OnboardingModal"
 import { useSession } from "next-auth/react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type NotificationType = 'ALERT' | 'ALERT_DIALOG' | 'TOAST'
 type StyleType = 'NATIVE' | 'GRADIENT' | 'LOGO'
@@ -49,6 +50,9 @@ export default function DashboardPage() {
   const [selectedType, setSelectedType] = useState<NotificationType>('ALERT')
   const [selectedStyle, setSelectedStyle] = useState<StyleType>('NATIVE')
   const [alerts, setAlerts] = useState<Alert[]>()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isWebsitesLoading, setIsWebsitesLoading] = useState(true)
+  const [isAlertsLoading, setIsAlertsLoading] = useState(true)
 
   const [title, setTitle] = useState('Oceanic Notification')
   const [startColor, setStartColor] = useState('#3B82F6')
@@ -68,8 +72,12 @@ export default function DashboardPage() {
   }, [isDark])
 
   useEffect(() => {
-    fetchWebsites()
-    fetchAlerts()
+    const fetchData = async () => {
+      setIsLoading(true)
+      await Promise.all([fetchWebsites(), fetchAlerts()])
+      setIsLoading(false)
+    }
+    fetchData()
   }, [])
 
 
@@ -155,11 +163,6 @@ export default function DashboardPage() {
     useEffect(()=>{
     },[])
   
-    const fetchAlerts = async()=>{
-      const response = await axios.get('/api/user/alerts/list')
-      setAlerts(response?.data?.response)
-    }
-  
 
   const sortWebsites = (websites: Website[]) => {
     return websites.sort((a, b) => {
@@ -169,6 +172,7 @@ export default function DashboardPage() {
   };
 
   const fetchWebsites = async () => {
+    setIsWebsitesLoading(true)
     try {
       const response = await axios.get<{ websites: Website[] }>("/api/user/websites/list");
       if (response.status === 201) {
@@ -183,11 +187,28 @@ export default function DashboardPage() {
       })
       console.error("Error fetching websites:", err);
     } finally {
+      setIsWebsitesLoading(false)
     }
   };
 
-  const handleWebsitesChange = (updatedWebsites: Website[]) => {
-    setWebsites(sortWebsites(updatedWebsites));
+  const fetchAlerts = async () => {
+    setIsAlertsLoading(true)
+    try {
+      const response = await axios.get('/api/user/alerts/list')
+      setAlerts(response?.data?.response)
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
+      toast({
+        title: 'Error fetching alerts',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsAlertsLoading(false)
+    }
+  }
+
+  const handleWebsitesChange =async () => {
+    await fetchWebsites();
   };
   const handleSelectedWebsitesChange = (updatedSelectedWebsites: Website[]) => {
     setSelectedWebsites(updatedSelectedWebsites);
@@ -241,6 +262,46 @@ export default function DashboardPage() {
         )
     }
   }
+
+  // Skeleton components
+  const WebsitesSkeleton = () => (
+    <Card className="bg-white dark:bg-zinc-800 shadow-lg border border-gray-200 dark:border-zinc-700 rounded-xl transition-all duration-300">
+      <CardHeader className="border-b border-gray-200 dark:border-zinc-700">
+        <CardTitle><Skeleton className="h-8 w-3/4" /></CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
+        <Skeleton className="h-12 w-full mb-4" />
+        <Skeleton className="h-12 w-full mb-4" />
+        <Skeleton className="h-12 w-full" />
+      </CardContent>
+    </Card>
+  )
+
+  const ConfigurationSkeleton = () => (
+    <Card className="bg-white dark:bg-zinc-800 shadow-lg border border-gray-200 dark:border-zinc-700 rounded-xl transition-all duration-300">
+      <CardHeader className="border-b border-gray-200 dark:border-zinc-700">
+        <CardTitle><Skeleton className="h-8 w-3/4" /></CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 space-y-6">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-36 w-full" />
+      </CardContent>
+    </Card>
+  )
+
+  const AlertsSkeleton = () => (
+    <Card className="bg-white dark:bg-zinc-800 shadow-lg border border-gray-200 dark:border-zinc-700 rounded-xl transition-all duration-300">
+      <CardHeader className="border-b border-gray-200 dark:border-zinc-700">
+        <CardTitle><Skeleton className="h-8 w-3/4" /></CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
+        <Skeleton className="h-16 w-full mb-4" />
+        <Skeleton className="h-16 w-full mb-4" />
+        <Skeleton className="h-16 w-full" />
+      </CardContent>
+    </Card>
+  )
 
   return (
     <div className={`min-h-screen bg-white dark:bg-[#0e0e0f] text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
@@ -330,16 +391,22 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Websites List and Configuration */}
           <div className="lg:col-span-2 space-y-6">
-
-            <VerifiedWebsiteManager 
-              websites={websites} 
-              selectedWebsites={selectedWebsites}
-              onWebsitesChange={handleWebsitesChange}
-              onSelectedWebsitesChange={handleSelectedWebsitesChange}
-            />
+            {isWebsitesLoading ? (
+              <WebsitesSkeleton />
+            ) : (
+              <VerifiedWebsiteManager 
+                websites={websites} 
+                selectedWebsites={selectedWebsites}
+                onWebsitesChange={handleWebsitesChange}
+                onSelectedWebsitesChange={handleSelectedWebsitesChange}
+              />
+            )}
 
             {/* Alert Configuration */}
-            <Card className="bg-gradient-to-b from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700 rounded-xl transition-all duration-300">
+            {isLoading ? (
+              <ConfigurationSkeleton />
+            ) : (
+              <Card className="bg-gradient-to-b from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700 rounded-xl transition-all duration-300">
   <CardHeader className="border-b border-gray-200 dark:border-zinc-700 bg-gradient-to-b from-gray-100 via-white to-gray-100 dark:from-zinc-800 dark:via-zinc-900 dark:to-zinc-800 p-6 rounded-t-xl">
     <CardTitle className="text-3xl font-bold text-gray-800 dark:text-zinc-200">
       Notification Configuration
@@ -568,6 +635,7 @@ export default function DashboardPage() {
     </div>
   </CardContent>
 </Card>
+            )}
 
 
 
@@ -575,10 +643,13 @@ export default function DashboardPage() {
 
           {/* Right Column - Recent Alerts and API Logs */}
           <div className="space-y-6">
-          <OnboardingModal></OnboardingModal>
-                <NotificationPage alerts={alerts ?? []}></NotificationPage>
-                 <ApiRequestManager></ApiRequestManager>
-
+            <OnboardingModal />
+            {isAlertsLoading ? (
+              <AlertsSkeleton />
+            ) : (
+              <NotificationPage alerts={alerts ?? []} />
+            )}
+            <ApiRequestManager />
           </div>
         </div>
       </div>

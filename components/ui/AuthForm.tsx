@@ -6,8 +6,8 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaGithub } from 'react-icons/fa'
 
 export function AuthForm() {
-  const handleGoogleSignIn = () => signIn('google', { callbackUrl: '/' })
-  const handleGithubSignIn = () => signIn('github', { callbackUrl: '/' })
+  const handleGoogleSignIn = () => signIn('google', { callbackUrl: '/dashboard' })
+  const handleGithubSignIn = () => signIn('github', { callbackUrl: '/dashboard' })
 
   return (
     <div className="space-y-6">

@@ -15,6 +15,7 @@ export async function POST(req:NextRequest){
     }
 
     try{
+        const websiteLimit = 6
 
         const body = await req.json();
         const {name,url}=body;
@@ -24,27 +25,19 @@ export async function POST(req:NextRequest){
             }
         })
 
-        const user = await prisma.user.findUnique({
+        const websiteCount = await prisma.website.count({
             where:{
-                id:session.user.id
+                userId:session.user.id
             }
         })
-        if(!user){
+        
+        if(websiteCount>=websiteLimit){
             return NextResponse.json({
-                msg:"No user found"
+                msg:"Website limit reached"
             },{
-                status:404
+                status:409
             })
         }
-
-
-
-        // const websiteLimit = PLAN_LIMITS[user.plan]
-        // if(user._count.registeredWebsites>=websiteLimit){
-        //     return NextResponse.json({
-        //         msg:`You have reached the maximum limits of ${websiteLimit} for your ${user.plan} plan `
-        //     })
-        // }
 
         if(checkExistingUrl){
             return NextResponse.json({
