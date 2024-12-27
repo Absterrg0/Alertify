@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import {logApiRequest } from "@/lib/rate-limit";
+import { logApiRequest } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
 import axios from "axios";
 import { Website } from "@/components/Dashboard";
 import prisma from "@/db";
+
 enum AlertType {
     ALERT = "ALERT",
     ALERT_DIALOG = "ALERT_DIALOG",
@@ -24,7 +25,7 @@ interface Payload {
     backgroundColor: string;
     textColor: string;
     borderColor: string;
-    imageUrl: string;
+    imageUrl?: string;
 }
 
 interface InputProps {
@@ -38,6 +39,8 @@ interface NotificationResult {
     message: string;
     error?: Error;
 }
+
+const WS_SERVER_URL = process.env.WEBSOCKET_SERVER_URL || 'http://localhost:8080';
 
 export async function POST(req: NextRequest) {
     try {
@@ -63,79 +66,90 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // 3. Rate limiting
-        // const rateLimit = await CheckRateLimit(user.id, user.plan);
-        // if (!rateLimit) {
-        //     return NextResponse.json(
-        //         { msg: "Rate limit exceeded, please try again tomorrow" },
-        //         { status: 429 }
-        //     );
-        // }
-
-        // 4. Parse request body
+        // 3. Parse request body
         const body: InputProps = await req.json();
         const { payload, websites } = body;
-        console.log(payload)
-        
-        // 5. Create alert record
+
+        if (websites.length === 0) {
+            return NextResponse.json({
+                msg: "Select at least 1 website"
+            }, {
+                status: 400
+            });
+        }
+
+        // 4. Create alert record
         const alert = await prisma?.alert.create({
             data: {
                 title: payload.title,
                 description: payload.description,
                 type: payload.selectedType,
-                style:payload.style,
-                userId:session.user.id,
+                style: payload.style,
+                userId: session.user.id,
                 backgroundColor: payload.backgroundColor,
                 textColor: payload.textColor,
                 borderColor: payload.borderColor,
-              },
+            },
         });
 
-        if(websites.length===0){
-            return NextResponse.json({
-                msg:"Select at least 1 website"
-            },{
-                status:400
-            })
-        }
-        // 6. Process notifications
+        // 5. Send notification to WebSocket server
         const results: NotificationResult[] = [];
         
-        for (const website of websites) {
-            try {
-                const response = await axios.post(
-                    `${website.url}/api/droplert/notify`,
-                    payload,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${user.apiKey}`,
-                            "Content-Type": "application/json",
-                        },
-                        timeout: 5000,
-                    }
-                );
+        try {
+            // Format payload for WebSocket server
+            const wsPayload = {
+                droplertId: user.droplertId,
+                websites: websites.map(w => w.url), // Array of website URLs
+                notification: {
+                    type: payload.selectedType.toLowerCase(),
+                    title: payload.title,
+                    message: payload.description,
+                    style: payload.style,
+                    backgroundColor: payload.backgroundColor,
+                    textColor: payload.textColor,
+                    borderColor: payload.borderColor,
+                    imageUrl: payload.imageUrl
+                }
+            };
 
-                const success = response.status === 200;
+            // Send to WebSocket server
+            const response = await axios.post(
+                `${WS_SERVER_URL}/notify`,
+                wsPayload,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${user.apiKey}`
+                    },
+                    timeout: 5000
+                }
+            );
+
+            // Log successful delivery
+            for (const website of websites) {
                 await logApiRequest(user.id, website.url, true);
-
                 results.push({
                     website: website.name,
-                    status: success ? 'success' : 'failed',
-                    message: success ? "Notification sent successfully" : "Failed to send notification"
+                    status: 'success',
+                    message: "Notification sent successfully"
                 });
-            } catch (error) {
-                console.error(error)
+            }
+        } catch (error) {
+            console.error('WebSocket server error:', error);
+            
+            // Log failed delivery
+            for (const website of websites) {
                 await logApiRequest(user.id, website.url, false);
-                
                 results.push({
                     website: website.name,
                     status: 'error',
                     message: 'Failed to send notification',
+                    error: error instanceof Error ? error : new Error('Unknown error')
                 });
             }
         }
 
-        // 7. Return response
+        // 6. Return response
         return NextResponse.json({
             msg: "Notification process completed",
             results,
@@ -144,7 +158,7 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error) {
-        console.error(error)
+        console.error(error);
         return NextResponse.json(
             {
                 msg: "Error while processing notifications",

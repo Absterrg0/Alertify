@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {toast} from '@/hooks/use-toast'
 export default function OnboardingModal() {
   const [apiKey, setApiKey] = useState('')
+  const [droplertId,setDroplertId]=useState('')
   const [copied, setCopied] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function OnboardingModal() {
   const fetchApiKey=async()=>{
     const response = await axios.get('/api/user/apiKey')
     setApiKey(response?.data?.apiKey)
+    setDroplertId(response.data.droplertId)
   }
 
   const generateApiKey = () => {
@@ -79,6 +81,16 @@ export default function OnboardingModal() {
     }
   }
 
+  const copyDroplertId = async () => {
+    try {
+      await navigator.clipboard.writeText(droplertId)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy API key:', error)
+    }
+  }
+
   return (
     <Card className="bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700 max-w-3xl mx-auto rounded-xl overflow-hidden transition-all duration-300 relative">
       {/* Header */}
@@ -118,6 +130,30 @@ export default function OnboardingModal() {
             </div>
 
             {/* API Key Section */}
+            <div className="mt-6 relative p-4 bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-zinc-900/70 transition-all duration-300 ease-out">
+              <Label className="text-gray-700 dark:text-zinc-300 font-medium mb-4 block">
+                Your droplert ID
+              </Label>
+              <div className="flex gap-3">
+                <div className="relative flex-1 group">
+                  <Input
+                    value={droplertId}
+                    readOnly
+                    className="font-mono bg-gray-50 dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 pr-12"
+                  />
+                  <button
+                    onClick={copyDroplertId}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors"
+                  >
+                    {copied ? (
+                      <CheckIcon size={18} className="text-green-500" />
+                    ) : (
+                      <CopyIcon size={18} />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
             <div className="mt-6 relative p-4 bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-zinc-900/70 transition-all duration-300 ease-out">
               <Label className="text-gray-700 dark:text-zinc-300 font-medium mb-4 block">
                 Your API Key

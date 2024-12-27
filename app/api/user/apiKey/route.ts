@@ -19,7 +19,8 @@ export async function GET(){
             where:{
                 id:session.user.id
             },select:{
-                apiKey:true
+                apiKey:true,
+                droplertId:true
             }
         })
         return NextResponse.json(response,{
