@@ -119,7 +119,7 @@ export default function OnboardingModal() {
             {/* Initialize Command Section */}
             <div className="relative p-4 bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-zinc-900/70 transition-all duration-300 ease-out">
               <p className="text-gray-600 dark:text-zinc-400 mb-4">
-                Run this command to initialize droplert in your project:
+                Run this command to initialize droplert in your project&apos;s <strong>Root</strong>:
               </p>
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 rounded-lg blur" />

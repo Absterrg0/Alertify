@@ -40,7 +40,7 @@ interface NotificationResult {
     error?: Error;
 }
 
-const WS_SERVER_URL = process.env.WEBSOCKET_SERVER_URL || 'http://localhost:8080';
+const WS_SERVER_URL = process.env.NEXT_PUBLIC_WEBSOCKET_SERVER_URL;
 
 export async function POST(req: NextRequest) {
     try {
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
             };
 
             // Send to WebSocket server
-            const response = await axios.post(
+            await axios.post(
                 `${WS_SERVER_URL}/notify`,
                 wsPayload,
                 {
