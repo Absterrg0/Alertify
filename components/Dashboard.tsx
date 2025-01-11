@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import axios from "axios"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Bell, Moon, Sun, Lock, MessageSquare, AlertCircle, Anchor, Waves, User } from 'lucide-react'
+import { Bell, Moon, Sun, Lock, MessageSquare, AlertCircle, Anchor, Waves, User, LogOut } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { Input } from "./ui/input"
 import ApiRequestManager from "./ApiLogs"
@@ -20,12 +20,14 @@ import { Toast } from "./presets/toasts/FirstToast"
 import { MyAlertDialog } from "./presets/alert-dialog/FirstAlertDialog"
 import { MyAlert } from "./presets/alerts/FirstAlert"
 import OnboardingModal from "./OnboardingModal"
-import { useSession } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useRouter } from "next/navigation"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 type NotificationType = 'ALERT' | 'ALERT_DIALOG' | 'TOAST'
 type StyleType = 'NATIVE' | 'GRADIENT' | 'LOGO'
-const isPremium = true
+const isUnlocked = false
 
 export type Website = {
   id: string;
@@ -70,6 +72,7 @@ export default function DashboardPage() {
     const root = window.document.documentElement
     root.classList.toggle('dark', isDark)
   }, [isDark])
+  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -206,7 +209,6 @@ export default function DashboardPage() {
       setIsAlertsLoading(false)
     }
   }
-
   const handleWebsitesChange =async () => {
     await fetchWebsites();
   };
@@ -334,15 +336,28 @@ export default function DashboardPage() {
               }
             </Label>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
-            <Button
-              onClick={()=>{}}
-              variant="ghost"
-              className="flex items-center gap-2 hover:bg-ocean-50 dark:hover:bg-gray-700 p-2 rounded-full"
-            >
-              <div className="w-8 h-8 rounded-full bg-ocean-100 dark:bg-ocean-800 flex items-center justify-center">
-                <User className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              </div>
-            </Button>
+            <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          className="flex items-center gap-2 hover:bg-ocean-50 dark:hover:bg-gray-700 p-2 rounded-full"
+        >
+          <div className="w-8 h-8 rounded-full bg-ocean-100 dark:bg-ocean-800 flex items-center justify-center">
+            <User className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+          </div>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-48">
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={()=>{signOut({redirectTo:"/getstarted"})}}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Log out
+        </Button>
+      </PopoverContent>
+    </Popover>
           </div>
         </nav>
 
@@ -449,22 +464,22 @@ export default function DashboardPage() {
 <div className="grid grid-cols-3 gap-6">
   {[
     { type: 'NATIVE', label: 'Native', description: 'Solid background color' },
-    { type: 'GRADIENT', label: 'Gradients', description: 'Great gradient background color with multiple variants', premium: true },
-    { type: 'LOGO', label: 'Personalised Logo', description: 'Brand-focused Logo as the background to personalise the notification', premium: true },
-  ].map(({ type, label, description, premium }) => (
+    { type: 'GRADIENT', label: 'Gradients', description: 'Great gradient background color with multiple variants' },
+    { type: 'LOGO', label: 'Personalised Logo', description: 'Brand-focused Logo as the background to personalise the notification', locked: true },
+  ].map(({ type, label, description, locked }) => (
     <button
       key={type}
-      onClick={() => (isPremium || !premium ? setSelectedStyle(type as StyleType) : null)}
-      disabled={premium && !isPremium}
+      onClick={() => (isUnlocked || !locked ? setSelectedStyle(type as StyleType) : null)}
+      disabled={locked && !isUnlocked}
       className={`p-6 rounded-lg transition-all duration-300 flex flex-col items-center justify-center text-center ${
         selectedStyle === type
           ? 'bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 shadow-md'
           : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:scale-105 hover:border-teal-300 dark:hover:border-teal-700'
-      } ${premium && !isPremium ? 'opacity-50 cursor-not-allowed' : ''}`}
+      } ${locked && !isUnlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <span className="text-base font-medium mb-2">{label}</span>
       <span className="text-sm dark:text-gray-100">{description}</span>
-      {premium && !isPremium && <Lock className="h-5 w-5 mt-2" />}
+      {locked && !isUnlocked && <Lock className="h-5 w-5 mt-2" />}
     </button>
   ))}
 </div>
