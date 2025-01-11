@@ -22,7 +22,6 @@ import { MyAlert } from "./presets/alerts/FirstAlert"
 import OnboardingModal from "./OnboardingModal"
 import { signOut, useSession } from "next-auth/react"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useRouter } from "next/navigation"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 type NotificationType = 'ALERT' | 'ALERT_DIALOG' | 'TOAST'
@@ -72,7 +71,6 @@ export default function DashboardPage() {
     const root = window.document.documentElement
     root.classList.toggle('dark', isDark)
   }, [isDark])
-  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
