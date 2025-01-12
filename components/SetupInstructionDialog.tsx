@@ -78,7 +78,8 @@ const SetupInstructionsDialog = () => {
                   </div>
                   <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-md">
                     <pre className="text-sm font-mono">
-                      {`import { Droplert } from '../components/Droplert'
+                      {`import Droplert from "@/components/droplert/droplert";
+
 
 export default function RootLayout({ children }) {
   return (

@@ -23,9 +23,9 @@ import SetupInstructionsDialog from './SetupInstructionDialog'
 export default function OnboardingModal() {
   const [apiKey, setApiKey] = useState('')
   const [droplertId,setDroplertId]=useState('')
-  const [copied, setCopied] = useState(false)
+  const [copiedApiKey, setCopiedApiKey] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
-
+  const [copiedDroplertId,setCopiedDroplertId]=useState(false)
   useEffect(() => {
     fetchApiKey()
   }, [])
@@ -76,9 +76,9 @@ export default function OnboardingModal() {
 
   const copyApiKey = async () => {
     try {
-      await navigator.clipboard.writeText(apiKey)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(`DROPLERT_KEY=${apiKey}`)
+      setCopiedApiKey(true)
+      setTimeout(() => setCopiedApiKey(false), 2000)
     } catch (error) {
       console.error('Failed to copy API key:', error)
     }
@@ -86,9 +86,9 @@ export default function OnboardingModal() {
 
   const copyDroplertId = async () => {
     try {
-      await navigator.clipboard.writeText(droplertId)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(`NEXT_PUBLIC_DROPLERT_ID=${droplertId}`)
+      setCopiedDroplertId(true)
+      setTimeout(() => setCopiedDroplertId(false), 2000)
     } catch (error) {
       console.error('Failed to copy API key:', error)
     }
@@ -152,7 +152,7 @@ export default function OnboardingModal() {
                     onClick={copyDroplertId}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors"
                   >
-                    {copied ? (
+                    {copiedDroplertId ? (
                       <CheckIcon size={18} className="text-green-500" />
                     ) : (
                       <CopyIcon size={18} />
@@ -177,7 +177,7 @@ export default function OnboardingModal() {
                     onClick={copyApiKey}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors"
                   >
-                    {copied ? (
+                    {copiedApiKey ? (
                       <CheckIcon size={18} className="text-green-500" />
                     ) : (
                       <CopyIcon size={18} />

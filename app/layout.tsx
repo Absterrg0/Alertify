@@ -5,7 +5,7 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/toaster";
 import Head from "next/head";
-
+import { Analytics } from "@vercel/analytics/react"
 // Google Font - Poppins
 const poppins = Poppins({
   subsets: ["latin"],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: "Droplert",
     description: "Free real-time website notifications to notify users effortlessly",
     url: "https://droplert.abstergo.dev",  // Replace with your actual domain
-    siteName: "Your App Name",
+    siteName: "Droplert",
     images: [
       {
         url: "/DarkLogo.png",  // Replace with your image URL
@@ -71,6 +71,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           {children}
+          <Analytics></Analytics>
           <Toaster />
         </SessionProvider>
       </body>
