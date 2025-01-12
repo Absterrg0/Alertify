@@ -98,7 +98,7 @@ export function WebsiteAddition({ onAddition }:WebsiteAdditionProps) {
         Add New Website
       </AlertDialogTitle>
       <AlertDialogDescription className="text-zinc-600 dark:text-gray-400">
-        Enter the name and URL of the website you'd like to add.
+        Enter the name and URL of the website you&apos;d like to add.
       </AlertDialogDescription>
     </AlertDialogHeader>
 
