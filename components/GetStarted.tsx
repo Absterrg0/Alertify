@@ -22,7 +22,7 @@ export default function AuthPage() {
             <div className="text-center mb-8">
               <h2 className="text-4xl font-bold tracking-tight mb-4">
                 <span className="text-zinc-100">Welcome to</span>
-                <span className="bg-gradient-to-r from-sky-300 via-blue-400 to-sky-300 bg-clip-text text-transparent"> DropAlert</span> 
+                <span className="bg-gradient-to-r from-sky-300 via-blue-400 to-sky-300 bg-clip-text text-transparent"> Droplert</span> 
               </h2>
               <p className="text-lg text-zinc-300 tracking-tight">
                 Sign in to explore the unknown
