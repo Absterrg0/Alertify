@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import axios from "axios"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Bell, Moon, Sun, Lock, MessageSquare, AlertCircle, Anchor, Waves, User, LogOut } from 'lucide-react'
+import { Bell, Moon, Sun, Lock, MessageSquare, AlertCircle, Waves, User, LogOut } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { Input } from "./ui/input"
 import ApiRequestManager from "./ApiLogs"
@@ -310,7 +310,6 @@ export default function DashboardPage() {
         <nav className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-[#0e0e0f] shadow-lg transition-all duration-300">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <Anchor className="h-6 w-6 text-teal-600 dark:text-teal-400" />
               <h1 className="text-2xl font-bold text-teal-600 dark:text-teal-400">Droplert</h1>
             </div>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />

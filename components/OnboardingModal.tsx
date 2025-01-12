@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { v4 } from "uuid"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
-import { CheckIcon, CopyIcon, AlertTriangle, Terminal } from "lucide-react"
+import { CheckIcon, CopyIcon, AlertTriangle, Terminal } from 'lucide-react'
 import { Button } from "./ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
 import { 
@@ -18,11 +18,14 @@ import {
 import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
 import {toast} from '@/hooks/use-toast'
+import SetupInstructionsDialog from './SetupInstructionDialog'
+
 export default function OnboardingModal() {
   const [apiKey, setApiKey] = useState('')
   const [droplertId,setDroplertId]=useState('')
   const [copied, setCopied] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
+
   useEffect(() => {
     fetchApiKey()
   }, [])
@@ -95,15 +98,16 @@ export default function OnboardingModal() {
     <Card className="bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700 max-w-3xl mx-auto rounded-xl overflow-hidden transition-all duration-300 relative">
       {/* Header */}
       <CardHeader className="p-6 bg-gradient-to-r from-gray-100 via-white to-gray-100 dark:from-zinc-800 dark:via-zinc-900 dark:to-zinc-800 border-b border-gray-200 dark:border-zinc-700">
-        <div className="flex items-center gap-4">
-          <div className="p-2 bg-gray-200/50 dark:bg-zinc-700/30 rounded-lg backdrop-blur-sm">
-            <Terminal className="h-6 w-6 text-gray-600 dark:text-zinc-300" />
-          </div>
-          <div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-gray-200/50 dark:bg-zinc-700/30 rounded-lg backdrop-blur-sm">
+              <Terminal className="h-6 w-6 text-gray-600 dark:text-zinc-300" />
+            </div>
             <CardTitle className="text-2xl font-bold text-gray-800 dark:text-zinc-200">
               Initialize Droplert
             </CardTitle>
           </div>
+          <SetupInstructionsDialog />
         </div>
       </CardHeader>
 
@@ -118,9 +122,12 @@ export default function OnboardingModal() {
           >
             {/* Initialize Command Section */}
             <div className="relative p-4 bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-zinc-900/70 transition-all duration-300 ease-out">
-              <p className="text-gray-600 dark:text-zinc-400 mb-4">
-                Run this command to initialize droplert in your project&apos;s <strong>Root</strong>:
-              </p>
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-gray-600 dark:text-zinc-400">
+                  Run this command to initialize droplert in your project&apos;s <strong>Root</strong>:
+                </p>
+                {/*<SetupInstructionsDialog />*/}
+              </div>
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 rounded-lg blur" />
                 <div className="relative bg-gray-50 dark:bg-zinc-900 p-4 rounded-lg font-mono text-sm border border-gray-200 dark:border-zinc-700">
@@ -154,6 +161,7 @@ export default function OnboardingModal() {
                 </div>
               </div>
             </div>
+            
             <div className="mt-6 relative p-4 bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-zinc-900/70 transition-all duration-300 ease-out">
               <Label className="text-gray-700 dark:text-zinc-300 font-medium mb-4 block">
                 Your API Key
@@ -216,3 +224,4 @@ export default function OnboardingModal() {
     </Card>
   )
 }
+

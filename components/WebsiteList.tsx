@@ -4,9 +4,20 @@ import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe,  ExternalLink, Search, X } from 'lucide-react';
+import { Globe, ExternalLink, Search, X } from 'lucide-react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import axios from "axios";
 import { WebsiteAddition } from "./Website-stack";
 import { toast } from '@/hooks/use-toast'
@@ -66,7 +77,7 @@ export default function VerifiedWebsiteManager({
       if (response.status === 200) {
         const updatedWebsites:Website[] = websites.map(site =>
           site.id === id
-            ? { ...site, status: 'DEACTIVATED', isVerified: false }  // Type-casting to 'DEACTIVATED'
+            ? { ...site, status: 'DEACTIVATED', isVerified: false }
             : site
         );
         onWebsitesChange(sortWebsites(updatedWebsites));
@@ -84,38 +95,11 @@ export default function VerifiedWebsiteManager({
       });
     }
   };
-  
-
-// const handleReactivate = async (id: string) => {
-//   try {
-//     const response = await axios.post(`/api/user/websites/${id}/reactivate`);
-//     if (response.status === 200) {
-//       const updatedWebsites = websites.map(site =>
-//         site.id === id 
-//           ? { ...site, status: 'PENDING' as 'PENDING', isVerified: false }  // Type-casting to match the expected status type
-//           : site
-//       );
-//       onWebsitesChange(sortWebsites(updatedWebsites));
-//       toast({
-//         title: "Website Reactivated",
-//         description: "The website has been successfully reactivated.",
-//       });
-//     }
-//   } catch (error) {
-//     console.error('Error reactivating website:', error);
-//     toast({
-//       title: "Reactivation Error",
-//       description: "An error occurred while reactivating the website.",
-//       variant: "destructive",
-//     });
-//   }
-// };
-
 
   const handleSelect = (website: Website) => {
     const updatedSelectedWebsites = selectedWebsites.some(site => site.id === website.id)
-      ? selectedWebsites.filter(site => site.id !== website.id)  // Remove the website from the array
-      : [...selectedWebsites, website];  // Add the complete website object to the array
+      ? selectedWebsites.filter(site => site.id !== website.id)
+      : [...selectedWebsites, website];
   
     onSelectedWebsitesChange(updatedSelectedWebsites);
   };
@@ -257,14 +241,46 @@ export default function VerifiedWebsiteManager({
                         <X></X>
                       </Button>
                     ) : site.status === 'ACTIVE' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-gradient-to-r from-red-500/10 to-red-600/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 hover:from-red-500/20 hover:to-red-600/20"
-                        onClick={() => handleDeactivate(site.id)}
-                      >
-                        Deactivate
-                      </Button>
+                      <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-gradient-to-r from-red-500/10 to-red-600/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 hover:from-red-500/20 hover:to-red-600/20"
+                        >
+                          Deactivate
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-xl font-semibold text-red-600 dark:text-red-400">
+                            ⚠️ Warning: Permanent Deactivation
+                          </AlertDialogTitle>
+                          <div className="mt-4 space-y-4 text-zinc-700 dark:text-zinc-300">
+                            <AlertDialogDescription className="font-medium">
+                              THIS WEBSITE CANNOT BE REACTIVATED THROUGH THE DASHBOARD.
+                            </AlertDialogDescription>
+                            <AlertDialogDescription>
+                              If you need to reactivate this website in the future, you will need to contact developer support.
+                            </AlertDialogDescription>
+                            <AlertDialogDescription className="text-sm italic">
+                              Are you sure you want to proceed with deactivation?
+                            </AlertDialogDescription>
+                          </div>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="mt-6">
+                          <AlertDialogCancel className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700">
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeactivate(site.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            Yes, Deactivate Website
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     ) : (
                       <Button
                         variant="outline"
@@ -285,4 +301,3 @@ export default function VerifiedWebsiteManager({
     </Card>
   );
 }
-
