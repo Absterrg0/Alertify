@@ -307,7 +307,7 @@ export default function DashboardPage() {
     <div className={`min-h-screen bg-white dark:bg-[#0e0e0f] text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
       <div className="container mx-auto p-6 space-y-6">
         {/* Navigation */}
-        <nav className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-[#0e0e0f] shadow-lg transition-all duration-300">
+        <nav className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-lg bg-white dark:bg-[#0e0e0f] shadow-lg transition-all duration-300">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
               <h1 className="text-2xl font-bold text-teal-600 dark:text-teal-400">Droplert</h1>
@@ -430,7 +430,7 @@ export default function DashboardPage() {
       <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-200 mb-6">
         Notification Types
       </h3>
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           { type: 'ALERT', icon: AlertCircle, label: 'Alert' },
           { type: 'ALERT_DIALOG', icon: MessageSquare, label: 'Alert Dialog' },
@@ -440,14 +440,14 @@ export default function DashboardPage() {
             key={type}
             onClick={() => setSelectedType(type as NotificationType)}
             className={cn(
-              "p-6 rounded-lg transition-all duration-300 flex flex-col items-center justify-center",
+              "p-4 rounded-lg transition-all duration-300 flex flex-col items-center justify-center",
               selectedType === type
                 ? "bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 shadow-md"
                 : "bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:scale-105 hover:border-teal-300 dark:hover:border-teal-700"
             )}
           >
-            <Icon className="h-10 w-10 mb-3" />
-            <span className="text-base font-medium">{label}</span>
+            <Icon className="h-8 w-8 mb-2" />
+            <span className="text-sm font-medium">{label}</span>
           </button>
         ))}
       </div>
@@ -458,7 +458,7 @@ export default function DashboardPage() {
       <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-200 mb-6">
         Style Options
       </h3>
-<div className="grid grid-cols-3 gap-6">
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
   {[
     { type: 'NATIVE', label: 'Native', description: 'Solid background color' },
     { type: 'GRADIENT', label: 'Gradients', description: 'Great gradient background color with multiple variants' },
@@ -468,15 +468,15 @@ export default function DashboardPage() {
       key={type}
       onClick={() => (isUnlocked || !locked ? setSelectedStyle(type as StyleType) : null)}
       disabled={locked && !isUnlocked}
-      className={`p-6 rounded-lg transition-all duration-300 flex flex-col items-center justify-center text-center ${
+      className={`p-4 rounded-lg transition-all duration-300 flex flex-col items-center justify-center text-center ${
         selectedStyle === type
           ? 'bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 shadow-md'
           : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:scale-105 hover:border-teal-300 dark:hover:border-teal-700'
       } ${locked && !isUnlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
-      <span className="text-base font-medium mb-2">{label}</span>
-      <span className="text-sm dark:text-gray-100">{description}</span>
-      {locked && !isUnlocked && <Lock className="h-5 w-5 mt-2" />}
+      <span className="text-sm font-medium mb-1">{label}</span>
+      <span className="text-xs dark:text-gray-100">{description}</span>
+      {locked && !isUnlocked && <Lock className="h-4 w-4 mt-1" />}
     </button>
   ))}
 </div>
@@ -484,86 +484,85 @@ export default function DashboardPage() {
     </div>
 
     {/* Message Customization and Color Configuration */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Customize Your Message */}
-      <div>
-        <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-200 mb-6">
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-200 mb-4">
           Customize Your Message
         </h3>
-        <div className="space-y-6">
-          <div>
-            <Label htmlFor="title" className="text-sm font-medium text-gray-800 dark:text-zinc-200">
-              Title
-            </Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter notification title"
-              className="mt-2 w-full bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-            />
-          </div>
-          <div>
-            <Label htmlFor="description" className="text-sm font-medium text-gray-800 dark:text-zinc-200">
-              Content
-            </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter notification message"
-              className="mt-2 w-full bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 h-28"
-            />
-          </div>
+        <div>
+          <Label htmlFor="title" className="text-sm font-medium text-gray-800 dark:text-zinc-200">
+            Title
+          </Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter notification title"
+            className="mt-2 w-full bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+          />
+        </div>
+        <div>
+          <Label htmlFor="description" className="text-sm font-medium text-gray-800 dark:text-zinc-200">
+            Content
+          </Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Enter notification message"
+            className="mt-2 w-full bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 h-28"
+          />
         </div>
       </div>
 
       {/* Color Configuration */}
-      <div>
-        <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-200 mb-6">
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-200 mb-4">
           Color Configuration
         </h3>
         {selectedStyle === 'NATIVE' ? (
-          <div className="space-y-6">
-            <div className="flex justify-center">
+          <div className="flex justify-center">
+            <div className="w-full max-w-xs">
               <ColorPicker onColorChange={setBackgroundColor} />
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="flex justify-between">
-            <button
-  className={cn(
-    "py-2 px-4 rounded-lg transition-colors duration-300",
-    activeTab === 'start'
-      ? "bg-dark-gray-800 text-black shadow-lg"
-      : "bg-white dark:bg-zinc-800 text-dark-gray-500 dark:text-dark-gray-400 border border-gray-200 dark:border-zinc-700"
-  )}
-  onClick={() => setActiveTab('start')}
->
-  Start Color
-</button>
-<button
-  className={cn(
-    "py-2 px-4 rounded-lg transition-colors duration-300",
-    activeTab === 'end'
-      ? "bg-dark-gray-800 text-black shadow-md"
-      : "bg-white dark:bg-zinc-800 text-dark-gray-500 dark:text-dark-gray-400 border border-gray-200 dark:border-zinc-700"
-  )}
-  onClick={() => setActiveTab('end')}
->
-  End Color
-</button>
-
+          <>
+            <div className="flex justify-between mb-4">
+              <button
+                className={cn(
+                  "py-2 px-4 rounded-lg transition-colors duration-300",
+                  activeTab === 'start'
+                    ? "bg-dark-gray-800 text-black shadow-lg"
+                    : "bg-white dark:bg-zinc-800 text-dark-gray-500 dark:text-dark-gray-400 border border-gray-200 dark:border-zinc-700"
+                )}
+                onClick={() => setActiveTab('start')}
+              >
+                Start Color
+              </button>
+              <button
+                className={cn(
+                  "py-2 px-4 rounded-lg transition-colors duration-300",
+                  activeTab === 'end'
+                    ? "bg-dark-gray-800 text-black shadow-md"
+                    : "bg-white dark:bg-zinc-800 text-dark-gray-500 dark:text-dark-gray-400 border border-gray-200 dark:border-zinc-700"
+                )}
+                onClick={() => setActiveTab('end')}
+              >
+                End Color
+              </button>
             </div>
-            <div className="flex justify-center">
-              <ColorPicker onColorChange={activeTab === 'start' ? setStartColor : setEndColor} />
+            <div className="flex justify-center mb-4">
+              <div className="w-full max-w-xs">
+                <ColorPicker onColorChange={activeTab === 'start' ? setStartColor : setEndColor} />
+              </div>
             </div>
             <Select
               value={gradientDirection}
               onValueChange={setGradientDirection}
             >
-              <SelectTrigger className="mt-4 text-sm bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200">
+              <SelectTrigger className="w-full text-sm bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200">
                 <SelectValue placeholder="Select gradient direction" />
               </SelectTrigger>
               <SelectContent>
@@ -573,7 +572,7 @@ export default function DashboardPage() {
                 <SelectItem value="-45deg">Diagonal ↗</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </>
         )}
       </div>
     </div>
@@ -583,30 +582,30 @@ export default function DashboardPage() {
       <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-200 mb-6">
         Preview
       </h3>
-      <div className="bg-gray-100 dark:bg-zinc-800 p-6 rounded-lg shadow-sm">
+      <div className="bg-gray-100 dark:bg-zinc-800 p-4 sm:p-6 rounded-lg shadow-sm overflow-x-auto">
         {renderPreview()}
       </div>
     </div>
 
     {/* Action Buttons */}
-    <div className="flex justify-between items-center p-4 rounded-lg bg-white dark:bg-zinc-800 shadow-sm">
-      <div className="space-x-4">
+    <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center p-4 rounded-lg bg-white dark:bg-zinc-800 shadow-sm">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:space-x-2">
         <Button
           variant="outline"
           onClick={toggleTextColor}
-          className="relative bg-slate-400 dark:bg-slate-800 text-white dark:text-white border border-slate-200 dark:border-slate-700
+          className="w-full sm:w-auto bg-slate-400 dark:bg-slate-800 text-white dark:text-white border border-slate-200 dark:border-slate-700
             hover:bg-slate-100 dark:hover:bg-slate-700
             focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500
             active:bg-slate-200 dark:active:bg-slate-600
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all duration-200"
         >
-          <span className="relative z-10">Text Color: {textColor}</span>
+          <span className="relative z-10">Text: {textColor}</span>
         </Button>
 
         <Button
           onClick={matchColor}
-          className="relative bg-indigo-500 dark:bg-indigo-600 text-white
+          className="w-full sm:w-auto bg-indigo-500 dark:bg-indigo-600 text-white
             hover:bg-indigo-600 dark:hover:bg-indigo-700
             focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:ring-offset-2
             active:bg-indigo-700 dark:active:bg-indigo-800
@@ -617,10 +616,10 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      <div className="space-x-4">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:space-x-2">
         <Button
           onClick={handleSendAlert}
-          className="relative inline-flex items-center bg-teal-500 dark:bg-teal-600 text-white
+          className="w-full sm:w-auto bg-teal-500 dark:bg-teal-600 text-white
             hover:bg-teal-600 dark:hover:bg-teal-700
             focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-600 focus:ring-offset-2
             active:bg-teal-700 dark:active:bg-teal-800
@@ -633,7 +632,7 @@ export default function DashboardPage() {
 
         <Button
           onClick={handlePreview}
-          className="relative inline-flex items-center bg-teal-500 dark:bg-teal-600 text-white
+          className="w-full sm:w-auto bg-teal-500 dark:bg-teal-600 text-white
             hover:bg-teal-600 dark:hover:bg-teal-700
             focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-600 focus:ring-offset-2
             active:bg-teal-700 dark:active:bg-teal-800
@@ -669,3 +668,4 @@ export default function DashboardPage() {
   )
 }
 
+  
