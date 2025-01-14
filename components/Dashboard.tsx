@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import axios from "axios"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Bell, Moon, Sun, Lock, MessageSquare, AlertCircle, Waves, User, LogOut } from 'lucide-react'
+import { Bell, Moon, Sun, Lock, MessageSquare, AlertCircle, User, LogOut } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { Input } from "./ui/input"
 import ApiRequestManager from "./ApiLogs"
@@ -626,7 +626,6 @@ export default function DashboardPage() {
             disabled:opacity-50 disabled:cursor-not-allowed
             group transition-all duration-200"
         >
-          <Waves className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
           <span className="relative z-10">Send Alert</span>
         </Button>
 
@@ -639,7 +638,6 @@ export default function DashboardPage() {
             disabled:opacity-50 disabled:cursor-not-allowed
             group transition-all duration-200"
         >
-          <Waves className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
           <span className="relative z-10">Show Preview</span>
         </Button>
       </div>
@@ -668,4 +666,3 @@ export default function DashboardPage() {
   )
 }
 
-  
