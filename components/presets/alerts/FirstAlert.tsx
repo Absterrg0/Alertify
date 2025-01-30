@@ -93,9 +93,9 @@ const MyAlert = React.forwardRef<HTMLDivElement, AlertProps>(
           >
             {renderLogo()}
             <div className="flex-1 relative z-10">
-              <div className="flex items-center justify-start mb-3">
+              <div className="flex justify-center items-center mb-3">
                 <Bell style={{ color: textColor }} className="mr-2" />
-                <h5 className="font-medium leading-none tracking-tight" style={{ color: textColor }}>
+                <h5 className="font-medium leading-none tracking-tight " style={{ color: textColor }}>
                   {title}
                 </h5>
               </div>
