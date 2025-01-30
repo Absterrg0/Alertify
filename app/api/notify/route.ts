@@ -25,7 +25,8 @@ interface Payload {
     backgroundColor: string;
     textColor: string;
     borderColor: string;
-    imageUrl?: string;
+    fileName?: string;
+    uploadedFileUrl?:string;
 }
 
 interface InputProps {
@@ -89,6 +90,8 @@ export async function POST(req: NextRequest) {
                 backgroundColor: payload.backgroundColor,
                 textColor: payload.textColor,
                 borderColor: payload.borderColor,
+                imageUrl:payload.uploadedFileUrl
+                
             },
         });
 
@@ -108,7 +111,7 @@ export async function POST(req: NextRequest) {
                     backgroundColor: payload.backgroundColor,
                     textColor: payload.textColor,
                     borderColor: payload.borderColor,
-                    imageUrl: payload.imageUrl
+                    fileName:payload.fileName
                 }
             };
 

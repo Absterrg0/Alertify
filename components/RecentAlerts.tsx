@@ -27,6 +27,8 @@ export default function NotificationPage({alerts}: InputProps) {
             textColor={alert.textColor}
             borderColor={alert.borderColor}
             onClose={() =>{}}
+            className="pointer-events-none"
+            uploadedFileUrl={alert.imageUrl}
           />
         )
       case "ALERT_DIALOG":
@@ -41,6 +43,9 @@ export default function NotificationPage({alerts}: InputProps) {
             textColor={alert.textColor}
             borderColor={alert.borderColor}
             onClose={() =>{}}
+            className="pointer-events-none"
+            uploadedFileUrl={alert.imageUrl}
+
           />
         )
       case "TOAST":
@@ -55,6 +60,8 @@ export default function NotificationPage({alerts}: InputProps) {
             textColor={alert.textColor}
             borderColor={alert.borderColor}
             onClose={() => {}}
+            className="pointer-events-none"
+            uploadedFileUrl={alert.imageUrl}
           />
         )
       default:

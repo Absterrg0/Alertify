@@ -90,6 +90,7 @@ model VerificationToken {
   textColor       String
   borderColor     String
   imageUrl        String?    // Made optional and renamed for clarity
+  
   userId          String
   user            User       @relation(fields: [userId], references: [id])
   createdAt       DateTime   @default(now())
