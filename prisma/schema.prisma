@@ -107,6 +107,7 @@ model ApiRequest{
   user    User    @relation(fields: [userId],references: [id])
   timestamp DateTime  @default(now())
   endpoint  String
+  name      String @default("")
   success Boolean
 
 

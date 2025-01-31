@@ -34,6 +34,7 @@ export async function CheckRateLimit(userId:string | undefined,plan:PlanStatus |
 export async function logApiRequest(
     userId: string | undefined, 
     endpoint: string, 
+    name: string,
     success: boolean
 ): Promise<boolean> {
     try {
@@ -45,7 +46,8 @@ export async function logApiRequest(
             data: {
                 userId,
                 success,
-                endpoint
+                endpoint,
+                name
             }
         });
 

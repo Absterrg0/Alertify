@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
             // Log successful delivery
             for (const website of websites) {
-                await logApiRequest(user.id, website.url, true);
+                await logApiRequest(user.id, website.url, website.name,true);
                 results.push({
                     website: website.name,
                     status: 'success',
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
             
             // Log failed delivery
             for (const website of websites) {
-                await logApiRequest(user.id, website.url, false);
+                await logApiRequest(user.id, website.url, website.name,false);
                 results.push({
                     website: website.name,
                     status: 'error',

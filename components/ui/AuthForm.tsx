@@ -4,46 +4,161 @@ import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { FcGoogle } from 'react-icons/fc'
 import { FaGithub } from 'react-icons/fa'
+import { motion } from 'framer-motion'
+
+const AnimatedButton = ({ children, onClick, variant }:any) => {
+  const isGoogle = variant === 'google'
+  
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="w-full"
+    >
+      <Button 
+        variant="outline" 
+        className={`w-full relative group h-14 px-6 rounded-xl border shadow-lg transition-all duration-500
+          ${isGoogle ? 
+            'bg-gradient-to-r from-metal-900/90 to-metal-800/90 border-metal-700/30 hover:border-metal-600/50' : 
+            'bg-gradient-to-r from-indigo-600 to-indigo-500 border-indigo-400/30 hover:border-indigo-400/50'
+          }`}
+        onClick={onClick}
+      >
+        {/* Ambient light effect */}
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/[0.05] to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
+        
+        {/* Hover gradient overlay */}
+        <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500
+          ${isGoogle ? 
+            'bg-gradient-to-r from-metal-800/50 via-metal-700/50 to-metal-800/50' : 
+            'bg-gradient-to-r from-indigo-500/50 via-indigo-400/50 to-indigo-500/50'
+          }`}
+        />
+        
+        {/* Content */}
+        <span className="relative flex items-center justify-center">
+          {isGoogle ? (
+            <div className="absolute left-1 p-2 rounded-lg">
+              <FcGoogle className="h-5 w-5" />
+            </div>
+          ) : (
+            <div className="absolute left-1 p-2">
+              <FaGithub className="h-5 w-5 text-white" />
+            </div>
+          )}
+          <span className={`ml-8 font-semibold text-base
+            ${isGoogle ? 
+              'bg-gradient-to-r from-metal-100 to-metal-300 bg-clip-text text-transparent' : 
+              'text-white'
+            }`}>
+            Continue with {isGoogle ? 'Google' : 'GitHub'}
+          </span>
+        </span>
+
+        {/* Glow effect */}
+        <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-2xl
+          ${isGoogle ? 'bg-metal-500/5' : 'bg-indigo-500/10'}`} 
+        />
+      </Button>
+    </motion.div>
+  )
+}
+
+const BackgroundAnimation = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Animated gradient mesh */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_50%)] animate-pulse-slow" />
+      
+      {/* Moving particles */}
+      <div className="absolute inset-0">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute h-1 w-1 bg-indigo-400/30 rounded-full"
+            initial={{ 
+              x: Math.random() * window.innerWidth, 
+              y: Math.random() * window.innerHeight 
+            }}
+            animate={{
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              transition: {
+                duration: 10 + Math.random() * 20,
+                repeat: Infinity,
+                ease: "linear"
+              }
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Floating orbs */}
+      <div className="absolute inset-0">
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-64 h-64"
+            initial={{ 
+              x: Math.random() * window.innerWidth, 
+              y: Math.random() * window.innerHeight 
+            }}
+            animate={{
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              transition: {
+                duration: 15 + Math.random() * 15,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }}
+          >
+            <div className="w-full h-full rounded-full bg-indigo-500/5 blur-3xl" />
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export function AuthForm() {
   const handleGoogleSignIn = () => signIn('google', { callbackUrl: '/dashboard' })
   const handleGithubSignIn = () => signIn('github', { callbackUrl: '/dashboard' })
 
   return (
-    <div className="space-y-6">
-      <Button 
-        variant="outline" 
-        className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white font-semibold py-4 px-4 rounded-xl border border-gray-700 shadow-lg transition duration-300 ease-in-out transform hover:shadow-cyan-500/20"
-        onClick={handleGoogleSignIn}
-      >
-        <FcGoogle className="mr-3 h-6 w-6" />
-        <span className="bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
-          Continue with Google
-        </span>
-      </Button>
-      <Button 
-        variant="default"
-        className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold py-4 px-4 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:shadow-blue-500/20"
-        onClick={handleGithubSignIn}
-      >
-        <FaGithub className="mr-3 h-6 w-6" />
-        Continue with GitHub
-      </Button>
-      <div className="relative">
+    <div className="relative space-y-6 z-10">
+      <BackgroundAnimation />
+      
+      {/* Buttons */}
+      <AnimatedButton variant="google" onClick={handleGoogleSignIn} />
+      <AnimatedButton variant="github" onClick={handleGithubSignIn} />
+
+      {/* Divider */}
+      <div className="relative py-3">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-700"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-gray-900 text-gray-400">Or</span>
+          <div className="w-full border-t border-metal-800/30"></div>
         </div>
       </div>
-      <p className="text-center text-sm text-gray-400 mt-8">
+
+      {/* Terms and Privacy */}
+      <p className="text-center text-sm text-metal-400 mt-6">
         By signing in, you agree to our{' '}
-        <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">Terms of Service</a>
+        <a 
+          href="#" 
+          className="font-medium text-indigo-400 hover:text-indigo-300 transition-colors relative group"
+        >
+          Terms of Service
+          <span className="absolute -bottom-0.5 left-0 w-full h-px bg-indigo-400/50 origin-left scale-x-0 group-hover:scale-x-100 transition-transform"></span>
+        </a>
         {' '}and{' '}
-        <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">Privacy Policy</a>
+        <a 
+          href="#" 
+          className="font-medium text-indigo-400 hover:text-indigo-300 transition-colors relative group"
+        >
+          Privacy Policy
+          <span className="absolute -bottom-0.5 left-0 w-full h-px bg-indigo-400/50 origin-left scale-x-0 group-hover:scale-x-100 transition-transform"></span>
+        </a>
       </p>
     </div>
   )
 }
-

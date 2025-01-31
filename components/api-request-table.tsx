@@ -1,11 +1,8 @@
-'use client';
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpDown, Box, ExternalLink, Rocket } from 'lucide-react';
-import axios from 'axios';
 import { Skeleton } from "@/components/ui/skeleton";
 
 type ApiRequest = {
@@ -16,39 +13,13 @@ type ApiRequest = {
   success: boolean;
 };
 
-interface ApiRequestManagerProps {
-  onRequestsChange?: (requests: ApiRequest[]) => void;
-  initialData?: ApiRequest[];
+interface ApiRequestTableProps {
+  requests: ApiRequest[];
+  isLoading: boolean;
 }
 
-export default function ApiRequestManager({ onRequestsChange }: ApiRequestManagerProps) {
-  const [mounted, setMounted] = useState(false);
-  const [requests, setRequests] = useState<ApiRequest[]>([]);
+export default function ApiRequestTable({ requests, isLoading }: ApiRequestTableProps) {
   const [sortConfig, setSortConfig] = useState<{ key: keyof ApiRequest; direction: 'asc' | 'desc' } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setMounted(true);
-    fetchApiLogs();
-  }, []);
-
-  useEffect(() => {
-    if (mounted && onRequestsChange) {
-      onRequestsChange(requests);
-    }
-  }, [requests, mounted, onRequestsChange]);
-
-  const fetchApiLogs = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get('/api/user/getApiLogs');
-      setRequests(response.data.logs);
-    } catch (error) {
-      console.error("Error fetching API logs:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const sortedRequests = React.useMemo(() => {
     const sortableRequests = [...requests];
@@ -90,7 +61,7 @@ export default function ApiRequestManager({ onRequestsChange }: ApiRequestManage
     <Card className="bg-gradient-to-br from-white to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700/50 transition-all duration-300 w-full mx-auto rounded-xl overflow-hidden backdrop-blur-md">
       <CardHeader className="p-4 sm:p-6 border-b border-gray-200 dark:border-zinc-700/50 bg-gradient-to-r from-gray-50 to-white dark:from-zinc-800 dark:to-zinc-900">
         <CardTitle className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-zinc-200">
-          API Requests
+          API Requests Table
         </CardTitle>
       </CardHeader>
 

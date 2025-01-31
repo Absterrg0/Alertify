@@ -104,7 +104,7 @@ export default function NotificationPage({alerts}: InputProps) {
               </div>            
             </motion.div>
           ) : (
-            alerts.slice(0, 2).map((alert, index) => (
+            alerts.slice(0, 5).map((alert, index) => (
               <motion.div
                 key={alert.id}
                 initial={{ opacity: 0, y: 20 }}
