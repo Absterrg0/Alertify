@@ -30,19 +30,6 @@ export function LogoSection({
   updateAlertState,
   logoPresets,
 }: LogoSectionProps) {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        updateAlertState({
-          uploadedFileUrl: reader.result as string,
-          fileName: file.name,
-        })
-      }
-      reader.readAsDataURL(file)
-    }
-  }
 
   const applyLogoPreset = (preset: { name: string; url: string }) => {
     updateAlertState({

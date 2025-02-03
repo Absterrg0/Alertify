@@ -1,4 +1,3 @@
-import { Label } from "@/components/ui/label";
 import type { AlertState } from "@/types/alert";
 
 interface GradientSectionProps {

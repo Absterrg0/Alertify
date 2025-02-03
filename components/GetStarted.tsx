@@ -1,7 +1,7 @@
+'use client'
 import React from 'react';
 import Image from "next/image";
 import { AuthForm } from "../components/ui/AuthForm";
-import { motion } from 'framer-motion';
 
 const GlowingOrb = ({ className = "" }) => (
   <div className={`relative ${className}`}>

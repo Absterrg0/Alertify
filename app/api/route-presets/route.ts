@@ -1,6 +1,5 @@
 import prisma from '@/db';
 import { auth } from '@/lib/auth';
-import { getSession } from 'next-auth/react';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Define types for the route preset data
@@ -9,7 +8,7 @@ interface RoutePreset {
   routes: string[];
 }
 
-export async function GET(req: NextRequest): Promise<NextResponse> {
+export async function GET(): Promise<NextResponse> {
   const session = await auth()
   if (!session) {
     return new NextResponse(

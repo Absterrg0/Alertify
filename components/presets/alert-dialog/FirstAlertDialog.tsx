@@ -16,7 +16,7 @@ interface AlertDialogProps extends React.HTMLAttributes<HTMLDivElement> {
   borderColor: string
   preview?: boolean
   uploadedFileUrl?: string
-  borderRadius: number
+  borderRadius?: number
 }
 
 const MyAlertDialog = React.forwardRef<HTMLDivElement, AlertDialogProps>(

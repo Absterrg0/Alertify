@@ -17,7 +17,7 @@ interface AlertCustomProps {
   borderColor: string;
   preview: boolean;
   uploadedFileUrl?: string;
-  borderRadius:number;
+  borderRadius?:number;
 }
 
 export type AlertProps = BaseProps & AlertCustomProps;

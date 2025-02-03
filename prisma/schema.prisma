@@ -17,6 +17,7 @@ model User {
   apiKey        String         @default(uuid())
   plan          UserPlan        @default(FREE)
   websites      Website[]
+  RoutePresets  RoutePreset[]
   recentAlerts  Alert[]
   apiHistory    ApiRequest[]
   accounts      Account[]
@@ -114,6 +115,15 @@ model ApiRequest{
   @@index([userId,timestamp])
 }
 
+
+model RoutePreset{
+  id   String   @id@default(cuid())
+  userId  String
+  user  User @relation(fields: [userId],references: [id])
+  routes  String[]
+  name  String
+
+}
 
  enum AlertType {
   ALERT

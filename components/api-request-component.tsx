@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import axios from "axios"
-import {ApiRequestGraph} from "./api-request-graph"
 import ApiRequestTable from "./api-request-table"
 type ApiRequest = {
   id: string

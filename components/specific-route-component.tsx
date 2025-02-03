@@ -33,7 +33,8 @@ const RouteManager = ({ routes, setRoutes }: InputProps) => {
     try {
       const { data } = await axios.get("/api/route-presets")
       setPresets(data)
-    } catch (error) {
+    } catch (e) {
+      console.error(e);
       toast({
         title: "Error",
         description: "Failed to load presets",
@@ -106,6 +107,7 @@ const RouteManager = ({ routes, setRoutes }: InputProps) => {
         description: "Preset saved successfully",
       })
     } catch (error) {
+      console.error(error);
       toast({
         title: "Error",
         description: "Failed to save preset",
@@ -126,6 +128,7 @@ const RouteManager = ({ routes, setRoutes }: InputProps) => {
         description: "Preset deleted successfully",
       })
     } catch (error) {
+      console.error(error);
       toast({
         title: "Error",
         description: "Failed to delete preset",
@@ -158,7 +161,7 @@ const RouteManager = ({ routes, setRoutes }: InputProps) => {
               </DialogHeader>
               <ScrollArea className="mt-4 max-h-[60vh] pr-4">
                 <div className="text-sm text-gray-600 dark:text-gray-300 space-y-4">
-                  <p>Configure routes for your application. Here's how to use the route configuration:</p>
+                  <p>Configure routes for your application. Here&apos;s how to use the route configuration:</p>
                   <ul className="list-disc pl-5 space-y-2">
                     <li>
                       <strong>Exact match:</strong> Use /path (e.g., /blogs) to match only that specific route.
@@ -168,7 +171,7 @@ const RouteManager = ({ routes, setRoutes }: InputProps) => {
                       its subroutes.
                     </li>
                     <li>
-                      <strong>Adding routes:</strong> Enter a route in the input field and click "Add Route" to add it
+                      <strong>Adding routes:</strong> Enter a route in the input field and click &quot;Add Route&quot; to add it
                       to the list.
                     </li>
                   </ul>

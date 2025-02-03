@@ -23,7 +23,6 @@ import { ApiRequestGraph } from "./api-request-graph"
 
 type NotificationType = "ALERT" | "ALERT_DIALOG" | "TOAST"
 type StyleType = "NATIVE" | "GRADIENT"
-const isUnlocked = true
 
 export type Website = {
   id: string
@@ -157,7 +156,12 @@ export default function DashboardPage() {
         <nav className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-lg bg-white dark:bg-[#0e0e0f] shadow-lg transition-all duration-300">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <h1 className="text-2xl font-bold text-teal-600 dark:text-teal-400">Droplert</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">
+      DropLert
+    </h1>
+    <span className="px-2 py-1 rounded-md bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs font-medium">
+      Builder
+    </span>
             </div>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <div className="text-gray-600 dark:text-gray-300">

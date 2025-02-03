@@ -16,7 +16,7 @@ interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
   preview: boolean
   isOpen: boolean
   uploadedFileUrl?: string
-  borderRadius: number
+  borderRadius?: number
 }
 
 const Toast = React.forwardRef<HTMLDivElement, ToastProps>(

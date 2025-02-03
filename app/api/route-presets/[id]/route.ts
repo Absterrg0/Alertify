@@ -1,26 +1,31 @@
-// app/api/routePreset/[id]/route/route.ts
 import prisma from '@/db'
 import { auth } from '@/lib/auth'
-import { getSession } from 'next-auth/react'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await auth()
-  if (!session || !session.user) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+export async function DELETE(req: NextRequest) {
+  // Authenticate the user session
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id } = params
-
+  // Accessing the id parameter
+  const { pathname } = new URL(req.url);
+  const id = pathname.split('/').pop(); // Get the last segment of the path
   try {
+    // Delete the route preset for the authenticated user
     await prisma.routePreset.delete({
       where: { 
-        id: id, // Ensure the `id` is passed correctly
+        id,
         userId: session.user.id
       }
-    })
-    return NextResponse.json(null, { status: 204 })
+    });
+    return NextResponse.json(null, { status: 204 }); // No content response
   } catch (error) {
-    return NextResponse.json({ message: 'Internal server error', error: error }, { status: 500 })
+    console.error('Delete route preset error:', error);
+    return NextResponse.json({ 
+      message: 'Internal server error', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
 }

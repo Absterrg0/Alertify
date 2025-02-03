@@ -5,7 +5,7 @@ export const SpecificUserSection = () => {
   return (
     <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-100 text-center mt-4 w-full">User's Configuration</h3>
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-100 text-center mt-4 w-full">User&apos;s Configuration</h3>
       </div>
       
       <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -24,7 +24,7 @@ export const SpecificUserSection = () => {
         </h2>
         
         <p className="mt-4 text-gray-600 dark:text-gray-400 text-center max-w-md">
-          We're working on something exciting! This feature will be available in the near future.
+          We&apos;re working on something exciting! This feature will be available in the near future.
         </p>
         
         <div className="mt-8 grid grid-cols-3 gap-4 text-center">
