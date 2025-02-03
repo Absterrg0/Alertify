@@ -103,8 +103,7 @@ export default function RootLayout({ children }) {
                   <div className="text-sm sm:text-base">Configure the following environment variables in your project:</div>
                   <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-md overflow-x-auto">
                     <pre className="text-xs sm:text-sm font-mono">
-                      {`NEXT_PUBLIC_WS_SERVER_URL=${process.env.NEXT_PUBLIC_WEBSOCKET_SERVER_URL}
-NEXT_PUBLIC_DROPLERT_ID=
+                      {`NEXT_PUBLIC_DROPLERT_ID=
 DROPLERT_KEY=`}
                     </pre>
                   </div>

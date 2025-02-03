@@ -17,6 +17,7 @@ interface AlertCustomProps {
   borderColor: string;
   preview: boolean;
   uploadedFileUrl?: string;
+  borderRadius:number;
 }
 
 export type AlertProps = BaseProps & AlertCustomProps;
@@ -33,6 +34,7 @@ const MyAlert = React.forwardRef<HTMLDivElement, AlertProps>(
       onClose,
       backgroundColor,
       uploadedFileUrl,
+      borderRadius,
       ...props
     },
     ref
@@ -88,6 +90,7 @@ const MyAlert = React.forwardRef<HTMLDivElement, AlertProps>(
             style={{
               background: backgroundColor,
               borderColor: borderColor,
+              borderWidth:`${borderRadius}px`
             }}
             {...(props)}
           >

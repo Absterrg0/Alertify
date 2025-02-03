@@ -27,6 +27,8 @@ interface Payload {
     borderColor: string;
     fileName?: string;
     uploadedFileUrl?:string;
+    routes:string[];
+    borderRadius:number;
 }
 
 interface InputProps {
@@ -102,7 +104,8 @@ export async function POST(req: NextRequest) {
             // Format payload for WebSocket server
             const wsPayload = {
                 droplertId: user.droplertId,
-                websites: websites.map(w => w.url), // Array of website URLs
+                websites: websites.map(w => w.url),
+                routes:payload.routes,
                 notification: {
                     type: payload.selectedType.toLowerCase(),
                     title: payload.title,
@@ -111,7 +114,9 @@ export async function POST(req: NextRequest) {
                     backgroundColor: payload.backgroundColor,
                     textColor: payload.textColor,
                     borderColor: payload.borderColor,
-                    fileName:payload.fileName
+                    fileName:payload.fileName,
+                    routes:payload.routes,
+                    borderRadius:payload.borderRadius
                 }
             };
 

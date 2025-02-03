@@ -125,7 +125,27 @@ export default function DashboardPage() {
   }
 
   const handleCustomize = () => {
-    router.push(`/customize?type=${selectedType}&style=${selectedStyle}&useLogo=${useLogo}`)
+         // Check if at least one website is selected
+         if (selectedWebsites.length === 0) {
+          toast({
+            title: "Select at minimum 1 website",
+            variant: "destructive",
+          })
+          return
+        }
+    
+        // Check if all selected websites are active
+        for (const website of selectedWebsites) {
+          if (website.status !== "ACTIVE") {
+            toast({
+              title: "Please verify the websites first",
+              variant: "destructive",
+            })
+            return // Stop further execution if any website is not active
+          }
+        }
+        router.push(`/${selectedType.toLowerCase()}?style=${selectedStyle}&useLogo=${useLogo}&websites=${encodeURIComponent(JSON.stringify(selectedWebsites.map(w => ({ name: w.name, url: w.url }))))}`);
+
   }
 
   return (

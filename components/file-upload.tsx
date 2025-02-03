@@ -86,7 +86,7 @@ export function FileUpload({
                       ) : (
                         <>
                           <Upload className="h-4 w-4" />
-                          <span>{ready ? "Choose File" : "Loading..."}</span>
+                          <span>{ready ? "Choose" : "Loading..."}</span>
                         </>
                       )}
                     </div>
