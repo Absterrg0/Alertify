@@ -39,7 +39,7 @@ export function AuthForm() {
   return (
     <div className="space-y-4 w-full max-w-sm mx-auto">
       <AuthButton variant="google" onClick={handleGoogleSignIn} />
-      <AuthButton variant="github" onClick={handleGithubSignIn} />
+    <AuthButton variant="github" onClick={handleGithubSignIn} />
 
       <div className="relative py-4">
         <div className="absolute inset-0 flex items-center">
