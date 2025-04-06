@@ -42,10 +42,9 @@ export function LogoSection({
   return (
     <div className="bg-white dark:bg-zinc-800/50 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700 w-full">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-semibold text-gray-800 dark:text-zinc-100">Logo Presets:</h3>
         <AlertDialog open={showLogoDialog} onOpenChange={setShowLogoDialog}>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2 text-center w-full">
               <Wand2 className="h-4 w-4" />
               Choose Preset
             </Button>
