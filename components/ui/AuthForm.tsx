@@ -20,7 +20,7 @@ const AuthButton = ({ onClick, variant }: AuthButtonProps) => {
         variant="outline"
         className={`w-full relative flex items-center justify-center h-14 px-6 rounded-lg border ${
           isGoogle
-            ? "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"
+            ? "bg-white text-zinc-900 border-gray-300 hover:bg-gray-50 hover:text-black"
             : "bg-[#24292e] text-white border-gray-700 hover:bg-[#2f363d]"
         }`}
         onClick={onClick}
