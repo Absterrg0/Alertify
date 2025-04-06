@@ -1,7 +1,6 @@
 """
 # ⚡️ Droplert – Smart Website Alert System
 
-![License](https://img.shields.io/github/license/absterrg0/droplert?style=flat-square)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)
 ![Made with ❤️](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=flat-square)
 
