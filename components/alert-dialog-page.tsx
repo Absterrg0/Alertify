@@ -5,22 +5,34 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+<<<<<<< HEAD
 import { ArrowLeft, Eye, Moon, Sun } from "lucide-react"
+=======
+import { ArrowLeft, Moon, Sun } from "lucide-react"
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
 import { CardFooter } from "@/components/ui/card"
 import { toast } from "@/hooks/use-toast"
 import axios from "axios"
 import type { AlertState } from "@/types/alert"
 import type { Website } from "./Dashboard"
+<<<<<<< HEAD
 import { LogoSection } from "./customise/logo-section"
 import { GradientSection } from "./customise/gradient-section"
 import { ContentSection } from "./customise/content-section"
 import { ColorSection } from "./customise/color-section"
+=======
+import { LogoSection } from "./cutomise/logo-section"
+import { GradientSection } from "./cutomise/gradient-section"
+import { ContentSection } from "./cutomise/content-section"
+import { ColorSection } from "./cutomise/color-section"
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import RouteManager from "./specific-route-component"
 import SpecificUserSection from "./specific-user-component"
 import { MyAlertDialog } from "./presets/alert-dialog/FirstAlertDialog"
 import EmptyState from "./empty-route-state"
+<<<<<<< HEAD
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 // Preset definitions
@@ -137,6 +149,25 @@ const logoPresets = [
   { name: "GoalMet", url: "https://075uvr3bfp.ufs.sh/f/SWDTAKMjNXVT59RuXSzUbHhcr09eY2WSxJ6NTDQlutmECi4P" },
   { name: "Caution", url: "https://075uvr3bfp.ufs.sh/f/SWDTAKMjNXVT2JZEzPgKNydbqVWD94IMFUCcrBSsTkA7ZxuX" },
   { name: "Abstract2", url: "https://075uvr3bfp.ufs.sh/f/SWDTAKMjNXVTn85x8EWqmi4vLjs7JGZFeXCpDSryg0hwuAnd" },
+=======
+
+const logoPresets = [
+    { name: "Abstract1", url: "https://075uvr3bfp.ufs.sh/f/SWDTAKMjNXVTZ1VMZnCYVDtCnH8Q0hBa4xPKcdlTb3qiX2Ap" },
+    { name: "GoalMet", url: "https://075uvr3bfp.ufs.sh/f/SWDTAKMjNXVT59RuXSzUbHhcr09eY2WSxJ6NTDQlutmECi4P" },
+    { name: "Caution", url: "https://075uvr3bfp.ufs.sh/f/SWDTAKMjNXVT2JZEzPgKNydbqVWD94IMFUCcrBSsTkA7ZxuX" },
+    { name: "Abstract2", url: "https://075uvr3bfp.ufs.sh/f/SWDTAKMjNXVTn85x8EWqmi4vLjs7JGZFeXCpDSryg0hwuAnd" },
+  ]
+  
+const gradientPresets = [
+  { name: "Cosmic Fusion", start: "#ff00cc", end: "#333399" },
+  { name: "Sunset Blaze", start: "#ff512f", end: "#f09819" },
+  { name: "Ocean Breeze", start: "#2193b0", end: "#6dd5ed" },
+  { name: "Forest Mist", start: "#000428", end: "#004e92" },
+  { name: "Cherry Blossom", start: "#ffc3a0", end: "#ffafbd" },
+  { name: "Northern Lights", start: "#43cea2", end: "#185a9d" },
+  { name: "Amethyst Dream", start: "#9d50bb", end: "#6e48aa" },
+  { name: "Citrus Splash", start: "#fdc830", end: "#f37335" },
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
 ]
 
 export default function AlertDialogPage() {
@@ -148,9 +179,12 @@ export default function AlertDialogPage() {
   const [showGradientDialog, setShowGradientDialog] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [routes, setRoutes] = useState<string[]>([])
+<<<<<<< HEAD
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null)
   const [selectedGradientId, setSelectedGradientId] = useState<string | null>(null)
 
+=======
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
   const [alertState, setAlertState] = useState<AlertState>({
     title: "Alert Dialog Title",
     description: "This is an alert dialog message.",
@@ -191,6 +225,7 @@ export default function AlertDialogPage() {
 
   const updateAlertState = (updates: Partial<AlertState>) => {
     setAlertState((prev) => ({ ...prev, ...updates }))
+<<<<<<< HEAD
     // Reset selected presets when manually changing settings
     if (
       Object.keys(updates).some((key) =>
@@ -202,6 +237,8 @@ export default function AlertDialogPage() {
     if (Object.keys(updates).some((key) => ["startColor", "endColor", "gradientDirection"].includes(key))) {
       setSelectedGradientId(null)
     }
+=======
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
   }
 
   const handleSendAlertDialog = async () => {
@@ -219,9 +256,18 @@ export default function AlertDialogPage() {
         fileName: alertState.fileName,
         uploadedFileUrl: alertState.uploadedFileUrl,
         routes: routes,
+<<<<<<< HEAD
         borderRadius: alertState.borderRadius,
       }
 
+=======
+        borderRadius:alertState.borderRadius
+
+      }
+
+      console.log(routes)
+
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
       const response = await axios.post("/api/notify", {
         payload,
         websites: websites,
@@ -254,6 +300,7 @@ export default function AlertDialogPage() {
     return alertState.backgroundColor
   }
 
+<<<<<<< HEAD
   const applyPreset = (preset: (typeof presets)[0]) => {
     setSelectedPresetId(preset.id)
     setSelectedGradientId(null)
@@ -318,6 +365,27 @@ export default function AlertDialogPage() {
         </div>
       )}
 
+=======
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-900 dark:to-black text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      {showPreview && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <MyAlertDialog
+            preview={false}
+            title={alertState.title}
+            description={alertState.description}
+            backgroundColor={getBackgroundStyle()}
+            borderColor={alertState.borderColor}
+            textColor={alertState.textColor}
+            onClose={() => setShowPreview(false)}
+            isOpen={true}
+            className="border-ocean-500 border shadow-lg"
+            uploadedFileUrl={alertState.uploadedFileUrl}
+            borderRadius={alertState.borderRadius}
+          />
+        </div>
+      )}
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
       <div className="container mx-auto p-6 space-y-8">
         {/* Navigation */}
         <nav className="flex items-center justify-between p-6 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg shadow-lg border border-gray-200 dark:border-zinc-800 transition-all duration-300">
@@ -353,6 +421,7 @@ export default function AlertDialogPage() {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+<<<<<<< HEAD
           {/* Left Column - Preview and Content */}
           <div className="xl:col-span-2 space-y-6">
             <div className="bg-white dark:bg-zinc-800/50 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700">
@@ -517,10 +586,125 @@ export default function AlertDialogPage() {
                     className="shadow-xl pointer-events-none"
                   />
                 </div>
+=======
+          {/* Left Column */}
+          <div className="xl:col-span-2 space-y-6 ">
+            <div className="bg-white dark:bg-zinc-800/50 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700">
+              <h3 className="text-2xl font-semibold text-gray-800 dark:text-zinc-100 mb-6">Content</h3>
+              <div className="mb-6 w-full flex justify-center">
+                <MyAlertDialog
+                  preview={true}
+                  title={alertState.title}
+                  description={alertState.description}
+                  backgroundColor={getBackgroundStyle()}
+                  borderColor={alertState.borderColor}
+                  textColor={alertState.textColor}
+                  onClose={() => {}}
+                  isOpen={true}
+                  uploadedFileUrl={alertState.useLogo ? alertState.uploadedFileUrl : undefined}
+                  borderRadius={alertState.borderRadius}
+                  className="pointer-events-none"
+                />
+              </div>
+              {!alertState.isGradient && !alertState.useLogo ? (
+                <div className="mt-48">
+                  <ContentSection alertState={alertState} updateAlertState={updateAlertState} />
+                </div>
+              ) : (
+                <ContentSection alertState={alertState} updateAlertState={updateAlertState} />
+              )}
+            </div>
+
+            {/* Gradient and Logo Section */}
+            {(alertState.isGradient || alertState.useLogo) && (
+              <div
+                className={`grid ${alertState.isGradient && alertState.useLogo ? "grid-cols-2" : "grid-cols-1"} gap-6`}
+              >
+                {alertState.isGradient && (
+                  <div className="bg-white dark:bg-zinc-800/50 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700">
+                    <h3 className="text-2xl font-semibold text-gray-800 dark:text-zinc-100 mb-6">
+                      Gradient Configuration
+                    </h3>
+                    <GradientSection alertState={alertState} updateAlertState={updateAlertState} />
+                  </div>
+                )}
+                {alertState.useLogo && (
+                  <div className="bg-white dark:bg-zinc-800/50 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700">
+                    <div className="flex items-center justify-between space-x-4 mb-6">
+    <h3 className="text-2xl font-semibold text-gray-800 dark:text-zinc-100 text-center">Configuration</h3>
+    
+    <div className="flex items-center bg-red-50 dark:bg-red-900/20 border border-red-500 text-red-700 dark:text-red-400 text-sm font-medium rounded-lg px-4 py-2 shadow-md">
+      <span className="text-center">⚠️ The same file should be present in <span className="font-bold">/public</span></span>
+
+    </div>
+  </div>
+                    <LogoSection
+                      alertState={alertState}
+                      isDark={isDark}
+                      showLogoDialog={showLogoDialog}
+                      setShowLogoDialog={setShowLogoDialog}
+                      updateAlertState={updateAlertState}
+                      logoPresets={logoPresets}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Style Configuration */}
+            <div className="bg-white dark:bg-zinc-800/50 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700">
+              <h3 className="text-2xl font-semibold text-gray-800 dark:text-zinc-100 mb-6">Style Configuration</h3>
+              <ColorSection
+                alertState={alertState}
+                updateAlertState={updateAlertState}
+                showGradientDialog={showGradientDialog}
+                setShowGradientDialog={setShowGradientDialog}
+                gradientPresets={gradientPresets}
+              />
+
+              {/* Border Style */}
+              <div className="space-y-4 mt-6">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-100">Border Style</h3>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="borderColor" className="text-sm font-medium">
+                    Border Color
+                  </Label>
+                  <Input
+                    id="borderColor"
+                    type="color"
+                    value={alertState.borderColor}
+                    onChange={(e) => updateAlertState({ borderColor: e.target.value })}
+                    className="w-32 h-12 rounded-lg cursor-pointer transition-all duration-200 hover:scale-110"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="borderRadius" className="text-sm font-medium">
+                    Border Radius
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      id="borderRadius"
+                      min={0}
+                      max={20}
+                      step={1}
+                      value={[alertState.borderRadius]}
+                      onValueChange={(value) => updateAlertState({ borderRadius: value[0] })}
+                      className="flex-1"
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[3ch]">
+                      {alertState.borderRadius}px
+                    </span>
+                  </div>
+                </div>
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
               </div>
             </div>
           </div>
         </div>
+<<<<<<< HEAD
 
         {/* Targeting Section */}
         <div className="flex flex-col md:flex-row justify-between space-y-6 md:space-y-0 md:space-x-4">
@@ -531,11 +715,23 @@ export default function AlertDialogPage() {
           <div className="w-full md:w-1/2 bg-white dark:bg-zinc-800/50 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700">
             <h3 className="text-xl font-semibold text-gray-800 dark:text-zinc-100 mb-4">User Targeting</h3>
             <SpecificUserSection />
+=======
+        <div className="flex justify-between space-x-4">
+          <div className="w-1/2">
+            {websites.length > 1 ? <EmptyState /> : <RouteManager routes={routes} setRoutes={setRoutes} />}
+          </div>
+          <div className="w-1/2">
+            <SpecificUserSection></SpecificUserSection>
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
           </div>
         </div>
 
         {/* Footer */}
+<<<<<<< HEAD
         <CardFooter className="p-6 flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50 rounded-xl">
+=======
+        <CardFooter className="p-6 flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50">
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
           <div className="text-sm text-gray-600 dark:text-gray-400">
             Sending to <span className="font-semibold">{websites?.length || 0}</span>{" "}
             {websites?.length === 1 ? "website" : "websites"}

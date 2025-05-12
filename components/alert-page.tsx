@@ -12,11 +12,19 @@ import axios from "axios"
 import type { AlertState } from "@/types/alert"
 import type { Website } from "./Dashboard"
 // Import our new components
+<<<<<<< HEAD
 import { LogoSection } from "./customise/logo-section"
 import { GradientSection } from "./customise/gradient-section"
 
 import { ContentSection } from "./customise/content-section"
 import { ColorSection } from "./customise/color-section"
+=======
+import { LogoSection } from "./cutomise/logo-section"
+import { GradientSection } from "./cutomise/gradient-section"
+
+import { ContentSection } from "./cutomise/content-section"
+import { ColorSection } from "./cutomise/color-section"
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import RouteManager from "./specific-route-component"

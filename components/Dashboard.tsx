@@ -48,10 +48,18 @@ export default function DashboardPage() {
   const { data: session } = useSession()
   const [isDark, setIsDark] = useState(true)
   const [selectedType, setSelectedType] = useState<NotificationType>("ALERT")
+<<<<<<< HEAD
+=======
+  const [selectedStyle, setSelectedStyle] = useState<StyleType>("NATIVE")
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
   const [alerts, setAlerts] = useState<Alert[]>()
   const [isLoading, setIsLoading] = useState(true)
   const [isWebsitesLoading, setIsWebsitesLoading] = useState(true)
   const [isAlertsLoading, setIsAlertsLoading] = useState(true)
+<<<<<<< HEAD
+=======
+  const [useLogo, setUseLogo] = useState(false)
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
 
   const [websites, setWebsites] = useState<Website[]>([])
   const [selectedWebsites, setSelectedWebsites] = useState<Website[]>([])
@@ -141,7 +149,11 @@ export default function DashboardPage() {
             return // Stop further execution if any website is not active
           }
         }
+<<<<<<< HEAD
         router.push(`/${selectedType.toLowerCase()}?style=GRADIENT&useLogo=${true}&websites=${encodeURIComponent(JSON.stringify(selectedWebsites.map(w => ({ name: w.name, url: w.url }))))}`);
+=======
+        router.push(`/${selectedType.toLowerCase()}?style=${selectedStyle}&useLogo=${useLogo}&websites=${encodeURIComponent(JSON.stringify(selectedWebsites.map(w => ({ name: w.name, url: w.url }))))}`);
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
 
   }
 
@@ -259,10 +271,64 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   </div>
+<<<<<<< HEAD
                 </CardContent>
                 <CardFooter className="p-8 flex justify-center">
                   <Button onClick={handleCustomize} className="w-full max-w-md text-lg py-6" size="lg">
                     Select Notification
+=======
+
+                  {/* Style Options */}
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-800 dark:text-zinc-200 mb-6">Select Style</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {[
+                        { type: "NATIVE", label: "Native", description: "Solid background color", icon: Palette },
+                        {
+                          type: "GRADIENT",
+                          label: "Gradients",
+                          description: "Great gradient background color with multiple variants",
+                          icon: Palette,
+                        },
+                      ].map(({ type, label, description, icon: Icon }) => (
+                        <button
+                          key={type}
+                          onClick={() => setSelectedStyle(type as StyleType)}
+                          className={cn(
+                            "p-6 rounded-xl transition-all duration-300 flex flex-col items-center justify-center text-center",
+                            selectedStyle === type
+                              ? "bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 shadow-md ring-2 ring-teal-500"
+                              : "bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:scale-105 hover:border-teal-300 dark:hover:border-teal-700",
+                          )}
+                        >
+                          <Icon className="h-12 w-12 mb-4" />
+                          <span className="text-lg font-medium mb-2">{label}</span>
+                          <span className="text-sm dark:text-gray-400">{description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Logo Option */}
+                  <div className="flex items-center justify-between p-6 bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-700">
+                    <div className="flex items-center space-x-4">
+                      <Image className="h-8 w-8 text-gray-600 dark:text-gray-300" />
+                      <div>
+                        <h4 className="text-lg font-medium text-gray-800 dark:text-zinc-200">Use Custom Logo</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Include your brand logo in notifications
+                        </p>
+                      </div>
+                    </div>
+                    <Switch id="use-logo" checked={useLogo} onCheckedChange={setUseLogo}
+                    className="data-[state=unchecked]:bg-white data-[state=checked]:bg-teal-500"
+                     />
+                  </div>
+                </CardContent>
+                <CardFooter className="p-8 flex justify-center">
+                  <Button onClick={handleCustomize} className="w-full max-w-md text-lg py-6" size="lg">
+                    Customize Notification
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
                   </Button>
                 </CardFooter>
               </Card>

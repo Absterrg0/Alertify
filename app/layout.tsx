@@ -78,6 +78,10 @@ export const metadata: Metadata = {
   },
   verification: {
     google: 'ZGlLzOHfT3u0RGIUcIUDuqSK11VHxNvhnrRFMDpQs-8',
+<<<<<<< HEAD
+=======
+    // other verification methods if applicable
+>>>>>>> ca4161cb94c8c5522d049353955bf186f8d11d3a
   },
   alternates: {
     canonical: 'https://droplert.abstergo.dev',
