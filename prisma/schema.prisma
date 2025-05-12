@@ -1,0 +1,153 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+ 
+generator client {
+  provider = "prisma-client-js"
+}
+ 
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  droplertId    String         @default(cuid())
+  apiKey        String         @default(uuid())
+  plan          UserPlan        @default(FREE)
+  websites      Website[]
+  RoutePresets  RoutePreset[]
+  recentAlerts  Alert[]
+  apiHistory    ApiRequest[]
+  accounts      Account[]
+  sessions      Session[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([provider, providerAccountId])
+} 
+ 
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@id([identifier, token])
+}
+ 
+
+
+
+ model Website{
+  id    String      @id@default(cuid())
+  name  String  
+  url   String      @unique
+  isVerified  Boolean @default(false)
+  status  websiteStatus     @default(PENDING)
+  userId  String
+  user  User        @relation(fields: [userId],references: [id])
+ }
+
+
+
+
+ model Alert {
+  id              String     @id @default(cuid())
+  title           String
+  description     String
+  type            AlertType 
+  style           StyleType 
+  backgroundColor String
+  textColor       String
+  borderColor     String
+  imageUrl        String?    
+  
+  userId          String
+  user            User       @relation(fields: [userId], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+
+
+model ApiRequest{
+  id     String     @id @default(cuid())
+  userId  String
+  user    User    @relation(fields: [userId],references: [id])
+  timestamp DateTime  @default(now())
+  endpoint  String
+  name      String @default("")
+  success Boolean
+
+
+  @@index([userId,timestamp])
+}
+
+
+model RoutePreset{
+  id   String   @id@default(cuid())
+  userId  String
+  user  User @relation(fields: [userId],references: [id])
+  routes  String[]
+  name  String
+
+}
+
+ enum AlertType {
+  ALERT
+  ALERT_DIALOG
+  TOAST
+ }
+
+
+ enum StyleType {
+  NATIVE
+  GRADIENT
+  LOGO
+ }
+
+
+
+ enum websiteStatus {
+  PENDING
+  ACTIVE
+  DEACTIVATED
+ }
+
+ enum UserPlan {
+  FREE
+  PREMIUM
+  ENTERPRISE
+ }
