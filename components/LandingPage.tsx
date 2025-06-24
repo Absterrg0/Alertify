@@ -1,6 +1,6 @@
 
-
-import { motion } from "motion/react"
+'use client'
+import {motion} from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Bell, Sun, ArrowRight, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react"
 import Link from "next/link"

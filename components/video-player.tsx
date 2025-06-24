@@ -1,3 +1,4 @@
+'use client'
 import { useRef, useState } from 'react';
 import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import { DefaultVideoLayout, defaultLayoutIcons } from '@vidstack/react/player/layouts/default';

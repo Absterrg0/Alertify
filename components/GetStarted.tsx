@@ -38,7 +38,7 @@ export default function AuthPage() {
       {/* Auth Container */}
       <div className="w-full flex items-center justify-center p-8 relative z-10">
         <div className="w-full max-w-md">
-          {/* Glass Card Effect */}
+          {/* Subtle Glass Card Effect */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-8 shadow-2xl">
             {/* Logo Animation */}
             <div className="mb-8 relative">
@@ -57,7 +57,7 @@ export default function AuthPage() {
               </p>
             </div>
 
-            {/* Auth Form with Enhanced Styling */}
+            {/* Auth Form */}
             <div className="space-y-6">
               <AuthForm />
             </div>
