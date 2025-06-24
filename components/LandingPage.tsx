@@ -1,37 +1,21 @@
-"use client"
 
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+
+import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Bell, Moon, Sun, ArrowRight, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react"
+import { Bell, Sun, ArrowRight, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { BackgroundBeams } from "@/components/ui/background-beams"
 import { TextGenerateEffect } from "@/components/ui/text-generate"
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient"
 import { TracingBeam } from "@/components/ui/tracing-beam"
-import VideoComponent from "./video-player"
+  import VideoComponent from "./video-player"
+import { ModeToggle } from "./theme-toggle-button"
 
 export default function LandingPage() {
-  const [isDark, setIsDark] = useState(false)
 
-  // Set theme based on system preference initially
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
-      setIsDark(isDarkMode)
 
-      // Add smooth scrolling
-      document.documentElement.style.scrollBehavior = "smooth"
-    }
-  }, [])
 
-  // Update theme when changed
-  useEffect(() => {
-    const root = window.document.documentElement
-    root.classList.toggle("dark", isDark)
-  }, [isDark])
+
 
   const features = [
     {
@@ -116,15 +100,7 @@ export default function LandingPage() {
               </div>
 
               <div className="flex items-center gap-4 ml-auto md:ml-0">
-                <Switch
-                  checked={isDark}
-                  onCheckedChange={setIsDark}
-                  id="dark-mode"
-                  className="data-[state=checked]:bg-teal-600"
-                />
-                <Label htmlFor="dark-mode" className="cursor-pointer">
-                  {isDark ? <Moon className="h-5 w-5 text-teal-400" /> : <Sun className="h-5 w-5 text-teal-500" />}
-                </Label>
+                <ModeToggle />
               </div>
 
               <div className="block md:hidden">

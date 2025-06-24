@@ -5,9 +5,10 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/toaster";
-import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
 import { Suspense } from "react";
+import { ThemeProvider } from "@/components/theme-provider"
+
 // Google Font - Poppins
 const poppins = Poppins({
   subsets: ["latin"],
@@ -82,23 +83,28 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://droplert.abstergo.dev',
-  },
-  icons: {
+},
+    icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
 };
 
+export const viewport = {
+  themeColor: '#ffffff',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <Head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#ffffff" />
-      </Head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
+      <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+      >
         <SessionProvider>
           <Suspense>
 
@@ -107,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Analytics />
           <Toaster />
         </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
