@@ -2,49 +2,84 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  ChevronDown,
-  Globe2,
-  Menu,
-  Radio,
-  ShieldCheck,
-  X,
-} from "lucide-react"
+import { ArrowRight, ArrowUpRight, Check, ChevronDown, Menu, ShieldCheck, X } from "lucide-react"
 import { DroplertMark } from "@/components/brand/DroplertMark"
 
-const featureRows = [
+const systemRecords = [
   {
     number: "01",
-    title: "Durable delivery",
-    copy: "Publish once and let the feed stay available for every new page load. Visible pages refresh without keeping a socket open.",
+    label: "DURABLE DELIVERY",
+    title: "The feed is the source of truth.",
+    copy: "Publish once and keep the campaign available for every new page load. The client reads a versioned HTTP feed, not a transient browser connection.",
+    detail: "HTTP / VERSIONED / CACHEABLE",
   },
   {
     number: "02",
-    title: "Schedule with intent",
-    copy: "Set a campaign window before you publish. Announcements can arrive when a launch, maintenance window, or release actually starts.",
+    label: "SCHEDULED WINDOWS",
+    title: "Make time part of the message.",
+    copy: "Set a start and optional end before publishing. Launch notes, maintenance windows, and release prompts arrive when their context is actually useful.",
+    detail: "START / END / PRIORITY",
   },
   {
     number: "03",
-    title: "Target the right routes",
-    copy: "Keep a campaign focused with route targeting, so a homepage note does not become a product-wide interruption.",
+    label: "ROUTE TARGETING",
+    title: "Carry the message to the right surface.",
+    copy: "Route rules keep a campaign focused. A note for /changelog can stay a note for /changelog instead of becoming a product-wide interruption.",
+    detail: "PATH RULES / VERIFIED ORIGINS",
   },
   {
     number: "04",
-    title: "Shape the surface",
-    copy: "Five visual presets and five motion options give teams a deliberate system for making announcements feel native to their product.",
+    label: "INSPECTABLE ANALYTICS",
+    title: "Know what was delivered.",
+    copy: "Delivery and interaction events are stored independently, so impressions, clicks, and dismissals can be understood without coupling them to feed retrieval.",
+    detail: "IMPRESSION / CLICK / DISMISS",
   },
-]
+] as const
 
-const stylePresets = [
-  { name: "Minimal", detail: "quiet / direct", className: "style-tile--minimal" },
-  { name: "Glass", detail: "soft / layered", className: "style-tile--glass" },
-  { name: "Aurora", detail: "luminous / calm", className: "style-tile--aurora" },
-  { name: "Editorial", detail: "warm / considered", className: "style-tile--editorial" },
-  { name: "Neon", detail: "sharp / high-signal", className: "style-tile--neon" },
-]
+const surfacePresets = [
+  {
+    name: "Minimal",
+    code: "MINIMAL",
+    detail: "QUIET / DIRECT",
+    href: "/alert?preset=MINIMAL",
+    className: "surface-register__item--minimal",
+    type: "ALERT",
+  },
+  {
+    name: "Glass",
+    code: "GLASS",
+    detail: "SOFT / LAYERED",
+    href: "/toast?preset=GLASS",
+    className: "surface-register__item--glass",
+    type: "TOAST",
+  },
+  {
+    name: "Aurora",
+    code: "AURORA",
+    detail: "AMBIENT / CALM",
+    href: "/alert?preset=AURORA",
+    className: "surface-register__item--aurora",
+    type: "ALERT",
+  },
+  {
+    name: "Editorial",
+    code: "EDITORIAL",
+    detail: "TYPE / VOICE",
+    href: "/alert_dialog?preset=EDITORIAL",
+    className: "surface-register__item--editorial",
+    type: "ALERT DIALOG",
+  },
+  {
+    name: "Neon",
+    code: "NEON",
+    detail: "HIGH / SIGNAL",
+    href: "/toast?preset=NEON",
+    className: "surface-register__item--neon",
+    type: "TOAST",
+  },
+] as const
+
+const proofItems = ["ETag revalidation", "15 min visible refresh", "verified origins", "no browser secret"]
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -52,68 +87,69 @@ export default function LandingPage() {
   const closeMenu = () => setMobileMenuOpen(false)
 
   return (
-    <div className="landing-shell noise-overlay">
-      <header className="landing-header">
-        <div className="mx-auto flex min-h-[4.4rem] w-full max-w-6xl items-center justify-between px-5 sm:px-8">
-          <DroplertMark />
+    <div className="landing-shell dispatch-page">
+      <a className="landing-skip-link" href="#system">
+        Skip to system
+      </a>
 
-          <nav aria-label="Primary navigation" className="hidden items-center gap-7 md:flex">
-            <a className="landing-nav-link" href="#product">
-              Product
+      <header className="landing-header dispatch-header">
+        <div className="landing-frame dispatch-header__inner">
+          <div className="dispatch-identity">
+            <DroplertMark className="dispatch-brand" />
+            <span className="dispatch-identity__code">DL / CAMPAIGN SYSTEM</span>
+          </div>
+
+          <nav aria-label="Primary navigation" className="dispatch-nav dispatch-nav--desktop">
+            <a className="dispatch-nav__link" href="#system">
+              <span>01</span> System
             </a>
-            <a className="landing-nav-link" href="#workflow">
-              How it works
+            <a className="dispatch-nav__link" href="#surfaces">
+              <span>02</span> Surfaces
             </a>
-            <a className="landing-nav-link" href="#styles">
-              Styles
+            <a className="dispatch-nav__link" href="#install">
+              <span>03</span> Install
             </a>
           </nav>
 
-          <div className="hidden items-center gap-3 md:flex">
-            <Link className="landing-nav-link px-2 py-2" href="/dashboard">
-              Dashboard
-            </Link>
-            <Link className="landing-nav-link px-2 py-2" href="/getstarted">
+          <div className="dispatch-header__actions dispatch-header__actions--desktop">
+            <Link className="dispatch-header__signin" href="/getstarted">
               Sign in
             </Link>
-            <Link className="button-mint" href="/getstarted">
-              Start building <ArrowUpRight aria-hidden="true" size={15} />
+            <Link className="dispatch-button dispatch-button--cobalt dispatch-button--small" href="/getstarted">
+              Start building <ArrowUpRight aria-hidden="true" size={14} />
             </Link>
           </div>
 
           <button
             type="button"
-            className="button-icon md:hidden"
+            className="dispatch-menu-button"
             aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-navigation"
+            aria-controls="dispatch-mobile-navigation"
             aria-label={mobileMenuOpen ? "Close navigation" : "Open navigation"}
             onClick={() => setMobileMenuOpen((open) => !open)}
           >
-            {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
+            {mobileMenuOpen ? <X aria-hidden="true" size={18} /> : <Menu aria-hidden="true" size={18} />}
           </button>
         </div>
 
         {mobileMenuOpen ? (
-          <div id="mobile-navigation" className="border-t border-white/[0.1] bg-[#090c11] md:hidden">
-            <nav aria-label="Mobile navigation" className="mx-auto flex w-full max-w-6xl flex-col px-5 py-4 sm:px-8">
-              <a className="landing-nav-link border-b border-white/[0.08] py-3" href="#product" onClick={closeMenu}>
-                Product
+          <div id="dispatch-mobile-navigation" className="dispatch-mobile-panel">
+            <nav aria-label="Mobile navigation" className="landing-frame dispatch-mobile-panel__nav">
+              <a className="dispatch-mobile-panel__link" href="#system" onClick={closeMenu}>
+                <span>01</span> System <ArrowRight aria-hidden="true" size={15} />
               </a>
-              <a className="landing-nav-link border-b border-white/[0.08] py-3" href="#workflow" onClick={closeMenu}>
-                How it works
+              <a className="dispatch-mobile-panel__link" href="#surfaces" onClick={closeMenu}>
+                <span>02</span> Surfaces <ArrowRight aria-hidden="true" size={15} />
               </a>
-              <a className="landing-nav-link border-b border-white/[0.08] py-3" href="#styles" onClick={closeMenu}>
-                Styles
+              <a className="dispatch-mobile-panel__link" href="#install" onClick={closeMenu}>
+                <span>03</span> Install <ArrowRight aria-hidden="true" size={15} />
               </a>
-              <div className="flex items-center gap-3 pt-4">
-                <Link className="button-quiet flex-1" href="/dashboard" onClick={closeMenu}>
-                  Dashboard
-                </Link>
-                <Link className="button-quiet flex-1" href="/getstarted" onClick={closeMenu}>
+              <div className="dispatch-mobile-panel__actions">
+                <Link className="dispatch-header__signin" href="/getstarted" onClick={closeMenu}>
                   Sign in
                 </Link>
-                <Link className="button-mint flex-1" href="/getstarted" onClick={closeMenu}>
-                  Start building <ArrowUpRight aria-hidden="true" size={15} />
+                <Link className="dispatch-button dispatch-button--cobalt" href="/getstarted" onClick={closeMenu}>
+                  Start building <ArrowUpRight aria-hidden="true" size={14} />
                 </Link>
               </div>
             </nav>
@@ -122,263 +158,310 @@ export default function LandingPage() {
       </header>
 
       <main>
-        <section className="landing-hero" id="product">
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-[0.84fr_1.16fr] lg:gap-14">
-            <div className="animate-rise-in">
-              <p className="eyebrow">Durable website campaigns / sdk + http feed</p>
-              <h1 className="landing-hero__title">
-                Announcements that stay <em>useful.</em>
-              </h1>
-              <p className="landing-hero__copy">
-                Droplert gives product teams a durable, scheduled way to publish in-page announcements. A small React component reads an HTTP feed, so every new page load gets the right campaign without running a realtime messaging stack.
+        <section className="dispatch-hero" aria-labelledby="hero-title">
+          <div className="landing-frame dispatch-hero__grid">
+            <div className="dispatch-hero__intro">
+              <p className="dispatch-kicker">
+                <span className="dispatch-kicker__mark" aria-hidden="true" /> DL / 0001 — DURABLE CAMPAIGN DELIVERY
               </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Link className="button-mint" href="/getstarted">
+              <h1 className="dispatch-hero__title" id="hero-title">
+                Publish the message. Keep the connection <span>out of your stack.</span>
+              </h1>
+              <p className="dispatch-hero__copy">
+                Droplert delivers scheduled in-page messages through a durable HTTP feed. The React client revalidates visible pages roughly every 15 minutes with ETag / 304, so there is no permanent WebSocket or browser secret to operate.
+              </p>
+              <div className="dispatch-hero__actions">
+                <Link className="dispatch-button dispatch-button--cobalt" href="/getstarted">
                   Start building <ArrowRight aria-hidden="true" size={15} />
                 </Link>
-                <a className="button-quiet" href="#workflow">
-                  View the workflow <ChevronDown aria-hidden="true" size={15} />
+                <a className="dispatch-button dispatch-button--outline" href="#system">
+                  Read the system <ChevronDown aria-hidden="true" size={15} />
                 </a>
               </div>
-              <div className="trust-row" aria-label="Technical highlights">
-                <span>
-                  <Check aria-hidden="true" size={12} className="text-[#70f0c0]" /> HTTP feed delivery
-                </span>
-                <span>
-                  <Check aria-hidden="true" size={12} className="text-[#70f0c0]" /> No open sockets
-                </span>
-                <span>
-                  <Check aria-hidden="true" size={12} className="text-[#70f0c0]" /> React + Next.js
-                </span>
-              </div>
+              <ul className="dispatch-proof-list" aria-label="Droplert delivery details">
+                {proofItems.map((item) => (
+                  <li key={item}>
+                    <Check aria-hidden="true" size={13} /> {item}
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <div className="animate-rise-in [animation-delay:120ms]" aria-label="Droplert product preview">
-              <div className="product-canvas">
-                <div className="browser-bar">
-                  <div className="browser-dots" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="browser-address">
-                    <Globe2 aria-hidden="true" size={10} />
-                    product.acme.dev / changelog
-                  </div>
-                  <span className="font-mono text-[0.52rem] text-[#70f0c0]">200 OK</span>
+            <div className="dispatch-plate-wrap">
+              <div className="dispatch-plate" aria-label="Campaign dispatch plate">
+                <div className="dispatch-plate__masthead">
+                  <span>DISPATCH PLATE / ACTIVE CAMPAIGN</span>
+                  <span>PLATE 001</span>
                 </div>
-
-                <div className="canvas-layout">
-                  <div className="canvas-page">
-                    <div className="canvas-page__copy">
-                      <strong>Make the next release feel close.</strong>
-                      <span>One clear message, delivered inside the product your users already know.</span>
+                <div className="dispatch-plate__body">
+                  <section className="dispatch-plate__record" aria-label="Active campaign record">
+                    <div className="dispatch-plate__record-top">
+                      <span>CAMPAIGN 017</span>
+                      <span className="dispatch-plate__active"><i aria-hidden="true" /> ACTIVE</span>
                     </div>
-                    <div className="demo-notification">
-                      <div className="demo-notification__top">
-                        <span>Campaign / active</span>
-                        <span>09:42 UTC</span>
+                    <h2>Version 2.4 is ready to explore</h2>
+                    <p>See what changed, then pick up exactly where you left off.</p>
+                    <dl className="dispatch-plate__metadata">
+                      <div>
+                        <dt>ROUTE</dt>
+                        <dd>/changelog</dd>
                       </div>
-                      <strong className="mt-2 block text-[0.85rem] font-[560] tracking-[-0.03em] text-[#f3f3ee]">
-                        Version 2.4 is ready to explore
-                      </strong>
-                      <p>
-                        See what changed, then pick up exactly where you left off.
-                      </p>
+                      <div>
+                        <dt>WINDOW</dt>
+                        <dd>NOW → 18:00 UTC</dd>
+                      </div>
+                      <div>
+                        <dt>ORIGIN</dt>
+                        <dd>product.acme.dev</dd>
+                      </div>
+                      <div>
+                        <dt>PRESET</dt>
+                        <dd>EDITORIAL</dd>
+                      </div>
+                    </dl>
+                    <div className="dispatch-plate__record-foot">
+                      <span>REVISION 17</span>
+                      <span>PRIORITY / 02</span>
                     </div>
+                  </section>
+
+                  <section className="dispatch-plate__surface" aria-label="Rendered notification specimen">
+                    <div className="dispatch-plate__surface-label">
+                      <span>VISIBLE SURFACE</span>
+                      <span>390 × AUTO</span>
+                    </div>
+                    <div className="dispatch-specimen">
+                      <div className="dispatch-specimen__bar" aria-hidden="true" />
+                      <div className="dispatch-specimen__content">
+                        <span className="dispatch-specimen__eyebrow">RELEASE NOTE / 02</span>
+                        <strong>Version 2.4 is ready to explore</strong>
+                        <p>New routes, sharper handoffs, fewer things to remember.</p>
+                        <span className="dispatch-specimen__link">Read the update <ArrowUpRight aria-hidden="true" size={12} /></span>
+                      </div>
+                    </div>
+                    <span className="dispatch-plate__surface-foot">IN-PAGE / EDITORIAL SURFACE</span>
+                  </section>
+                </div>
+                <div className="dispatch-plate__feed">
+                  <div>
+                    <span className="dispatch-plate__feed-label">REQUEST</span>
+                    <code>GET /api/v1/sites/site_7F3.../feed</code>
                   </div>
-
-                  <aside className="canvas-controls" aria-label="Campaign feed and controls">
-                    <div className="canvas-controls__head">
-                      <strong>Campaign feed</strong>
-                      <span>LIVE PREVIEW</span>
-                    </div>
-                    <div className="canvas-feed">
-                      <span className="canvas-feed__label">delivery / http</span>
-                      <div className="canvas-feed__row">
-                        <span className="feed-status" />
-                        <div>
-                          <strong>Release notes</strong>
-                          <span>active · route /changelog</span>
-                        </div>
-                      </div>
-                      <div className="canvas-feed__row">
-                        <span className="feed-status" style={{ background: "var(--violet)" }} />
-                        <div>
-                          <strong>Maintenance window</strong>
-                          <span>scheduled · 18 Aug, 08:00</span>
-                        </div>
-                      </div>
-                      <div className="canvas-feed__row">
-                        <span className="feed-status" style={{ background: "var(--warning)" }} />
-                        <div>
-                          <strong>Invite your team</strong>
-                          <span>draft · not delivered</span>
-                        </div>
-                      </div>
-                    </div>
-                  </aside>
+                  <div>
+                    <span className="dispatch-plate__feed-label">RESPONSE</span>
+                    <strong>200 OK</strong>
+                    <code>ETag &quot;site-17&quot;</code>
+                  </div>
+                  <div>
+                    <span className="dispatch-plate__feed-label">NEXT CHECK</span>
+                    <strong>15 MIN / VISIBLE</strong>
+                    <code>If-None-Match → 304</code>
+                  </div>
                 </div>
               </div>
-              <div className="mt-3 flex items-center justify-between px-1 font-mono text-[0.58rem] text-[#727b89]">
-                <span>campaign_canvas / 01</span>
-                <span className="inline-flex items-center gap-1.5 text-[#70f0c0]"><span className="status-dot status-dot--success" /> feed connected</span>
+              <div className="dispatch-plate__caption">
+                <span>HTTP FEED / ETag REVALIDATION</span>
+                <span>ONE RECORD / MANY PAGE LOADS</span>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="value-strip" aria-label="How Droplert works">
-          <div className="mx-auto grid w-full max-w-6xl px-5 sm:px-8 md:grid-cols-3">
-            <div className="value-step">
-              <span className="value-step__number">01 / PUBLISH</span>
-              <strong>Publish once</strong>
-              <span>Write the announcement and choose its window.</span>
-            </div>
-            <div className="value-step">
-              <span className="value-step__number">02 / PERSIST</span>
-              <strong>Durable feed</strong>
-              <span>New page loads receive the active campaign immediately.</span>
-            </div>
-            <div className="value-step">
-              <span className="value-step__number">03 / DELIVER</span>
-              <strong>Lightweight SDK</strong>
-              <span>A small component keeps the experience in your product.</span>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-24 sm:py-32" id="capabilities">
-          <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
-            <div>
-              <p className="eyebrow">Built for product moments</p>
-              <h2 className="editorial-heading mt-4">Control the message. Keep the stack light.</h2>
-              <p className="editorial-copy mt-6">
-                Your announcement system should feel like part of the product, not a second infrastructure project. Droplert keeps campaign state explicit and delivery easy to inspect.
-              </p>
-              <div className="mt-8 inline-flex items-center gap-2 font-mono text-[0.62rem] text-[#9a8cff]">
-                <Radio aria-hidden="true" size={13} /> DELIVERY MODEL / HTTP + POLLING
-              </div>
-            </div>
-            <div>
-              {featureRows.map((feature) => (
-                <article className="feature-row" key={feature.number}>
-                  <span className="feature-row__number">{feature.number}</span>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.copy}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section-rule py-24 sm:py-32" id="styles">
-          <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
-            <div className="flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
+        <section className="dispatch-system" id="system" aria-labelledby="system-title">
+          <div className="landing-frame">
+            <div className="dispatch-section-intro">
               <div>
-                <p className="eyebrow">Appearance system</p>
-                <h2 className="editorial-heading mt-4">Five ways to make a notice feel native.</h2>
+                <p className="dispatch-kicker"><span className="dispatch-kicker__mark" aria-hidden="true" /> 01 / SYSTEM</p>
+                <h2 className="dispatch-section-title" id="system-title">A campaign is a record, not a live wire.</h2>
               </div>
-              <p className="editorial-copy sm:max-w-[20rem]">
-                Start with a preset, then tune the content, color, motion, and route for the moment at hand.
-              </p>
+              <p className="dispatch-section-copy">Compose once, verify the destination, publish to a durable feed, and let the visible surface do the receiving. The lifecycle stays legible at every step.</p>
             </div>
-            <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {stylePresets.map((preset) => (
-                <article className={`style-tile ${preset.className}`} key={preset.name}>
-                  <span className="style-tile__label">{preset.name}</span>
-                  <div className="style-tile__sample">
-                    <strong>Small note, clear intent</strong>
-                    <span>Ship the next step with context.</span>
+
+            <ol className="dispatch-rail" aria-label="Droplert campaign lifecycle">
+              {[
+                ["01", "COMPOSE", "message + surface"],
+                ["02", "VERIFY", "origin + routes"],
+                ["03", "PUBLISH", "window + priority"],
+                ["04", "VISIBLE", "feed + surface"],
+              ].map(([number, label, detail], index) => (
+                <li className="dispatch-rail__step" key={label}>
+                  <span className="dispatch-rail__number">{number}</span>
+                  <span className="dispatch-rail__marker" aria-hidden="true" />
+                  <strong>{label}</strong>
+                  <span>{detail}</span>
+                  {index < 3 ? <span className="dispatch-rail__connector" aria-hidden="true" /> : null}
+                </li>
+              ))}
+            </ol>
+
+            <div className="dispatch-records">
+              {systemRecords.map((record) => (
+                <article className="dispatch-record" key={record.number}>
+                  <span className="dispatch-record__number">{record.number}</span>
+                  <div className="dispatch-record__title">
+                    <span>{record.label}</span>
+                    <h3>{record.title}</h3>
                   </div>
-                  <span className="style-tile__meta">{preset.detail}</span>
+                  <p>{record.copy}</p>
+                  <span className="dispatch-record__detail">{record.detail}</span>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="section-rule py-24 sm:py-32" id="workflow">
-          <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-            <div>
-              <p className="eyebrow">A calm path to publish</p>
-              <h2 className="editorial-heading mt-4">From first install to first campaign in an afternoon.</h2>
-              <p className="editorial-copy mt-6">
-                Add the component, connect a public site ID, and keep campaign decisions in one focused control room.
-              </p>
-              <div className="code-snippet mt-8">
-                <div className="code-snippet__top">
+        <section className="dispatch-surfaces" id="surfaces" aria-labelledby="surfaces-title">
+          <div className="landing-frame">
+            <div className="dispatch-section-intro dispatch-section-intro--surfaces">
+              <div>
+                <p className="dispatch-kicker"><span className="dispatch-kicker__mark" aria-hidden="true" /> 02 / SURFACES</p>
+                <h2 className="dispatch-section-title" id="surfaces-title">Five surfaces. One appearance contract.</h2>
+              </div>
+              <p className="dispatch-section-copy">Preset color, motion, placement, route rules, and schedule stay configurable at publish time. Choose a starting language, then make it yours.</p>
+            </div>
+
+            <div className="surface-register" aria-label="Notification preset register">
+              {surfacePresets.map((preset, index) => (
+                <Link className={`surface-register__item ${preset.className}`} href={preset.href} key={preset.code}>
+                  <div className="surface-register__head">
+                    <span>{String(index + 1).padStart(2, "0")} / {preset.type}</span>
+                    <ArrowUpRight aria-hidden="true" size={14} />
+                  </div>
+                  <div className="surface-register__sample">
+                    {preset.code === "MINIMAL" ? (
+                      <div className="surface-sample surface-sample--minimal">
+                        <span>PRODUCT UPDATE</span>
+                        <strong>Small note, clear intent.</strong>
+                        <p>One line of context is enough.</p>
+                      </div>
+                    ) : null}
+                    {preset.code === "GLASS" ? (
+                      <div className="surface-sample surface-sample--glass">
+                        <span>NOW / 02</span>
+                        <strong>Keep the thread visible.</strong>
+                        <p>A soft arrival for a light touch.</p>
+                      </div>
+                    ) : null}
+                    {preset.code === "AURORA" ? (
+                      <div className="surface-sample surface-sample--aurora">
+                        <span>FIELD NOTE</span>
+                        <strong>Make room for what is next.</strong>
+                        <p>Ambient, but still easy to read.</p>
+                      </div>
+                    ) : null}
+                    {preset.code === "EDITORIAL" ? (
+                      <div className="surface-sample surface-sample--editorial">
+                        <span>RELEASE / 02</span>
+                        <strong>The change has a place to land.</strong>
+                        <p>Give the headline a little more air.</p>
+                        <b>READ THE NOTE ↗</b>
+                      </div>
+                    ) : null}
+                    {preset.code === "NEON" ? (
+                      <div className="surface-sample surface-sample--neon">
+                        <span>LIVE SIGNAL</span>
+                        <strong>New route detected.</strong>
+                        <p>High signal, no hidden state.</p>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="surface-register__foot">
+                    <strong>{preset.name}</strong>
+                    <span>{preset.detail}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <p className="surface-register__note"><span aria-hidden="true">↗</span> Open a composer with this preset preselected.</p>
+          </div>
+        </section>
+
+        <section className="dispatch-install" id="install" aria-labelledby="install-title">
+          <div className="landing-frame">
+            <div className="dispatch-section-intro dispatch-section-intro--dark">
+              <div>
+                <p className="dispatch-kicker"><span className="dispatch-kicker__mark" aria-hidden="true" /> 03 / INSTALL</p>
+                <h2 className="dispatch-section-title" id="install-title">Install a reader. Publish a record.</h2>
+              </div>
+              <p className="dispatch-section-copy">A verified origin and a public site ID are enough to connect the feed. The owner credential stays in Droplert, never in the browser.</p>
+            </div>
+
+            <div className="dispatch-install__grid">
+              <ol className="dispatch-install__steps">
+                <li>
+                  <span>01</span>
+                  <div><strong>Verify the origin</strong><p>Add the exact site URL in your workspace and confirm it.</p></div>
+                </li>
+                <li>
+                  <span>02</span>
+                  <div><strong>Install the package</strong><p>Bring the small React reader into the app that owns the surface.</p></div>
+                </li>
+                <li>
+                  <span>03</span>
+                  <div><strong>Mount the reader</strong><p>Give it the public site ID and the Droplert API origin once.</p></div>
+                </li>
+                <li>
+                  <span>04</span>
+                  <div><strong>Publish the campaign</strong><p>Compose the message, choose its routes and window, then publish.</p></div>
+                </li>
+              </ol>
+
+              <div className="dispatch-code-block">
+                <div className="dispatch-code-block__head">
                   <span>app/layout.tsx</span>
-                  <span>React / Next.js</span>
+                  <span>REACT / NEXT APP ROUTER</span>
                 </div>
-                <pre>
-                  <span className="code-keyword">import</span> {"{"} Droplert {"}"} <span className="code-keyword">from</span> <span className="code-string">&quot;droplert/react&quot;</span>
-                  {"\n\n"}
-                  <span className="code-keyword">export default function</span> RootLayout() {"{"}
-                  {"\n  "}&lt;Droplert siteId={<span className="code-string">&quot;site_public_id&quot;</span>} /&gt;
-                  {"\n"}{"}"}
-                </pre>
+                <pre aria-label="Droplert React installation example"><code><span className="dispatch-code__keyword">import</span> &#123; Droplert &#125; <span className="dispatch-code__keyword">from</span> <span className="dispatch-code__string">&quot;droplert/react&quot;</span>
+<span className="dispatch-code__keyword">import</span> <span className="dispatch-code__string">&quot;droplert/styles.css&quot;</span>
+
+<span className="dispatch-code__keyword">export default function</span> RootLayout(&#123; children &#125;) &#123;
+  <span className="dispatch-code__tag">return</span> (
+    &lt;&gt;
+      &#123;children&#125;
+      &lt;Droplert
+        siteId=<span className="dispatch-code__string">&quot;site_public_id&quot;</span>
+        apiUrl=<span className="dispatch-code__string">&quot;https://droplert.abstergo.dev&quot;</span>
+      /&gt;
+    &lt;/&gt;
+  )
+&#125;</code></pre>
+                <div className="dispatch-code-block__foot">
+                  <span>FEED / PUBLIC READ</span>
+                  <span>NO BROWSER SECRET</span>
+                </div>
               </div>
             </div>
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2">
-              <article className="workflow-step">
-                <span className="workflow-step__number">01 / CONNECT</span>
-                <h3>Add a site</h3>
-                <p>Verify the domain in your workspace and copy its public site ID.</p>
-              </article>
-              <article className="workflow-step">
-                <span className="workflow-step__number">02 / INSTALL</span>
-                <h3>Drop in the SDK</h3>
-                <p>Use the small React component wherever your app owns its layout.</p>
-              </article>
-              <article className="workflow-step">
-                <span className="workflow-step__number">03 / COMPOSE</span>
-                <h3>Shape the moment</h3>
-                <p>Pick a type, style, route, and schedule without touching your app release.</p>
-              </article>
-              <article className="workflow-step">
-                <span className="workflow-step__number">04 / PUBLISH</span>
-                <h3>Let the feed deliver</h3>
-                <p>Active campaigns appear on new loads and refresh efficiently while visible.</p>
-              </article>
+
+            <div className="dispatch-polling-note">
+              <ShieldCheck aria-hidden="true" size={17} />
+              <p><strong>ETag polling, without the ceremony.</strong> Visible pages fetch on load and revalidate at roughly 15-minute intervals. An unchanged feed returns <code>304 Not Modified</code>; a changed revision delivers the next record. No permanent socket is required.</p>
             </div>
           </div>
         </section>
 
-        <section className="py-24 sm:py-32">
-          <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
-            <div className="surface-card relative overflow-hidden px-6 py-12 sm:px-12 sm:py-16">
-              <div className="absolute -right-20 -top-28 h-72 w-72 rounded-full bg-[#70f0c0]/[0.07] blur-3xl" aria-hidden="true" />
-              <div className="relative max-w-2xl">
-                <p className="eyebrow">Your next product moment</p>
-                <h2 className="editorial-heading mt-4">Make the announcement part of the experience.</h2>
-                <p className="editorial-copy mt-6">
-                  Start with one site, one clear message, and a delivery model your team can reason about.
-                </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link className="button-mint" href="/getstarted">
-                    Open your workspace <ArrowUpRight aria-hidden="true" size={15} />
-                  </Link>
-                  <Link className="button-quiet" href="/dashboard">
-                    View dashboard
-                  </Link>
-                </div>
-              </div>
+        <section className="dispatch-final" aria-labelledby="final-title">
+          <div className="landing-frame dispatch-final__inner">
+            <div>
+              <p className="dispatch-kicker"><span className="dispatch-kicker__mark" aria-hidden="true" /> READY WHEN THE MESSAGE IS</p>
+              <h2 className="dispatch-final__title" id="final-title">Put the next product moment on the record.</h2>
             </div>
+            <Link className="dispatch-button dispatch-button--cobalt" href="/getstarted">
+              Open your workspace <ArrowUpRight aria-hidden="true" size={15} />
+            </Link>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-white/[0.12] py-8">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 sm:px-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <DroplertMark compact />
-            <span className="font-mono text-[0.58rem] text-[#727b89]">durable campaigns for the web</span>
+      <footer className="dispatch-footer">
+        <div className="landing-frame dispatch-footer__inner">
+          <div className="dispatch-footer__identity">
+            <DroplertMark compact className="dispatch-brand" />
+            <span>DL / DURABLE CAMPAIGNS FOR THE WEB</span>
           </div>
-          <div className="flex items-center gap-5 font-mono text-[0.6rem] text-[#727b89]">
-            <Link className="hover:text-[#f3f3ee]" href="/getstarted">Sign in</Link>
-            <Link className="hover:text-[#f3f3ee]" href="/dashboard">Dashboard</Link>
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck aria-hidden="true" size={12} /> HTTP feed</span>
+          <div className="dispatch-footer__links">
+            <Link href="/getstarted">Sign in</Link>
+            <Link href="/dashboard">Dashboard</Link>
+            <span><ShieldCheck aria-hidden="true" size={13} /> VERIFIED HTTP FEED</span>
           </div>
         </div>
       </footer>
