@@ -62,8 +62,9 @@ export async function POST(req: NextRequest) {
         );
     }
 
+    const requestUrl = new URL(req.url);
     // Extracting ID from URL path
-    const { pathname } = new URL(req.url);
+    const { pathname } = requestUrl;
     const id = pathname.split('/').pop(); // Get the last segment of the path
 
     if (!id) {
@@ -74,22 +75,60 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        console.log(`Deactivating website with ID: ${id}`);
+        let action = requestUrl.searchParams.get("action") === "reactivate" ? "reactivate" : "deactivate";
+        try {
+            const body = (await req.json()) as { action?: string };
+            if (body.action) action = body.action;
+        } catch {
+            // Existing deactivation calls send no body; keep that request shape supported.
+        }
 
-        // Update the website status
-        const updatedWebsite = await prisma.website.update({
+        if (action !== "deactivate" && action !== "reactivate") {
+            return NextResponse.json({ msg: "Unsupported website action" }, { status: 400 });
+        }
+
+        // Read through the authenticated owner before changing lifecycle state.
+        const website = await prisma.website.findFirst({
             where: {
                 id,
                 userId: session.user.id,
             },
-            data: {
-                status: "DEACTIVATED",
-            },
+        });
+
+        if (!website) {
+            return NextResponse.json({ msg: "Website not found" }, { status: 404 });
+        }
+
+        if (action === "reactivate") {
+            if (website.status !== "DEACTIVATED") {
+                return NextResponse.json({ msg: "Only deactivated websites can be reactivated", website }, { status: 409 });
+            }
+
+            // Keep the stored DNS result authoritative. A verified site returns ACTIVE;
+            // an unverified record returns to the pending flow instead of being promoted.
+            const updatedWebsite = await prisma.website.update({
+                where: { id: website.id },
+                data: { status: website.isVerified ? "ACTIVE" : "PENDING" },
+            });
+
+            return NextResponse.json(
+                {
+                    msg: updatedWebsite.isVerified ? "Website successfully reactivated" : "Website reactivated; verification is required",
+                    website: updatedWebsite,
+                },
+                { status: 200 },
+            );
+        }
+
+        // Preserve the old empty-body POST deactivation call for backwards compatibility.
+        const updatedWebsite = await prisma.website.update({
+            where: { id: website.id },
+            data: { status: "DEACTIVATED" },
         });
 
         return NextResponse.json(
             { msg: "Website successfully deactivated", website: updatedWebsite },
-            { status: 200 }
+            { status: 200 },
         );
     } catch (e) {
         console.error('Error while deactivating website:', e);

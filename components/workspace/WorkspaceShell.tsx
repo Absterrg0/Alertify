@@ -128,7 +128,7 @@ export function WorkspaceShell({
           </div>
           <div className="workspace-topbar__right">
             {!hideNewCampaign ? (
-              <Link className="workspace-button workspace-button--primary workspace-button--compact" href="/alert">
+              <Link className="workspace-button workspace-button--primary workspace-button--compact" href="/alert" aria-label="New campaign">
                 <BellPlus aria-hidden="true" size={14} />
                 <span>New campaign</span>
               </Link>

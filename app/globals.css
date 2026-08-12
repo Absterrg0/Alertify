@@ -736,11 +736,30 @@
 }
 
 .workspace-checklist__items li > a,
-.workspace-checklist__done {
+.workspace-checklist__done,
+.workspace-checklist__manual {
   color: var(--workspace-cobalt-bright);
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.58rem;
   text-transform: uppercase;
+}
+
+.workspace-checklist__manual {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: right;
+  cursor: pointer;
+}
+
+.workspace-checklist__manual:hover,
+.workspace-checklist__manual:focus-visible {
+  color: var(--workspace-paper);
+}
+
+.workspace-checklist__manual:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .workspace-checklist__done {
@@ -776,11 +795,24 @@
   font-size: 0.66rem;
 }
 
+.workspace-success-strip__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  margin-left: auto;
+}
+
+.workspace-success-strip__actions .workspace-button {
+  white-space: nowrap;
+}
+
 .workspace-success-strip a {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-left: auto;
+  margin-left: 0;
   color: var(--workspace-mint);
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.6rem;
@@ -1709,9 +1741,10 @@
   .workspace-overview-grid { margin-top: 1rem; }
   .workspace-panel__header { padding-inline: 1rem; }
   .workspace-checklist__items li { grid-template-columns: 1.7rem minmax(0,1fr); padding-inline: 1rem; }
-  .workspace-checklist__items li > a, .workspace-checklist__done { grid-column: 2; }
+  .workspace-checklist__items li > a, .workspace-checklist__done, .workspace-checklist__manual { grid-column: 2; justify-self: start; text-align: left; }
   .workspace-success-strip { align-items: flex-start; flex-wrap: wrap; padding-inline: 1rem; }
-  .workspace-success-strip a { width: 100%; margin-left: 2.05rem; }
+  .workspace-success-strip__actions { width: 100%; margin-left: 2.05rem; justify-content: flex-start; }
+  .workspace-success-strip a { width: auto; margin-left: 0; }
   .workspace-list__row { padding-inline: 1rem; }
   .workspace-registry-toolbar, .workspace-analytics-toolbar { display: grid; align-items: start; }
   .workspace-search { min-width: 0; }
@@ -3978,6 +4011,11 @@
   color: #c5cbd4;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.dispatch-code-line {
+  display: block;
+  min-height: 1.75em;
 }
 
 .dispatch-code-block__foot {

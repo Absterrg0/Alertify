@@ -411,22 +411,7 @@ export default function LandingPage() {
                   <span>app/layout.tsx</span>
                   <span>REACT / NEXT APP ROUTER</span>
                 </div>
-                <pre aria-label="Droplert React installation example"><code><span className="dispatch-code__comment">$ npm install droplert-cli</span>
-
-                  <span className="dispatch-code__keyword">import</span> &#123; Droplert &#125; <span className="dispatch-code__keyword">from</span> <span className="dispatch-code__string">&quot;droplert/react&quot;</span>
-                  <span className="dispatch-code__keyword">import</span> <span className="dispatch-code__string">&quot;droplert/styles.css&quot;</span>
-
-                  <span className="dispatch-code__keyword">export default function</span> RootLayout(&#123; children &#125;) &#123;
-                  <span className="dispatch-code__tag">return</span> (
-                  &lt;&gt;
-                  &#123;children&#125;
-                  &lt;Droplert
-                  siteId=<span className="dispatch-code__string">&quot;site_public_id&quot;</span>
-                  apiUrl=<span className="dispatch-code__string">&quot;https://droplert.abstergo.dev&quot;</span>
-                  /&gt;
-                  &lt;/&gt;
-                  )
-                  &#125;</code></pre>
+                <pre aria-label="Droplert React installation example"><code><span className="dispatch-code-line dispatch-code__comment">$ npm install droplert-cli</span><span className="dispatch-code-line dispatch-code-line--blank" aria-hidden="true" /><span className="dispatch-code-line"><span className="dispatch-code__keyword">import</span>{" { Droplert } "}<span className="dispatch-code__keyword">from</span>{" "}<span className="dispatch-code__string">&quot;droplert/react&quot;</span></span><span className="dispatch-code-line"><span className="dispatch-code__keyword">import</span>{" "}<span className="dispatch-code__string">&quot;droplert/styles.css&quot;</span></span><span className="dispatch-code-line dispatch-code-line--blank" aria-hidden="true" /><span className="dispatch-code-line"><span className="dispatch-code__keyword">export default function</span>{" RootLayout({ children }) {"}</span><span className="dispatch-code-line">{"  "}<span className="dispatch-code__tag">return</span>{" ("}</span><span className="dispatch-code-line">{"    <>"}</span><span className="dispatch-code-line">{"      {children}"}</span><span className="dispatch-code-line">{"      <Droplert"}</span><span className="dispatch-code-line">{"        siteId="}<span className="dispatch-code__string">&quot;site_public_id&quot;</span></span><span className="dispatch-code-line">{"        apiUrl="}<span className="dispatch-code__string">&quot;https://droplert.abstergo.dev&quot;</span></span><span className="dispatch-code-line">{"      />"}</span><span className="dispatch-code-line">{"    </>"}</span><span className="dispatch-code-line">{"  )"}</span><span className="dispatch-code-line">{"}"}</span></code></pre>
                 <div className="dispatch-code-block__foot">
                   <span>FEED / PUBLIC READ</span>
                   <span>NO BROWSER SECRET</span>

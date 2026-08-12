@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   AlertCircle,
   ArrowRight,
@@ -113,7 +114,40 @@ function ResourceLoading({ label }: { label: string }) {
   return <div className="workspace-loading" role="status" aria-label={`Loading ${label}`}><span /><span /><span /></div>;
 }
 
-function Checklist({ websites, campaigns }: { websites: Website[]; campaigns: CampaignSummary[] }) {
+function Checklist({ websites, campaigns, storageKey }: { websites: Website[]; campaigns: CampaignSummary[]; storageKey: string | null }) {
+  const [sdkConfirmed, setSdkConfirmed] = useState(false);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- localStorage is the external browser state for this manual confirmation. */
+  useEffect(() => {
+    if (!storageKey) {
+      setSdkConfirmed(false);
+      return;
+    }
+
+    try {
+      setSdkConfirmed(window.localStorage.getItem(storageKey) === "true");
+    } catch {
+      setSdkConfirmed(false);
+    }
+  }, [storageKey]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const toggleSdkConfirmation = () => {
+    const nextValue = !sdkConfirmed;
+    setSdkConfirmed(nextValue);
+    if (!storageKey) return;
+
+    try {
+      if (nextValue) {
+        window.localStorage.setItem(storageKey, "true");
+      } else {
+        window.localStorage.removeItem(storageKey);
+      }
+    } catch {
+      // The control remains usable if browser storage is unavailable.
+    }
+  };
+
   const activeSites = websites.filter((site) => site.status === "ACTIVE" && site.isVerified);
   const hasPending = websites.some((site) => site.status === "PENDING");
   const hasPublishedCampaign = campaigns.some((campaign) => campaign.status === "PUBLISHED");
@@ -121,19 +155,19 @@ function Checklist({ websites, campaigns }: { websites: Website[]; campaigns: Ca
     { label: "Add a site", detail: "Register the exact HTTPS origin.", complete: websites.length > 0, href: "/sites" },
     { label: "Publish the DNS TXT record", detail: "Prove ownership for a pending origin.", complete: websites.length > 0 && !hasPending, href: "/sites" },
     { label: "Verify the origin", detail: "Recheck until the site is active.", complete: activeSites.length > 0, href: "/sites" },
-    { label: "Install the SDK", detail: "Mount Droplert with a public site ID in your app.", complete: false, href: "/sites" },
+    { label: "Install the SDK", detail: "Confirm locally after mounting Droplert with a public site ID.", complete: sdkConfirmed, href: "/sites" },
     { label: "Publish a campaign", detail: "Send the first durable record to a verified site.", complete: hasPublishedCampaign, href: "/campaigns" },
   ];
   const completeCount = steps.filter((step) => step.complete).length;
 
   if (completeCount === steps.length) {
-    return <section className="workspace-success-strip"><CheckCircle2 size={18} /><div><strong>Workspace is ready.</strong><span>Sites, SDK connection, and the first campaign are in place.</span></div><Link href="/campaigns">Open registry <ArrowRight size={14} /></Link></section>;
+    return <section className="workspace-success-strip"><CheckCircle2 size={18} /><div><strong>Workspace is ready.</strong><span>Sites, your SDK installation confirmation, and the first campaign are in place.</span></div><div className="workspace-success-strip__actions"><button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" aria-label="Undo browser-local SDK confirmation" onClick={toggleSdkConfirmation}>Undo SDK confirmation · browser-local</button><Link href="/campaigns">Open registry <ArrowRight size={14} /></Link></div></section>;
   }
 
   return (
     <section className="workspace-panel workspace-checklist" aria-labelledby="setup-title">
       <div className="workspace-panel__header">
-        <div><span className="workspace-eyebrow">First-run path / {completeCount} of {steps.length}</span><h2 id="setup-title">Prepare a destination for delivery.</h2><p>Each step reflects the state Droplert can verify from this workspace.</p></div>
+        <div><span className="workspace-eyebrow">First-run path / {completeCount} of {steps.length}</span><h2 id="setup-title">Prepare a destination for delivery.</h2><p>Droplert verifies site and campaign state here; the SDK step is a manual confirmation stored in this browser.</p></div>
         <TerminalSquare aria-hidden="true" size={18} />
       </div>
       <ol className="workspace-checklist__items">
@@ -141,7 +175,7 @@ function Checklist({ websites, campaigns }: { websites: Website[]; campaigns: Ca
           <li key={step.label} className={step.complete ? "is-complete" : ""}>
             <span className="workspace-checklist__number">{step.complete ? <Check size={13} /> : String(index + 1).padStart(2, "0")}</span>
             <div><strong>{step.label}</strong><span>{step.detail}</span></div>
-            {!step.complete ? <Link href={step.href} aria-label={`Open ${step.label}`}>{index === 3 ? "View guide" : "Open"} <ArrowRight size={13} /></Link> : <span className="workspace-checklist__done">done</span>}
+            {index === 3 ? <button type="button" className="workspace-checklist__manual" aria-pressed={step.complete} onClick={toggleSdkConfirmation} disabled={!storageKey}>{step.complete ? "Undo confirmation" : "I've installed the reader"}</button> : !step.complete ? <Link href={step.href} aria-label={`Open ${step.label}`}>Open <ArrowRight size={13} /></Link> : <span className="workspace-checklist__done">done</span>}
           </li>
         ))}
       </ol>
@@ -150,6 +184,7 @@ function Checklist({ websites, campaigns }: { websites: Website[]; campaigns: Ca
 }
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [websites, setWebsites] = useState<ResourceState<Website[]>>(emptyResource([]));
   const [campaigns, setCampaigns] = useState<ResourceState<CampaignSummary[]>>(emptyResource([]));
   const [logs, setLogs] = useState<ResourceState<RequestLog[]>>(emptyResource([]));
@@ -205,6 +240,8 @@ export default function DashboardPage() {
   const latestLog = logs.data[0];
   const recommendedHref = activeSites.length === 0 ? "/sites" : publishedCount === 0 ? "/campaigns" : "/analytics";
   const recommendedLabel = activeSites.length === 0 ? "Verify a site" : publishedCount === 0 ? "Compose your first campaign" : "Inspect delivery";
+  const sdkIdentity = session?.user?.id ?? session?.user?.email?.toLowerCase() ?? null;
+  const sdkConfirmationStorageKey = sdkIdentity ? `droplert:sdk-reader-installed:${sdkIdentity}` : null;
 
   return (
     <WorkspaceShell hideNewCampaign>
@@ -217,7 +254,7 @@ export default function DashboardPage() {
         <section className="workspace-metric-grid" aria-label="Workspace summary">
           <article className="workspace-metric"><div><span>Active sites</span><Globe2 size={15} /></div><strong>{websites.loading ? "—" : activeSites.length}</strong><small>{websites.loading ? "Loading destinations" : `${pendingSites.length} pending / ${websites.data.length} total`}</small></article>
           <article className="workspace-metric"><div><span>Published</span><CheckCircle2 size={15} /></div><strong>{campaigns.loading ? "—" : publishedCount}</strong><small>{campaigns.loading ? "Loading campaigns" : `${scheduledCount} scheduled`}</small></article>
-          <article className="workspace-metric"><div><span>Recorded events</span><Radio size={15} /></div><strong>{logs.loading ? "—" : logs.data.length}</strong><small>{logs.loading ? "Loading event feed" : "delivery events returned"}</small></article>
+          <article className="workspace-metric"><div><span>Recorded events</span><Radio size={15} /></div><strong>{logs.loading ? "—" : logs.data.length}</strong><small>{logs.loading ? "Loading event feed" : "Latest returned events"}</small></article>
           <article className="workspace-metric workspace-metric--signal"><div><span>Next action</span><Clock3 size={15} /></div><strong className="workspace-metric__action">{recommendedLabel}</strong><small><Link href={recommendedHref}>Open destination <ArrowRight size={12} /></Link></small></article>
         </section>
 
@@ -226,7 +263,7 @@ export default function DashboardPage() {
             {websites.error || campaigns.error || logs.error ? (
               <section className="workspace-panel workspace-panel--notice"><span className="workspace-eyebrow">Resource status</span><h2>Some workspace data needs another read.</h2><p>Independent resources can be retried without losing the rest of the overview.</p><div className="workspace-retry-row">{websites.error ? <button type="button" onClick={() => void loadWebsites()}>Retry sites</button> : null}{campaigns.error ? <button type="button" onClick={() => void loadCampaigns()}>Retry campaigns</button> : null}{logs.error ? <button type="button" onClick={() => void loadLogs()}>Retry events</button> : null}</div></section>
             ) : null}
-            <Checklist websites={websites.data} campaigns={campaigns.data} />
+            <Checklist websites={websites.data} campaigns={campaigns.data} storageKey={sdkConfirmationStorageKey} />
 
             <section className="workspace-panel workspace-panel--compact" aria-labelledby="recent-campaigns-title">
               <div className="workspace-panel__header workspace-panel__header--inline"><div><span className="workspace-eyebrow">Campaign registry</span><h2 id="recent-campaigns-title">Recent campaigns</h2></div><Link href="/campaigns">View all <ArrowRight size={13} /></Link></div>

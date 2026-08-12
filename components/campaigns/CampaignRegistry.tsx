@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Bell,
@@ -77,7 +77,7 @@ export function CampaignRegistry({ campaigns }: { campaigns: CampaignRegistryRec
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const [type, setType] = useState<TypeFilter>("ALL");
   const [selectedId, setSelectedId] = useState<string | null>(campaigns[0]?.id ?? null);
-  const selected = campaigns.find((campaign) => campaign.id === selectedId) ?? null;
+  const [inspectorClosed, setInspectorClosed] = useState(false);
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -89,6 +89,21 @@ export function CampaignRegistry({ campaigns }: { campaigns: CampaignRegistryRec
       return matchesQuery && matchesStatus && matchesType;
     });
   }, [campaigns, query, status, type]);
+
+  const visibleSelectedId = inspectorClosed ? null : selectedId === null ? null : filtered.some((campaign) => campaign.id === selectedId) ? selectedId : filtered[0]?.id ?? null;
+
+  /* eslint-disable react-hooks/set-state-in-effect -- the inspector selection must follow the filtered master collection. */
+  useEffect(() => {
+    if (selectedId !== visibleSelectedId) setSelectedId(visibleSelectedId);
+  }, [selectedId, visibleSelectedId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const selected = filtered.find((campaign) => campaign.id === visibleSelectedId) ?? null;
+
+  const selectCampaign = (id: string) => {
+    setInspectorClosed(false);
+    setSelectedId(id);
+  };
 
   const counts = useMemo(() => campaigns.reduce<Record<StatusFilter, number>>((accumulator, campaign) => {
     accumulator.ALL += 1;
@@ -133,8 +148,8 @@ export function CampaignRegistry({ campaigns }: { campaigns: CampaignRegistryRec
                   role="button"
                   tabIndex={0}
                   aria-pressed={isSelected}
-                  onClick={() => setSelectedId(campaign.id)}
-                  onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(campaign.id); } }}
+                  onClick={() => selectCampaign(campaign.id)}
+                  onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectCampaign(campaign.id); } }}
                 >
                   <div className="workspace-campaign-row__icon"><TypeIcon type={revision?.type ?? "ALERT"} /></div>
                   <div className="workspace-campaign-row__main"><div className="workspace-campaign-row__tags"><StatusBadge status={currentStatus} /><span>{revision?.type ? typeLabels[revision.type] : "Campaign"}</span><span>{revision?.preset ?? "—"}</span></div><h2>{revision?.title ?? "Untitled campaign"}</h2><p>{revision?.description ?? "No description provided."}</p><div className="workspace-campaign-row__meta"><span><Globe2 size={12} /> {campaign.targets.length ? campaign.targets.map((target) => target.website.name).join(", ") : "No target sites"}</span><span><CalendarClock size={12} /> {formatDate(campaign.startsAt)}</span></div></div>
@@ -143,7 +158,7 @@ export function CampaignRegistry({ campaigns }: { campaigns: CampaignRegistryRec
               );
             })}
           </section>
-          <CampaignInspector campaign={selected} onClose={() => setSelectedId(null)} />
+          <CampaignInspector campaign={selected} onClose={() => { setInspectorClosed(true); setSelectedId(null); }} />
         </div>
       )}
     </main>
