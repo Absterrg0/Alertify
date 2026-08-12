@@ -1,16 +1,5 @@
-import AlertDialogPage from "@/components/alert-dialog-page"
+import { CampaignComposer } from "@/components/campaigns/CampaignComposer";
 
-
-
-
-
-
-
-
-
-export default function AlertDialog(){
-    return <div>
-        
-        <AlertDialogPage></AlertDialogPage> 
-    </div>
+export default function DialogCampaignPage() {
+  return <CampaignComposer type="ALERT_DIALOG" />;
 }

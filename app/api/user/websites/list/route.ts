@@ -1,41 +1,27 @@
+import prisma from "@/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import prisma from "@/db";
 
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
 
+  try {
+    const websites = await prisma.website.findMany({
+      where: { userId: session.user.id },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+    });
 
-
-export async function GET(){
-    const session = await auth();
-    if(!session?.user||!session?.user?.id){
-        return NextResponse.json({
-            msg:"Unauthorized"
-        },{
-            status:403
-        })
-    }
-    try{
-
-        const websites = await prisma?.website.findMany({
-            where:{
-                userId:session.user.id
-            }
-        })
-
-
-        return NextResponse.json({
-            websites
-        },{
-            status:201
-        })
-        
-    }
-    catch(e){
-        console.error(e);
-        return NextResponse.json({
-            msg:"Error while fetching the websites"
-        },{
-            status:500
-        })
-    }
+    return NextResponse.json({
+      websites: websites.map((website) => ({
+        ...website,
+        verificationRecord: `droplert-verification=${website.verificationToken}`,
+      })),
+    });
+  } catch (error) {
+    console.error("Failed to list websites", error);
+    return NextResponse.json({ message: "Unable to load websites" }, { status: 500 });
+  }
 }

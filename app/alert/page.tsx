@@ -1,11 +1,5 @@
+import { CampaignComposer } from "@/components/campaigns/CampaignComposer";
 
-
-import AlertPage from "@/components/alert-page"
-
-
-
-export default function Alert(){
-    return <div>
-            <AlertPage></AlertPage>
-    </div>
+export default function AlertCampaignPage() {
+  return <CampaignComposer type="ALERT" />;
 }

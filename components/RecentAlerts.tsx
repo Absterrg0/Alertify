@@ -1,132 +1,61 @@
 "use client"
 
-import React from "react"
-import { MyAlert } from "./presets/alerts/FirstAlert"
-import { MyAlertDialog } from "./presets/alert-dialog/FirstAlertDialog"
-import { Toast } from "./presets/toasts/FirstToast"
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
-import { Bell } from 'lucide-react'
-import { motion, AnimatePresence } from "framer-motion"
-import { Alert } from "./Dashboard"
+import { Bell, Clock3, ExternalLink, MessageSquare, PanelsTopLeft } from "lucide-react"
+import type { Alert } from "./Dashboard"
 
 interface InputProps {
   alerts: Alert[]
 }
+const typeLabels: Record<Alert["type"], string> = {
+  ALERT: "Inline alert",
+  ALERT_DIALOG: "Alert dialog",
+  TOAST: "Toast",
+}
 
-export default function NotificationPage({alerts}: InputProps) {
-  const renderNotification = (alert: Alert) => {
-    switch (alert.type) {
-      case "ALERT":
-        return (
-          <MyAlert
-            preview={true}
-            key={alert.id}
-            title={alert.title}
-            description={alert.description}
-            backgroundColor={alert.backgroundColor}
-            textColor={alert.textColor}
-            borderColor={alert.borderColor}
-            onClose={() =>{}}
-            className="pointer-events-none"
-            uploadedFileUrl={alert.imageUrl}
-          />
-        )
-      case "ALERT_DIALOG":
-        return (
-          <MyAlertDialog
-            preview={true}
-            isOpen={true}
-            key={alert.id}
-            title={alert.title}
-            description={alert.description}
-            backgroundColor={alert.backgroundColor}
-            textColor={alert.textColor}
-            borderColor={alert.borderColor}
-            onClose={() =>{}}
-            className="pointer-events-none"
-            uploadedFileUrl={alert.imageUrl}
+function typeIcon(type: Alert["type"]) {
+  if (type === "ALERT_DIALOG") return MessageSquare
+  if (type === "TOAST") return Bell
+  return PanelsTopLeft
+}
 
-          />
-        )
-      case "TOAST":
-        return (
-          <Toast
-            isOpen={true}
-            preview={true}
-            key={alert.id}
-            title={alert.title}
-            description={alert.description}
-            backgroundColor={alert.backgroundColor}
-            textColor={alert.textColor}
-            borderColor={alert.borderColor}
-            onClose={() => {}}
-            className="pointer-events-none"
-            uploadedFileUrl={alert.imageUrl}
-          />
-        )
-      default:
-        return null
-    }
+export default function NotificationPage({ alerts }: InputProps) {
+  if (alerts.length === 0) {
+    return (
+      <div className="px-2 py-7 text-center">
+        <div className="mx-auto grid h-10 w-10 place-items-center rounded border border-[#9a8cff]/20 bg-[#9a8cff]/[0.08] text-[#9a8cff]"><Bell size={17} /></div>
+        <p className="mt-3 text-[0.76rem] font-[560] text-[#f3f3ee]">No campaigns yet</p>
+        <p className="mx-auto mt-1 max-w-xs text-[0.67rem] leading-5 text-[#9097a5]">Your next published announcement will appear here with its delivery style.</p>
+      </div>
+    )
   }
 
   return (
-    <Card className="bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 shadow-lg border border-gray-200 dark:border-zinc-700 w-full max-w-3xl mx-auto rounded-xl overflow-hidden transition-all duration-300 relative">
-      <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-gray-100 via-white to-gray-100 dark:from-zinc-800 dark:via-zinc-900 dark:to-zinc-800 border-b border-gray-200 dark:border-zinc-700 flex justify-between items-center">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="p-2 bg-gray-200/50 dark:bg-zinc-700/30 rounded-lg backdrop-blur-sm">
-            <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-zinc-300" />
-          </div>
-          <div>
-            <CardTitle className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-zinc-200">
-              Recent Alerts
-            </CardTitle>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-gradient-to-b from-gray-50 to-white dark:from-zinc-900 dark:to-zinc-800">
-        <AnimatePresence>
-          {alerts.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-            >
-              <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center px-4">
-                <div className="mb-3 sm:mb-4 rounded-full bg-blue-100 p-3 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                  <Bell className="h-6 w-6 sm:h-8 sm:w-8" />
+    <div className="space-y-2">
+      {alerts.slice(0, 5).map((alert) => {
+        const Icon = typeIcon(alert.type)
+        return (
+          <article className="rounded border border-white/[0.1] bg-[#0c1016] p-3 transition-colors hover:border-white/[0.22]" key={alert.id}>
+            <div className="flex items-start gap-2.5">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded border border-white/[0.1] bg-white/[0.04] text-[#9a8cff]"><Icon aria-hidden="true" size={13} /></span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="truncate text-[0.72rem] font-[580] text-[#f3f3ee]">{alert.title || "Untitled campaign"}</p>
+                  <span className="shrink-0 font-mono text-[0.54rem] text-[#70f0c0]">published</span>
                 </div>
-                <h3 className="mb-2 text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">No Alerts Yet</h3>
-                <p className="mb-4 sm:mb-6 max-w-sm text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                  Your alert feed is currently empty. New alerts will appear here as they come in.
-                </p>
-              </div>            
-            </motion.div>
-          ) : (
-            alerts.slice(0, 5).map((alert, index) => (
-              <motion.div
-                key={alert.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ 
-                  duration: 0.4, 
-                  delay: index * 0.1,
-                  ease: [0.4, 0, 0.2, 1] 
-                }}
-              >
-                <div className="group relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-200/20 to-gray-100/20 dark:from-zinc-700/20 dark:to-zinc-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="relative p-3 sm:p-4 bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-700 group-hover:border-gray-300 dark:group-hover:border-zinc-600 group-hover:shadow-lg dark:group-hover:shadow-zinc-900/70 transition-all duration-300 ease-out">
-                    {renderNotification(alert)}
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          )}
-        </AnimatePresence>
-      </CardContent>
-    </Card>
+                <p className="mt-1 line-clamp-2 text-[0.65rem] leading-5 text-[#9097a5]">{alert.description || "No description provided."}</p>
+                <div className="mt-2 flex items-center gap-3 font-mono text-[0.54rem] text-[#727b89]"><span>{typeLabels[alert.type]}</span><span className="inline-flex items-center gap-1"><Clock3 aria-hidden="true" size={10} /> feed ready</span></div>
+              </div>
+            </div>
+            <div className="mt-3 overflow-hidden rounded border" style={{ background: alert.backgroundColor || "#151a22", borderColor: alert.borderColor || "rgba(243,243,238,.15)" }}>
+              <div className="flex items-center gap-2 px-3 py-2" style={{ color: alert.textColor || "#f3f3ee" }}>
+                <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+                <span className="truncate text-[0.62rem] font-[560]">{alert.title || "Campaign preview"}</span>
+                <ExternalLink aria-hidden="true" size={10} className="ml-auto opacity-60" />
+              </div>
+            </div>
+          </article>
+        )
+      })}
+    </div>
   )
 }

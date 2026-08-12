@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import websiteSchema from "@/types/WebsiteSchema";
+import websiteSchema from "@/types/WebsiteSchema"
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/db";
 export async function PUT(req: NextRequest) {

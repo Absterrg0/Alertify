@@ -1,14 +1,5 @@
+import { CampaignComposer } from "@/components/campaigns/CampaignComposer";
 
-
-
-
-
-import ToastPage from "@/components/toast-page"
-
-
-
-export default function Toast(){
-    return <div>
-        <ToastPage></ToastPage>
-    </div>
+export default function ToastCampaignPage() {
+  return <CampaignComposer type="TOAST" />;
 }

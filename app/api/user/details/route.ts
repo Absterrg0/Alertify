@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/db";
 import userSchema from "@/types/UserUpdate";
-import { randomBytes } from 'crypto'
+import { ZodError } from "zod";
 
 export async function PUT(req:NextRequest){
     const session = await auth();
@@ -19,22 +19,24 @@ export async function PUT(req:NextRequest){
         const body = await req.json();
         const parsedBody = userSchema.parse(body)
         const {email,name} = parsedBody;
-        const apiKey = randomBytes(32).toString('hex');
         await prisma.user.update({
             where:{
                 id:session.user.id
             },
             data:{
                 email,
-                name,
-                apiKey
+                name
             }
         })
+        return NextResponse.json({ message: "Profile updated" });
     }
     catch(e){
-        console.log(e);
+        if (e instanceof ZodError) {
+            return NextResponse.json({ message: "Enter a valid name and email" }, { status: 400 });
+        }
+        console.error("Failed to update user details", e);
         return NextResponse.json({
-            msg:"Error while updating user details"
+            message:"Error while updating user details"
         },{
             status:500
         })

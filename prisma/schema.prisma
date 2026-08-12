@@ -2,30 +2,33 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
- 
+
 generator client {
   provider = "prisma-client-js"
 }
- 
+
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  image         String?
-  droplertId    String         @default(cuid())
-  apiKey        String         @default(uuid())
-  plan          UserPlan        @default(FREE)
-  websites      Website[]
-  RoutePresets  RoutePreset[]
-  recentAlerts  Alert[]
-  apiHistory    ApiRequest[]
-  accounts      Account[]
-  sessions      Session[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String          @id @default(cuid())
+  name           String?
+  email          String          @unique
+  emailVerified  DateTime?
+  image          String?
+  // Retained only for a non-destructive rollout from v1. No v2 API reads or exposes these values.
+  droplertId     String          @default(cuid())
+  apiKey         String          @default(uuid())
+  plan           UserPlan        @default(FREE)
+  websites       Website[]
+  RoutePresets   RoutePreset[]
+  recentAlerts   Alert[]
+  campaigns      Campaign[]
+  deliveryEvents DeliveryEvent[]
+  apiHistory     ApiRequest[]
+  accounts       Account[]
+  sessions       Session[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
- 
+
 model Account {
   userId            String
   type              String
@@ -38,116 +41,218 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- 
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@id([provider, providerAccountId])
 }
- 
+
 model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
- 
+
 model VerificationToken {
   identifier String
   token      String
   expires    DateTime
- 
+
   @@id([identifier, token])
 }
- 
 
+model Website {
+  id                String           @id @default(cuid())
+  publicId          String           @unique @default(cuid())
+  name              String
+  url               String           @unique
+  isVerified        Boolean          @default(false)
+  status            websiteStatus    @default(PENDING)
+  verificationToken String           @default(uuid())
+  verifiedAt        DateTime?
+  feedRevision      Int              @default(0)
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaignTargets   CampaignTarget[]
+  deliveryEvents    DeliveryEvent[]
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
- model Website{
-  id    String      @id@default(cuid())
-  name  String  
-  url   String      @unique
-  isVerified  Boolean @default(false)
-  status  websiteStatus     @default(PENDING)
-  userId  String
-  user  User        @relation(fields: [userId],references: [id])
- }
-
-
-
-
- model Alert {
-  id              String     @id @default(cuid())
+model Alert {
+  id              String    @id @default(cuid())
   title           String
   description     String
   type            AlertType // Changed to match enum name
-  style           StyleType  // Changed to match enum name
+  style           StyleType // Changed to match enum name
   backgroundColor String
   textColor       String
   borderColor     String
-  imageUrl        String?    // Made optional and renamed for clarity
-  
-  userId          String
-  user            User       @relation(fields: [userId], references: [id])
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  imageUrl        String? // Made optional and renamed for clarity
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
+model Campaign {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          CampaignStatus     @default(DRAFT)
+  currentRevision Int                @default(1)
+  startsAt        DateTime           @default(now())
+  endsAt          DateTime?
+  priority        Int                @default(100)
+  publishedAt     DateTime?
+  archivedAt      DateTime?
+  revisions       CampaignRevision[]
+  targets         CampaignTarget[]
+  deliveryEvents  DeliveryEvent[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
+  @@index([userId, status, createdAt])
+  @@index([status, startsAt, endsAt])
+}
 
-model ApiRequest{
-  id     String     @id @default(cuid())
-  userId  String
-  user    User    @relation(fields: [userId],references: [id])
-  timestamp DateTime  @default(now())
+model CampaignRevision {
+  id          String                @id @default(cuid())
+  campaignId  String
+  campaign    Campaign              @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  revision    Int
+  type        AlertType
+  preset      NotificationPreset    @default(GLASS)
+  animation   NotificationAnimation @default(SPRING)
+  position    NotificationPosition  @default(TOP_CENTER)
+  title       String
+  description String
+  appearance  Json
+  routeRules  String[]
+  dismissible Boolean               @default(true)
+  durationMs  Int                   @default(10000)
+  createdAt   DateTime              @default(now())
+
+  @@unique([campaignId, revision])
+  @@index([campaignId, revision])
+}
+
+model CampaignTarget {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  websiteId  String
+  website    Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([campaignId, websiteId])
+  @@index([websiteId, createdAt])
+}
+
+model DeliveryEvent {
+  id               String            @id @default(cuid())
+  websiteId        String
+  website          Website           @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  campaignId       String
+  campaign         Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             DeliveryEventType
+  campaignRevision Int
+  visitorId        String?
+  path             String?
+  createdAt        DateTime          @default(now())
+
+  @@index([websiteId, createdAt])
+  @@index([campaignId, type, createdAt])
+}
+
+model ApiRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  timestamp DateTime @default(now())
   endpoint  String
-  name      String @default("")
-  success Boolean
+  name      String   @default("")
+  success   Boolean
 
-
-  @@index([userId,timestamp])
+  @@index([userId, timestamp])
 }
 
-
-model RoutePreset{
-  id   String   @id@default(cuid())
-  userId  String
-  user  User @relation(fields: [userId],references: [id])
-  routes  String[]
-  name  String
-
+model RoutePreset {
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id])
+  routes String[]
+  name   String
 }
 
- enum AlertType {
+enum AlertType {
   ALERT
   ALERT_DIALOG
   TOAST
- }
+}
 
-
- enum StyleType {
+enum StyleType {
   NATIVE
   GRADIENT
   LOGO
- }
+}
 
+enum CampaignStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
 
+enum NotificationPreset {
+  MINIMAL
+  GLASS
+  AURORA
+  EDITORIAL
+  NEON
+}
 
- enum websiteStatus {
+enum NotificationAnimation {
+  FADE
+  SLIDE
+  POP
+  SPRING
+  FLIP
+}
+
+enum NotificationPosition {
+  TOP_CENTER
+  TOP_RIGHT
+  BOTTOM_RIGHT
+  BOTTOM_CENTER
+}
+
+enum DeliveryEventType {
+  IMPRESSION
+  CLICK
+  DISMISS
+}
+
+enum websiteStatus {
   PENDING
   ACTIVE
   DEACTIVATED
- }
+}
 
- enum UserPlan {
+enum UserPlan {
   FREE
   PREMIUM
   ENTERPRISE
- }
+}

@@ -1,103 +1,45 @@
-'use client'
-import React from 'react';
-import Image from "next/image";
-import { AuthForm } from "../components/ui/AuthForm";
+"use client";
 
-const GlowingOrb = ({ className = "" }) => (
-  <div className={`relative ${className}`}>
-    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl" />
-    <div className="absolute inset-2 bg-blue-400/20 rounded-full blur-lg" />
-    <div className="absolute inset-4 bg-blue-300/20 rounded-full blur-md" />
-  </div>
-);
+import Link from "next/link";
+import { ArrowLeft, Check, Database, Gauge, ShieldCheck } from "lucide-react";
+
+import { DroplertMark } from "@/components/brand/DroplertMark";
+import { AuthForm } from "@/components/ui/AuthForm";
+
+const principles = [
+  { icon: Database, title: "Durable by default", copy: "Campaigns survive restarts and reach the next page view." },
+  { icon: Gauge, title: "Quiet infrastructure", copy: "Conditional HTTP reads replace permanent visitor connections." },
+  { icon: ShieldCheck, title: "No browser secrets", copy: "The installed client only receives a public per-site identifier." },
+];
 
 export default function AuthPage() {
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 relative overflow-hidden">
-      {/* Improved Background Pattern */}
-      <div className="absolute inset-0 z-0 opacity-30">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:14px_24px]" />
-        <Image
-          src="/abstract-pattern.svg"
-          alt="Abstract background pattern"
-          fill
-          className="opacity-20 object-cover"
-        />
-      </div>
-
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96">
-          <div className="absolute w-full h-full bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        </div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96">
-          <div className="absolute w-full h-full bg-sky-500/10 rounded-full blur-3xl animate-pulse-slow delay-700" />
-        </div>
-      </div>
-
-      {/* Auth Container */}
-      <div className="w-full flex items-center justify-center p-8 relative z-10">
-        <div className="w-full max-w-md">
-          {/* Subtle Glass Card Effect */}
-          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-8 shadow-2xl">
-            {/* Logo Animation */}
-            <div className="mb-8 relative">
-              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-40 h-40">
-                <GlowingOrb className="animate-float" />
-              </div>
-              
-              <h2 className="text-4xl font-bold tracking-tight mb-6 pt-8 text-center">
-                <span className="text-zinc-100">Welcome To</span>
-                <span className="block mt-2 bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 bg-clip-text text-transparent animate-gradient">
-                  Droplert
-                </span>
-              </h2>
-              <p className="text-lg text-zinc-400 tracking-tight text-center">
-                Sign in to give your users the best real time notifications.
-              </p>
-            </div>
-
-            {/* Auth Form */}
-            <div className="space-y-6">
-              <AuthForm />
-            </div>
+    <main className="grid min-h-screen bg-[#07090d] text-[#f3f3ee] lg:grid-cols-[minmax(0,1.05fr)_minmax(28rem,.95fr)]">
+      <section className="relative hidden overflow-hidden border-r border-white/10 p-12 lg:flex lg:flex-col xl:p-16">
+        <div className="absolute inset-0 ink-grid opacity-55" aria-hidden="true" />
+        <div className="absolute -right-40 top-20 h-96 w-96 rounded-full bg-[#70f0c0]/10 blur-[110px]" aria-hidden="true" />
+        <div className="relative z-10"><DroplertMark /></div>
+        <div className="relative z-10 my-auto max-w-2xl py-16">
+          <p className="eyebrow">Owner control room / secure access</p>
+          <h1 className="mt-5 text-5xl font-[580] leading-[.98] tracking-[-.065em] xl:text-6xl">A calmer place to publish product moments.</h1>
+          <p className="mt-6 max-w-xl text-base leading-7 text-[#9097a5]">Sign in to manage verified sites, shape accessible announcement surfaces, and schedule durable campaigns without operating a realtime delivery stack.</p>
+          <div className="mt-10 grid gap-3">
+            {principles.map(({ icon: Icon, title, copy }) => <article key={title} className="grid grid-cols-[36px_1fr] gap-4 border-t border-white/10 py-4"><span className="grid size-9 place-items-center rounded-lg border border-white/10 bg-white/[.03] text-[#70f0c0]"><Icon size={16} /></span><div><h2 className="text-sm font-medium">{title}</h2><p className="mt-1 text-xs leading-5 text-[#727b89]">{copy}</p></div></article>)}
           </div>
         </div>
-      </div>
+        <p className="relative z-10 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.14em] text-[#727b89]"><Check size={13} className="text-[#70f0c0]" /> sdk + versioned http feed</p>
+      </section>
 
-      {/* Floating Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-32 h-32"
-            style={{
-              top: `${20 + i * 30}%`,
-              left: `${10 + i * 40}%`,
-              animation: `float ${8 + i}s infinite ease-in-out`,
-              animationDelay: `${i * 1}s`
-            }}
-          >
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-sky-500/10 to-transparent blur-xl transform rotate-45" />
-          </div>
-        ))}
-      </div>
-
-      {/* Enhanced Particle System */}
-      <div className="absolute inset-0 z-0">
-        {[...Array(30)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `twinkle ${3 + Math.random() * 4}s infinite ease-in-out`,
-              animationDelay: `${Math.random() * 5}s`,
-            }}
-          />
-        ))}
-      </div>
-    </div>
+      <section className="flex min-h-screen flex-col px-5 py-6 sm:px-10 lg:px-14 xl:px-20">
+        <div className="flex items-center justify-between lg:justify-end"><div className="lg:hidden"><DroplertMark compact /></div><Link href="/" className="inline-flex items-center gap-2 text-xs text-[#9097a5] hover:text-[#f3f3ee]"><ArrowLeft size={14} /> Back to product</Link></div>
+        <div className="my-auto w-full max-w-md self-center py-12">
+          <p className="eyebrow">Welcome back</p>
+          <h2 className="mt-3 text-3xl font-[580] tracking-[-.05em] sm:text-4xl">Open your workspace.</h2>
+          <p className="mt-3 text-sm leading-6 text-[#9097a5]">Use the identity connected to your Droplert sites. Authentication is handled by your chosen provider.</p>
+          <div className="mt-8"><AuthForm /></div>
+          <p className="mt-8 border-t border-white/10 pt-5 text-xs leading-5 text-[#727b89]">By continuing, you acknowledge that campaign content and aggregate delivery events are stored for your workspace.</p>
+        </div>
+      </section>
+    </main>
   );
 }

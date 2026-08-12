@@ -1,91 +1,80 @@
-import { auth } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
+import { resolveTxt } from "node:dns/promises";
+
 import prisma from "@/db";
+import { auth } from "@/lib/auth";
+import { InvalidOriginError, normalizeOrigin } from "@/lib/campaigns/contracts";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+const DNS_TIMEOUT_MS = 5_000;
+
+export async function POST(request: NextRequest) {
   const session = await auth();
-
-  // Check user session
-  if (!session || !session.user) {
-    return NextResponse.json(
-      { msg: "Unauthorized" },
-      { status: 403 }
-    );
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const body = await req.json();
-    const { url } = body;
-
-    // Check if the website belongs to the user
-    const validWebsite = await prisma?.website.findFirst({
+    const body = (await request.json()) as { id?: string; url?: string };
+    const website = await prisma.website.findFirst({
       where: {
-        url: url,
         userId: session.user.id,
-      },
-      include: {
-        user: true,
+        ...(body.id ? { id: body.id } : body.url ? { url: normalizeOrigin(body.url) } : { id: "" }),
       },
     });
 
-    if (!validWebsite) {
-      return NextResponse.json(
-        { msg: "Not a valid website for this user" },
-        { status: 400 }
-      );
+    if (!website) {
+      return NextResponse.json({ message: "Website not found" }, { status: 404 });
     }
 
-    const apiKey = validWebsite.user.apiKey;
-    // Verify the user's website API
-    let response;
-    try {
-      response = await axios.post(
-        `${url}/api/droplert/verify`,
-        null,
+    const hostname = new URL(website.url).hostname;
+    const expected = `droplert-verification=${website.verificationToken}`;
+    let verified = process.env.NODE_ENV !== "production" && hostname === "localhost";
+
+    if (!verified) {
+      const records = await Promise.race([
+        resolveTxt(hostname),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("DNS verification timed out")), DNS_TIMEOUT_MS),
+        ),
+      ]);
+      verified = records.some((record) => record.join("") === expected);
+    }
+
+    if (!verified) {
+      return NextResponse.json(
         {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-        }
-      );
-    } catch (err) {
-      console.error("Error during API verification:", err);
-      return NextResponse.json(
-        { msg: "Failed to connect to website API" },
-        { status: 502 }
+          message: "Verification record was not found",
+          hostname,
+          recordType: "TXT",
+          recordValue: expected,
+        },
+        { status: 422 },
       );
     }
 
-    // Check response status
-    if (response.status === 200) {
-      // Update website verification status
-      const verification = await prisma?.website.update({
-        where: {
-          id: validWebsite.id,
-        },
-        data: {
-          isVerified: true,
-          status:"ACTIVE"
-        },
-      });
-      console.log(verification);
+    const updated = await prisma.website.update({
+      where: { id: website.id },
+      data: { isVerified: true, status: "ACTIVE", verifiedAt: new Date() },
+    });
+
+    return NextResponse.json({ message: "Website verified", website: updated });
+  } catch (error) {
+    if (error instanceof InvalidOriginError || error instanceof SyntaxError) {
+      return NextResponse.json({ message: "Enter a valid HTTPS website origin" }, { status: 400 });
+    }
+    const message = error instanceof Error ? error.message : "Verification failed";
+    if (
+      typeof error === "object" && error !== null && "code" in error &&
+      ["ENODATA", "ENOTFOUND", "ESERVFAIL", "ETIMEOUT"].includes(
+        String((error as { code?: string }).code),
+      )
+    ) {
       return NextResponse.json(
-        { msg: "API Key validation successful" },
-        { status: 200 }
-      );
-    } else {
-      return NextResponse.json(
-        { msg: "API key validation is not successful" },
-        { status: 400 }
+        { message: "DNS record is not visible yet. DNS changes can take time to propagate." },
+        { status: 422 },
       );
     }
-  } catch (e) {
-    console.error("Unexpected error:", e);
-    return NextResponse.json(
-      { msg: "Error while sending test request" },
-      { status: 500 }
-    );
+    console.error("Website verification failed", message);
+    return NextResponse.json({ message: "Unable to verify website" }, { status: 500 });
   }
 }

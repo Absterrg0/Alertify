@@ -34,8 +34,7 @@ export const {handlers,auth,signIn,signOut} = NextAuth({
     }),
   ],
   pages: {
-    signIn: '/auth/signin', // Custom sign-in page
-    error: '/auth/error', // Error page
+    signIn: '/getstarted',
+    error: '/getstarted',
   },
 });
-

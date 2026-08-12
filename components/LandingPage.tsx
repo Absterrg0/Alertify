@@ -1,766 +1,387 @@
+"use client"
 
-'use client'
-import {motion} from "motion/react"
-import { Button } from "@/components/ui/button"
-import { Bell, Sun, ArrowRight, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react"
+import { useState } from "react"
 import Link from "next/link"
-import { BackgroundBeams } from "@/components/ui/background-beams"
-import { TextGenerateEffect } from "@/components/ui/text-generate"
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient"
-import { TracingBeam } from "@/components/ui/tracing-beam"
-  import VideoComponent from "./video-player"
-import { ModeToggle } from "./theme-toggle-button"
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  Globe2,
+  Menu,
+  Radio,
+  ShieldCheck,
+  X,
+} from "lucide-react"
+import { DroplertMark } from "@/components/brand/DroplertMark"
+
+const featureRows = [
+  {
+    number: "01",
+    title: "Durable delivery",
+    copy: "Publish once and let the feed stay available for every new page load. Visible pages refresh without keeping a socket open.",
+  },
+  {
+    number: "02",
+    title: "Schedule with intent",
+    copy: "Set a campaign window before you publish. Announcements can arrive when a launch, maintenance window, or release actually starts.",
+  },
+  {
+    number: "03",
+    title: "Target the right routes",
+    copy: "Keep a campaign focused with route targeting, so a homepage note does not become a product-wide interruption.",
+  },
+  {
+    number: "04",
+    title: "Shape the surface",
+    copy: "Five visual presets and five motion options give teams a deliberate system for making announcements feel native to their product.",
+  },
+]
+
+const stylePresets = [
+  { name: "Minimal", detail: "quiet / direct", className: "style-tile--minimal" },
+  { name: "Glass", detail: "soft / layered", className: "style-tile--glass" },
+  { name: "Aurora", detail: "luminous / calm", className: "style-tile--aurora" },
+  { name: "Editorial", detail: "warm / considered", className: "style-tile--editorial" },
+  { name: "Neon", detail: "sharp / high-signal", className: "style-tile--neon" },
+]
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-
-
-
-
-  const features = [
-    {
-      title: "Alert Notifications",
-      description: "Simple, non-intrusive alerts that appear at the top of your website.",
-      icon: AlertCircle,
-    },
-    {
-      title: "Alert Dialogs",
-      description: "Modal dialogs that ensure your message gets attention from users.",
-      icon: MessageSquare,
-    },
-    {
-      title: "Toast Notifications",
-      description: "Temporary notifications that appear and disappear automatically.",
-      icon: Bell,
-    },
-    {
-      title: "Easy Integration",
-      description: "Simple npm command integration with any website or application.",
-      icon: CheckCircle2,
-    },
-    {
-      title: "Light & Dark Themes",
-      description: "Notifications that adapt to your website's theme automatically.",
-      icon: Sun,
-    },
-    {
-      title: "Custom Styling",
-      description: "Fully customizable colors, gradients, and branding options.",
-      icon: ArrowRight,
-    },
-  ]
-
-  const steps = [
-    {
-      title: "Register & Integrate",
-      description: "Add and verify your website in the DropLert dashboard.",
-    },
-    {
-      title: "Design Your Notification",
-      description: "Choose the type, style, and content of your notification.",
-    },
-    {
-      title: "Notify your users",
-      description: "Click a button to send notifications to your users in real time ",
-    },
-  ]
+  const closeMenu = () => setMobileMenuOpen(false)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0e0e0f] text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-[#0e0e0f]/80 border-b border-gray-200 dark:border-gray-800 bg-opacity-50 ">
-        <div className="container mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-wrap items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">
-                DropLert
+    <div className="landing-shell noise-overlay">
+      <header className="landing-header">
+        <div className="mx-auto flex min-h-[4.4rem] w-full max-w-6xl items-center justify-between px-5 sm:px-8">
+          <DroplertMark />
+
+          <nav aria-label="Primary navigation" className="hidden items-center gap-7 md:flex">
+            <a className="landing-nav-link" href="#product">
+              Product
+            </a>
+            <a className="landing-nav-link" href="#workflow">
+              How it works
+            </a>
+            <a className="landing-nav-link" href="#styles">
+              Styles
+            </a>
+          </nav>
+
+          <div className="hidden items-center gap-3 md:flex">
+            <Link className="landing-nav-link px-2 py-2" href="/dashboard">
+              Dashboard
+            </Link>
+            <Link className="landing-nav-link px-2 py-2" href="/getstarted">
+              Sign in
+            </Link>
+            <Link className="button-mint" href="/getstarted">
+              Start building <ArrowUpRight aria-hidden="true" size={15} />
+            </Link>
+          </div>
+
+          <button
+            type="button"
+            className="button-icon md:hidden"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            aria-label={mobileMenuOpen ? "Close navigation" : "Open navigation"}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+          >
+            {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
+          </button>
+        </div>
+
+        {mobileMenuOpen ? (
+          <div id="mobile-navigation" className="border-t border-white/[0.1] bg-[#090c11] md:hidden">
+            <nav aria-label="Mobile navigation" className="mx-auto flex w-full max-w-6xl flex-col px-5 py-4 sm:px-8">
+              <a className="landing-nav-link border-b border-white/[0.08] py-3" href="#product" onClick={closeMenu}>
+                Product
+              </a>
+              <a className="landing-nav-link border-b border-white/[0.08] py-3" href="#workflow" onClick={closeMenu}>
+                How it works
+              </a>
+              <a className="landing-nav-link border-b border-white/[0.08] py-3" href="#styles" onClick={closeMenu}>
+                Styles
+              </a>
+              <div className="flex items-center gap-3 pt-4">
+                <Link className="button-quiet flex-1" href="/dashboard" onClick={closeMenu}>
+                  Dashboard
+                </Link>
+                <Link className="button-quiet flex-1" href="/getstarted" onClick={closeMenu}>
+                  Sign in
+                </Link>
+                <Link className="button-mint flex-1" href="/getstarted" onClick={closeMenu}>
+                  Start building <ArrowUpRight aria-hidden="true" size={15} />
+                </Link>
+              </div>
+            </nav>
+          </div>
+        ) : null}
+      </header>
+
+      <main>
+        <section className="landing-hero" id="product">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-[0.84fr_1.16fr] lg:gap-14">
+            <div className="animate-rise-in">
+              <p className="eyebrow">Durable website campaigns / sdk + http feed</p>
+              <h1 className="landing-hero__title">
+                Announcements that stay <em>useful.</em>
               </h1>
-              <span className="px-2 py-1 rounded-md bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs font-medium">
-                Beta
-              </span>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex space-x-6">
-                <Link
-                  href="#features"
-                  className="font-medium hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  Features
+              <p className="landing-hero__copy">
+                Droplert gives product teams a durable, scheduled way to publish in-page announcements. A small React component reads an HTTP feed, so every new page load gets the right campaign without running a realtime messaging stack.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Link className="button-mint" href="/getstarted">
+                  Start building <ArrowRight aria-hidden="true" size={15} />
                 </Link>
-                <Link
-                  href="#how-it-works"
-                  className="font-medium hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  How It Works
-                </Link>
-                <Link href="#demo" className="font-medium hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  Demo
-                </Link>
+                <a className="button-quiet" href="#workflow">
+                  View the workflow <ChevronDown aria-hidden="true" size={15} />
+                </a>
               </div>
-
-              <div className="flex items-center gap-4 ml-auto md:ml-0">
-                <ModeToggle />
-              </div>
-
-              <div className="block md:hidden">
-                <Button variant="ghost" size="sm" className="p-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </Button>
-              </div>
-
-              <div className="hidden md:block">
-                <HoverBorderGradient
-                  containerClassName="rounded-full"
-                  className="rounded-full"
-                  as={Link}
-                  href="/getstarted"
-                  from="from-teal-500"
-                  to="to-purple-600"
-                  fromOpacity={0.5}
-                  toOpacity={0.5}
-                >
-                  <Button className="rounded-full bg-gradient-to-r from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-700 text-white">
-                    Get Started
-                  </Button>
-                </HoverBorderGradient>
+              <div className="trust-row" aria-label="Technical highlights">
+                <span>
+                  <Check aria-hidden="true" size={12} className="text-[#70f0c0]" /> HTTP feed delivery
+                </span>
+                <span>
+                  <Check aria-hidden="true" size={12} className="text-[#70f0c0]" /> No open sockets
+                </span>
+                <span>
+                  <Check aria-hidden="true" size={12} className="text-[#70f0c0]" /> React + Next.js
+                </span>
               </div>
             </div>
-          </div>
-        </div>
-      </nav>
 
-      {/* Improved Hero Section with Enhanced Mobile Responsiveness */}
-      <section className="relative overflow-hidden py-16 md:py-24 lg:py-32">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 bg-gradient-to-b from-teal-50/50 to-purple-50/50 dark:from-teal-950/20 dark:to-purple-950/20" />
-        <div className="absolute top-0 left-0 right-0 h-[500px] bg-[radial-gradient(circle_at_30%_20%,rgba(0,200,255,0.1),transparent_40%),radial-gradient(circle_at_70%_60%,rgba(120,0,240,0.15),transparent_50%)]" />
-        
-        {/* Moving particles background */}
-        <BackgroundBeams className="opacity-80" />
-        
-        {/* Multiple floating notification elements for visual appeal */}
-        <div className="absolute top-1/4 right-10 w-48 text-center h-16 rounded-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm p-3 shadow-lg rotate-3 hidden lg:block">
-          <div className="flex items-start gap-2">
-            <CheckCircle2 className="h-5 w-5 text-teal-500 flex-shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <p className="font-semibold ml-2">Notification sent</p>
-              <p className="text-gray-500 dark:text-gray-400 text-xs mt-2">Campaign live</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="absolute bottom-1/4 left-5 w-60 h-20 rounded-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm p-3 shadow-lg -rotate-6 hidden lg:block">
-          <div className="flex items-start justify-center gap-2">
-            <Bell className="h-5 w-5  text-purple-500 flex-shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <p className="font-semibold items-center w-full text-center">New subscriber</p>
-              <p className="text-gray-500 dark:text-gray-400 text-xs text-center  mt-2">Someone joined your newsletter</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="relative z-10">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
-              {/* Text content - stacks on mobile, side by side on desktop */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex-1 text-center lg:text-left"
-              >
-                <div className="mb-8">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-teal-500/10 to-purple-500/10 border border-teal-500/20 dark:border-purple-500/20 text-teal-700 dark:text-teal-300 text-sm font-medium mb-6"
-                  >
-                    <span className="flex h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
-                    <span className="whitespace-nowrap">Boost engagement by 40%</span>
-                  </motion.div>
-                  
-                  {/* Responsive heading with gradient text */}
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-500 via-purple-500 to-purple-600">
-                      Captivate Users with Live Notifications
-                    </span>
-                  </h1>
+            <div className="animate-rise-in [animation-delay:120ms]" aria-label="Droplert product preview">
+              <div className="product-canvas">
+                <div className="browser-bar">
+                  <div className="browser-dots" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <div className="browser-address">
+                    <Globe2 aria-hidden="true" size={10} />
+                    product.acme.dev / changelog
+                  </div>
+                  <span className="font-mono text-[0.52rem] text-[#70f0c0]">200 OK</span>
                 </div>
 
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                >
-                  <TextGenerateEffect
-                    words="Transform visitor experiences with beautiful, interactive alerts that drive action and skyrocket your conversion rates."
-                    className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 sm:mb-10 max-w-3xl mx-auto lg:mx-0"
-                  />
-                </motion.div>
-
-                {/* Responsive button layout - stacks on mobile, side by side on larger screens */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.5 }}
-                  className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
-                >
-                  <HoverBorderGradient
-                    containerClassName="rounded-full w-full sm:w-auto"
-                    className="rounded-full w-full sm:w-auto"
-                    as={Link}
-                    href="/getstarted"
-                    from="from-teal-500"
-                    to="to-purple-600"
-                    fromOpacity={0.5}
-                    toOpacity={0.5}
-                  >
-                    <Button
-                      size="lg"
-                      className="rounded-full bg-gradient-to-r from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-700 text-white text-lg px-6 sm:px-8 shadow-lg shadow-teal-500/20 dark:shadow-purple-500/20 w-full sm:w-auto"
-                    >
-                      Start Building <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </HoverBorderGradient>
-
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    variant="outline" 
-                    className="text-lg px-6 sm:px-8 rounded-full border-2 w-full sm:w-auto"
-                  >
-                    <Link href="/dashboard">Dashboard</Link>
-                  </Button>
-
-                  <Button
-                    asChild
-                    size="lg"
-                    variant="ghost"
-                    className="text-lg px-6 sm:px-8 rounded-full w-full sm:w-auto hidden sm:inline-flex"
-                    onClick={() => {
-                      document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })
-                    }}
-                  >
-                    <Link href="#demo">Watch Demo</Link>
-                  </Button>
-                </motion.div>
-
-                {/* Social proof section */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.9, duration: 0.5 }}
-                  className="mt-10 flex items-center justify-center lg:justify-start"
-                >
-                  <div className="flex -space-x-3">
-                    {[...Array(4)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white dark:border-gray-800 overflow-hidden shadow-lg"
-                      >
-                        <img
-                          src={`https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${i + 20}.jpg`}
-                          alt={`User ${i + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                <div className="canvas-layout">
+                  <div className="canvas-page">
+                    <div className="canvas-page__copy">
+                      <strong>Make the next release feel close.</strong>
+                      <span>One clear message, delivered inside the product your users already know.</span>
+                    </div>
+                    <div className="demo-notification">
+                      <div className="demo-notification__top">
+                        <span>Campaign / active</span>
+                        <span>09:42 UTC</span>
                       </div>
-                    ))}
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 text-xs font-bold">
-                      +96
+                      <strong className="mt-2 block text-[0.85rem] font-[560] tracking-[-0.03em] text-[#f3f3ee]">
+                        Version 2.4 is ready to explore
+                      </strong>
+                      <p>
+                        See what changed, then pick up exactly where you left off.
+                      </p>
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      <span className="font-semibold text-gray-900 dark:text-white">100+</span> developers trust
-                      DropLert
-                    </p>
-                  </div>
-                </motion.div>
-              </motion.div>
 
-              {/* Improved visual element - interactive mockup */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                className="flex-1 w-full max-w-lg mx-auto lg:ml-0 mt-10 lg:mt-0"
-              >
-                <div className="relative">
-                  {/* Animated glow effect */}
-                  <div className="absolute w-[120%] h-[120%] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-teal-500/20 to-purple-600/20 rounded-full blur-3xl opacity-30 animate-pulse" />
-                  
-                  {/* Main device mockup */}
-                  <div className="relative z-10 w-full">
-                    <div className="relative shadow-2xl rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
-                      <div className="bg-white dark:bg-gray-900 p-2 rounded-2xl">
-                        {/* Browser chrome */}
-                        <div className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded-lg mb-3">
-                          <div className="flex space-x-1">
-                            <div className="w-3 h-3 rounded-full bg-red-500" />
-                            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                            <div className="w-3 h-3 rounded-full bg-green-500" />
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">droplert.app</div>
-                          <div className="w-4" />
+                  <aside className="canvas-controls" aria-label="Campaign feed and controls">
+                    <div className="canvas-controls__head">
+                      <strong>Campaign feed</strong>
+                      <span>LIVE PREVIEW</span>
+                    </div>
+                    <div className="canvas-feed">
+                      <span className="canvas-feed__label">delivery / http</span>
+                      <div className="canvas-feed__row">
+                        <span className="feed-status" />
+                        <div>
+                          <strong>Release notes</strong>
+                          <span>active · route /changelog</span>
                         </div>
-                        
-                        {/* Demo screen with animated notifications */}
-                        <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg overflow-hidden">
-                          {/* Top notification with animation */}
-                          <motion.div 
-                            initial={{ x: "120%", opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 1.2, duration: 0.5, type: "spring" }}
-                            className="absolute top-4 right-4 p-3 bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-[80%]"
-                          >
-                            <div className="flex items-start gap-3">
-                              <Bell className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium">New message received!</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                  John just sent you a new message.
-                                </p>
-                              
-                              </div>
-                            </div>
-                          </motion.div>
-                          
-                          {/* Bottom notification with animation */}
-                          <motion.div 
-                            initial={{ y: 50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 1.5, duration: 0.5 }}
-                            className="absolute bottom-4 left-4 p-3 bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-[80%]"
-                          >
-                            <div className="flex items-start gap-3">
-                              <CheckCircle2 className="h-5 w-5 text-teal-500 flex-shrink-0 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium">New feature available!</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                  Check out our latest update with improved notifications.
-                                </p>
-              
-                              </div>
-                            </div>
-                          </motion.div>
-                          
-                          {/* Floating indicator dot with pulse animation */}
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <span className="flex h-3 w-3">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
-                            </span>
-                          </div>
+                      </div>
+                      <div className="canvas-feed__row">
+                        <span className="feed-status" style={{ background: "var(--violet)" }} />
+                        <div>
+                          <strong>Maintenance window</strong>
+                          <span>scheduled · 18 Aug, 08:00</span>
+                        </div>
+                      </div>
+                      <div className="canvas-feed__row">
+                        <span className="feed-status" style={{ background: "var(--warning)" }} />
+                        <div>
+                          <strong>Invite your team</strong>
+                          <span>draft · not delivered</span>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* Optional decorative elements */}
-                  <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
-                  <div className="absolute -top-4 -left-4 w-20 h-20 bg-teal-500/10 rounded-full blur-lg"></div>
+                  </aside>
                 </div>
-                
-                {/* Mobile-only watch demo button */}
-                <div className="mt-6 text-center block sm:hidden">
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="text-sm rounded-full"
-                    onClick={() => {
-                      document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })
-                    }}
-                  >
-                    <Link href="#demo" className="flex items-center justify-center">
-                      <span className="mr-2">Watch Demo</span>
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M15.5 12L10.5 15.5V8.5L15.5 12Z" fill="currentColor" />
-                      </svg>
-                    </Link>
-                  </Button>
-                </div>
-              </motion.div>
+              </div>
+              <div className="mt-3 flex items-center justify-between px-1 font-mono text-[0.58rem] text-[#727b89]">
+                <span>campaign_canvas / 01</span>
+                <span className="inline-flex items-center gap-1.5 text-[#70f0c0]"><span className="status-dot status-dot--success" /> feed connected</span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-{/* Video Demo Section - Angled layout with side-by-side content */}
-<section id="demo" className="py-24 md:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50/70 to-gray-100/70 dark:from-gray-900/50 dark:to-gray-800/50 skew-y-3 transform-gpu"></div>
-      
-      {/* Background decorative elements */}
-      <div className="absolute top-1/4 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-0 w-72 h-72 bg-purple-500/5 rounded-full blur-3xl"></div>
-      
-      <div className="container mx-auto px-4 lg:px-6 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-          {/* Left side content - More breathing room */}
-          <motion.div
-            className="w-full lg:w-2/5 text-left"
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="inline-block px-4 py-2 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 text-sm font-medium mb-6">
-              Watch & Learn
-            </span>
-            <h2 className="text-4xl lg:text-5xl font-bold mb-6 tracking-tight">See DropLert in Action</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-              Discover how easy it is to create beautiful, engaging notifications that drive user action and improve conversion rates.
-            </p>
-            
-            {/* Desktop-only CTA */}
-            <div className="hidden md:block">
-              <Button 
-                size="lg"
-                className="rounded-full bg-teal-500 hover:bg-teal-600 text-white font-medium px-8 shadow-lg hover:shadow-xl transition-all"
-              >
-                Get Started Free
-              </Button>
+        <section className="value-strip" aria-label="How Droplert works">
+          <div className="mx-auto grid w-full max-w-6xl px-5 sm:px-8 md:grid-cols-3">
+            <div className="value-step">
+              <span className="value-step__number">01 / PUBLISH</span>
+              <strong>Publish once</strong>
+              <span>Write the announcement and choose its window.</span>
             </div>
-          </motion.div>
-          
-          {/* Right side video - Larger size */}
-          <motion.div
-            className="w-full lg:w-3/5"
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <VideoComponent />
-          </motion.div>
-        </div>
-      </div>
-    </section>
-
-      {/* Features Section with Card Hover Effect */}
-      <section id="features" className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-white to-gray-50 dark:from-[#0e0e0f] dark:to-gray-900/20"></div>
-        <div className="container mx-auto px-6 relative z-10">
-          <motion.div
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="inline-block px-4 py-2 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 text-sm font-medium mb-4">
-              Powerful Features
-            </span>
-            <h2 className="text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-purple-600">
-              Everything You Need
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Create engaging notifications that drive user action and improve conversion rates
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="group relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-purple-600/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 p-8 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 h-full backdrop-blur-sm">
-                  <div className="mb-5 inline-flex p-3 rounded-xl bg-gradient-to-r from-teal-500/20 to-purple-600/20 text-teal-600 dark:text-teal-300">
-                    <feature.icon className="h-7 w-7" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
-                </div>
-              </motion.div>
-            ))}
+            <div className="value-step">
+              <span className="value-step__number">02 / PERSIST</span>
+              <strong>Durable feed</strong>
+              <span>New page loads receive the active campaign immediately.</span>
+            </div>
+            <div className="value-step">
+              <span className="value-step__number">03 / DELIVER</span>
+              <strong>Lightweight SDK</strong>
+              <span>A small component keeps the experience in your product.</span>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How It Works Section with Tracing Beam */}
-      <section id="how-it-works" className="py-20">
-        <div className="container mx-auto px-6">
-          <motion.div
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Get up and running with DropLert in just three simple steps
-            </p>
-          </motion.div>
-
-          <TracingBeam className="px-6">
-            <div className="max-w-2xl mx-auto">
-              {steps.map((step, idx) => (
-                <div key={idx} className="mb-12">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                    className="flex gap-4"
-                  >
-                    <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-teal-500 to-purple-600 text-white font-bold">
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-semibold mb-3">{step.title}</h3>
-                      <p className="text-gray-600 dark:text-gray-300">{step.description}</p>
-                    </div>
-                  </motion.div>
-                </div>
+        <section className="py-24 sm:py-32" id="capabilities">
+          <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
+            <div>
+              <p className="eyebrow">Built for product moments</p>
+              <h2 className="editorial-heading mt-4">Control the message. Keep the stack light.</h2>
+              <p className="editorial-copy mt-6">
+                Your announcement system should feel like part of the product, not a second infrastructure project. Droplert keeps campaign state explicit and delivery easy to inspect.
+              </p>
+              <div className="mt-8 inline-flex items-center gap-2 font-mono text-[0.62rem] text-[#9a8cff]">
+                <Radio aria-hidden="true" size={13} /> DELIVERY MODEL / HTTP + POLLING
+              </div>
+            </div>
+            <div>
+              {featureRows.map((feature) => (
+                <article className="feature-row" key={feature.number}>
+                  <span className="feature-row__number">{feature.number}</span>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.copy}</p>
+                </article>
               ))}
             </div>
-          </TracingBeam>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* CTA Section - Improved and more subtle */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 to-purple-600/10 dark:from-teal-500/5 dark:to-purple-600/5"></div>
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-3xl shadow-lg overflow-hidden border border-gray-200/50 dark:border-gray-700/30"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
-          {/* Left Content - Takes 3/5 of the space */}
-          <div className="col-span-3 p-8 md:p-12">
-            <span className="inline-block px-3 py-1 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 text-xs font-medium mb-6">
-              Start Today
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-purple-600">transform</span> your user experience?
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg">
-              Join the community of developers creating meaningful interactions with their users.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <HoverBorderGradient
-                containerClassName="rounded-full"
-                className="rounded-full"
-                as={Link}
-                href="/getstarted"
-                from="from-teal-500"
-                to="to-purple-600"
-                fromOpacity={0.4}
-                toOpacity={0.4}
-              >
-                <Button className="rounded-full bg-gradient-to-r from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-700 text-white px-6 py-2 shadow-md">
-                  Get Started <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </HoverBorderGradient>
-              <Button asChild variant="outline" className="rounded-full">
-                <Link href="/dashboard">View Dashboard</Link>
-              </Button>
-            </div>
-
-            <div className="mt-8 flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-6 h-6 rounded-full border border-white dark:border-gray-800 overflow-hidden shadow-sm"
-                  >
-                    <img
-                      src={`https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${i + 20}.jpg`}
-                      alt={`User ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+        <section className="section-rule py-24 sm:py-32" id="styles">
+          <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
+            <div className="flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
+              <div>
+                <p className="eyebrow">Appearance system</p>
+                <h2 className="editorial-heading mt-4">Five ways to make a notice feel native.</h2>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                <span className="font-medium text-gray-700 dark:text-gray-300">100+</span> developers already using DropLert
+              <p className="editorial-copy sm:max-w-[20rem]">
+                Start with a preset, then tune the content, color, motion, and route for the moment at hand.
               </p>
             </div>
+            <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {stylePresets.map((preset) => (
+                <article className={`style-tile ${preset.className}`} key={preset.name}>
+                  <span className="style-tile__label">{preset.name}</span>
+                  <div className="style-tile__sample">
+                    <strong>Small note, clear intent</strong>
+                    <span>Ship the next step with context.</span>
+                  </div>
+                  <span className="style-tile__meta">{preset.detail}</span>
+                </article>
+              ))}
+            </div>
           </div>
+        </section>
 
-          {/* Right Content - Takes 2/5 of the space */}
-          <div className="col-span-2 relative hidden lg:block">
-            <div className="absolute inset-0 bg-gradient-to-br from-teal-500/30 to-purple-600/30"></div>
-            <div className="h-full p-8 flex items-center justify-center relative">
-              <div className="relative w-full max-w-xs">
-                {/* Notification Examples */}
-                <div className="absolute -top-4 -left-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg transform -rotate-3 z-10">
-                  <div className="flex items-start gap-2">
-                    <Bell className="h-4 w-4 text-purple-500 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs font-medium">New update!</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Check out the latest features
-                      </p>
-                    </div>
-                  </div>
+        <section className="section-rule py-24 sm:py-32" id="workflow">
+          <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+            <div>
+              <p className="eyebrow">A calm path to publish</p>
+              <h2 className="editorial-heading mt-4">From first install to first campaign in an afternoon.</h2>
+              <p className="editorial-copy mt-6">
+                Add the component, connect a public site ID, and keep campaign decisions in one focused control room.
+              </p>
+              <div className="code-snippet mt-8">
+                <div className="code-snippet__top">
+                  <span>app/layout.tsx</span>
+                  <span>React / Next.js</span>
                 </div>
+                <pre>
+                  <span className="code-keyword">import</span> {"{"} Droplert {"}"} <span className="code-keyword">from</span> <span className="code-string">&quot;droplert/react&quot;</span>
+                  {"\n\n"}
+                  <span className="code-keyword">export default function</span> RootLayout() {"{"}
+                  {"\n  "}&lt;Droplert siteId={<span className="code-string">&quot;site_public_id&quot;</span>} /&gt;
+                  {"\n"}{"}"}
+                </pre>
+              </div>
+            </div>
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2">
+              <article className="workflow-step">
+                <span className="workflow-step__number">01 / CONNECT</span>
+                <h3>Add a site</h3>
+                <p>Verify the domain in your workspace and copy its public site ID.</p>
+              </article>
+              <article className="workflow-step">
+                <span className="workflow-step__number">02 / INSTALL</span>
+                <h3>Drop in the SDK</h3>
+                <p>Use the small React component wherever your app owns its layout.</p>
+              </article>
+              <article className="workflow-step">
+                <span className="workflow-step__number">03 / COMPOSE</span>
+                <h3>Shape the moment</h3>
+                <p>Pick a type, style, route, and schedule without touching your app release.</p>
+              </article>
+              <article className="workflow-step">
+                <span className="workflow-step__number">04 / PUBLISH</span>
+                <h3>Let the feed deliver</h3>
+                <p>Active campaigns appear on new loads and refresh efficiently while visible.</p>
+              </article>
+            </div>
+          </div>
+        </section>
 
-                <div className="absolute -bottom-2 -right-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg transform rotate-2 z-10">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-teal-500 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs font-medium">Success!</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Your changes have been saved
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Main visual element */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
-                  <div className="mb-4 flex justify-between items-center">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                    </div>
-                    <div className="text-xs text-gray-500">droplert.app</div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4"></div>
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full w-5/6"></div>
-                  </div>
-                  <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-teal-500" />
-                      <p className="text-xs font-medium">Engage users with notifications</p>
-                    </div>
-                  </div>
+        <section className="py-24 sm:py-32">
+          <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
+            <div className="surface-card relative overflow-hidden px-6 py-12 sm:px-12 sm:py-16">
+              <div className="absolute -right-20 -top-28 h-72 w-72 rounded-full bg-[#70f0c0]/[0.07] blur-3xl" aria-hidden="true" />
+              <div className="relative max-w-2xl">
+                <p className="eyebrow">Your next product moment</p>
+                <h2 className="editorial-heading mt-4">Make the announcement part of the experience.</h2>
+                <p className="editorial-copy mt-6">
+                  Start with one site, one clear message, and a delivery model your team can reason about.
+                </p>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link className="button-mint" href="/getstarted">
+                    Open your workspace <ArrowUpRight aria-hidden="true" size={15} />
+                  </Link>
+                  <Link className="button-quiet" href="/dashboard">
+                    View dashboard
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
-  </div>
-</section>
+        </section>
+      </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-50 dark:bg-[#0e0e0f] py-12 border-t border-gray-200 dark:border-gray-800">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <div className="flex items-center space-x-3">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">
-                  DropLert
-                </h1>
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">Real-time notifications for your website</p>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-8">
-              <div>
-                <h3 className="font-semibold mb-3">Product</h3>
-                <ul className="space-y-2">
-                  <li>
-                    <Link
-                      href="#features"
-                      className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400"
-                    >
-                      Features
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="#how-it-works"
-                      className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400"
-                    >
-                      How It Works
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="#demo"
-                      className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400"
-                    >
-                      Demo
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-3">Company</h3>
-                <ul className="space-y-2">
-                  <li>
-                    <Link
-                      href="#"
-                      className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400"
-                    >
-                      About
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="#"
-                      className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400"
-                    >
-                      Blog
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="#"
-                      className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400"
-                    >
-                      Contact
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-3">Legal</h3>
-                <ul className="space-y-2">
-                  <li>
-                    <Link
-                      href="#"
-                      className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400"
-                    >
-                      Privacy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="#"
-                      className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400"
-                    >
-                      Terms
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
+      <footer className="border-t border-white/[0.12] py-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 sm:px-8 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <DroplertMark compact />
+            <span className="font-mono text-[0.58rem] text-[#727b89]">durable campaigns for the web</span>
           </div>
-
-          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 text-center text-gray-600 dark:text-gray-400">
-            <p>© {new Date().getFullYear()} DropLert. All rights reserved.</p>
+          <div className="flex items-center gap-5 font-mono text-[0.6rem] text-[#727b89]">
+            <Link className="hover:text-[#f3f3ee]" href="/getstarted">Sign in</Link>
+            <Link className="hover:text-[#f3f3ee]" href="/dashboard">Dashboard</Link>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck aria-hidden="true" size={12} /> HTTP feed</span>
           </div>
         </div>
       </footer>
     </div>
   )
 }
-

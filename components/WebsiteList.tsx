@@ -1,12 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Globe, ExternalLink, Search, X } from "lucide-react"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { useMemo, useState } from "react"
+import { Copy, ExternalLink, Globe2, Plus, RefreshCw, Search, ShieldCheck, X } from "lucide-react"
+import { WebsiteAddition } from "./Website-addition-dialog"
+import { toast } from "@/hooks/use-toast"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,27 +14,41 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import axios from "axios"
-import { WebsiteAddition } from "./Website-addition-dialog"
-import { toast } from "@/hooks/use-toast"
+} from "./ui/alert-dialog"
 
 export type WebsiteStatus = "PENDING" | "ACTIVE" | "DEACTIVATED"
 
 export interface Website {
   id: string
+  publicId: string
+  verificationRecord?: string
   name: string
   url: string
   status: WebsiteStatus
   isVerified: boolean
 }
 
-
 interface VerifiedWebsiteManagerProps {
   websites: Website[]
   selectedWebsites: Website[]
-  onWebsitesChange: (websites: Website[]) => void
+  onWebsitesChange: (websites?: Website[]) => void | Promise<void>
   onSelectedWebsitesChange: (selectedWebsites: Website[]) => void
+}
+
+const statusCopy: Record<WebsiteStatus, { label: string; className: string }> = {
+  ACTIVE: { label: "Active", className: "text-[#70f0c0] border-[#70f0c0]/25 bg-[#70f0c0]/[0.08]" },
+  PENDING: { label: "Pending", className: "text-[#f5c86b] border-[#f5c86b]/25 bg-[#f5c86b]/[0.08]" },
+  DEACTIVATED: { label: "Deactivated", className: "text-[#9097a5] border-white/[0.14] bg-white/[0.04]" },
+}
+
+const SITE_LIMIT = 6
+
+function hostname(url: string) {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url.replace(/^https?:\/\//, "").split("/")[0]
+  }
 }
 
 export default function VerifiedWebsiteManager({
@@ -47,318 +58,146 @@ export default function VerifiedWebsiteManager({
   onSelectedWebsitesChange,
 }: VerifiedWebsiteManagerProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [isVerifying, setIsVerifying] = useState<string | null>(null)
+  const [isDeactivating, setIsDeactivating] = useState<string | null>(null)
 
-  const handleVerify = async (url: string) => {
+  const copyVerificationRecord = async (site: Website) => {
+    if (!site.verificationRecord) return
+    await navigator.clipboard.writeText(site.verificationRecord)
+    toast({ title: "TXT value copied", description: `Add it to ${hostname(site.url)}, then verify.` })
+  }
+
+  const sortWebsites = (items: Website[]) => {
+    const order: Record<WebsiteStatus, number> = { ACTIVE: 0, PENDING: 1, DEACTIVATED: 2 }
+    return [...items].sort((a, b) => order[a.status] - order[b.status])
+  }
+
+  const filteredWebsites = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
+    return websites.filter((site) => {
+      if (!query) return true
+      return site.name.toLowerCase().includes(query) || site.url.toLowerCase().includes(query)
+    })
+  }, [searchTerm, websites])
+
+  const activeFiltered = filteredWebsites.filter((site) => site.status !== "DEACTIVATED")
+  const allActiveSelected = activeFiltered.length > 0 && activeFiltered.every((site) => selectedWebsites.some((selected) => selected.id === site.id))
+
+  const handleVerify = async (site: Website) => {
+    setIsVerifying(site.id)
     try {
-      const response = await axios.post("/api/notify/verify", { url })
-      if (response.status === 200) {
-        console.log("URL verification successful:", response.data)
-        const updatedWebsites = websites.map((site) =>
-          site.url === url ? { ...site, status: "ACTIVE" as WebsiteStatus, isVerified: true } : site,
-        )
-        onWebsitesChange(sortWebsites(updatedWebsites))
-        toast({
-          title: "Website Verified",
-          description: "The website has been successfully verified.",
-        })
-      } else {
-        console.error("Verification failed:", response.data)
-        toast({
-          title: "Verification Failed",
-          description: "There was an error verifying the website.",
-          variant: "destructive",
-        })
+      const response = await fetch("/api/notify/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: site.id }) })
+      if (!response.ok) {
+        const result = (await response.json()) as { message?: string }
+        throw new Error(result.message || "Verification failed")
       }
+      const updated = websites.map((item) => item.id === site.id ? { ...item, status: "ACTIVE" as const, isVerified: true } : item)
+      await onWebsitesChange(sortWebsites(updated))
+      toast({ title: "Site verified", description: `${site.name} is ready for campaigns.` })
     } catch (error) {
       console.error("Error during verification:", error)
-      toast({
-        title: "Verification Error",
-        description: "An unexpected error occurred during verification.",
-        variant: "destructive",
-      })
+      toast({ title: "Verification failed", description: "Check the URL and try again.", variant: "destructive" })
+    } finally {
+      setIsVerifying(null)
     }
   }
 
   const handleDeactivate = async (id: string) => {
+    setIsDeactivating(id)
     try {
-      const response = await axios.post(`/api/user/websites/update/${id}`)
-      if (response.status === 200) {
-        const updatedWebsites = websites.map((site) =>
-          site.id === id ? { ...site, status: "DEACTIVATED" as WebsiteStatus, isVerified: false } : site,
-        )
-        onWebsitesChange(sortWebsites(updatedWebsites))
-        toast({
-          title: "Website Deactivated",
-          description: "The website has been successfully deactivated.",
-        })
-      }
+      const response = await fetch(`/api/user/websites/update/${id}`, { method: "POST" })
+      if (!response.ok) throw new Error("Deactivation failed")
+      const updated = websites.map((item) => item.id === id ? { ...item, status: "DEACTIVATED" as const, isVerified: false } : item)
+      onSelectedWebsitesChange(selectedWebsites.filter((site) => site.id !== id))
+      await onWebsitesChange(sortWebsites(updated))
+      toast({ title: "Site deactivated", description: "It will no longer receive new campaigns." })
     } catch (error) {
       console.error("Error deactivating website:", error)
-      toast({
-        title: "Deactivation Error",
-        description: "An error occurred while deactivating the website.",
-        variant: "destructive",
-      })
+      toast({ title: "Could not deactivate site", variant: "destructive" })
+    } finally {
+      setIsDeactivating(null)
     }
   }
 
-  const handleSelect = (website: Website) => {
-    const updatedSelectedWebsites = selectedWebsites.some((site) => site.id === website.id)
-      ? selectedWebsites.filter((site) => site.id !== website.id)
-      : [...selectedWebsites, website]
-
-    onSelectedWebsitesChange(updatedSelectedWebsites)
+  const toggleSite = (site: Website) => {
+    if (site.status === "DEACTIVATED") return
+    const isSelected = selectedWebsites.some((selected) => selected.id === site.id)
+    onSelectedWebsitesChange(isSelected ? selectedWebsites.filter((selected) => selected.id !== site.id) : [...selectedWebsites, site])
   }
 
-  const sortWebsites = (websitesToSort: Website[]): Website[] => {
-    return websitesToSort.sort((a, b) => {
-      const order: { [key in WebsiteStatus]: number } = { ACTIVE: 0, PENDING: 1, DEACTIVATED: 2 }
-      return (order[a.status] || 3) - (order[b.status] || 3)
-    })
+  const toggleAll = (checked: boolean) => {
+    if (checked) {
+      const selected = [...selectedWebsites]
+      activeFiltered.forEach((site) => {
+        if (!selected.some((item) => item.id === site.id)) selected.push(site)
+      })
+      onSelectedWebsitesChange(selected)
+    } else {
+      onSelectedWebsitesChange(selectedWebsites.filter((selected) => !activeFiltered.some((site) => site.id === selected.id)))
+    }
   }
-
-  const filteredWebsites = websites.filter(
-    (site) =>
-      site &&
-      site.name &&
-      site.url &&
-      (site.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        site.url.toLowerCase().includes(searchTerm.toLowerCase())),
-  )
-
-  const emptyRows = Array(6 - filteredWebsites.length).fill(null)
 
   return (
-    <Card className="bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 backdrop-blur-sm border border-zinc-300/50 dark:border-zinc-700/50 shadow-xl">
-      <CardHeader className="border-b border-zinc-200/50 dark:border-zinc-700/50 bg-gradient-to-r from-zinc-50/50 to-zinc-100/50 dark:from-zinc-800/50 dark:to-zinc-900/50 p-3 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 w-4 h-4" />
-            <Input
-              placeholder="Search websites..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full sm:w-72 bg-white/80 dark:bg-zinc-900/80 border-zinc-300/50 dark:border-zinc-600/50 backdrop-blur-sm text-sm"
-            />
-          </div>
-
-          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-            {selectedWebsites.length > 0 && (
-              <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 bg-zinc-200/50 dark:bg-zinc-700/50 px-2 sm:px-3 py-1 rounded-full">
-                {selectedWebsites.length} selected
-              </span>
-            )}
-
-            {websites.length < 5 && (
-              <WebsiteAddition
-                onAddition={(newWebsite: Website) => onWebsitesChange([...websites, newWebsite])}
-              />
-            )}
-          </div>
+    <div className="surface-card overflow-hidden">
+      <div className="flex flex-col gap-4 border-b border-white/[0.1] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="relative w-full sm:max-w-[18rem]">
+          <Search aria-hidden="true" size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#727b89]" />
+          <input className="dashboard-input w-full pl-9 pr-3" type="search" placeholder="Search sites or domains" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} aria-label="Search sites or domains" />
         </div>
-      </CardHeader>
-
-      <CardContent className="p-2 sm:p-6">
-        <div className="rounded-lg border border-zinc-200/50 dark:border-zinc-700/50 overflow-x-auto bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gradient-to-r from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900">
-                <TableHead className="w-12">
-                  <input
-                    type="checkbox"
-                    className="rounded border-zinc-300 dark:border-zinc-600 scale-90 sm:scale-100"
-                    onChange={(e) => {
-                      onSelectedWebsitesChange(e.target.checked ? filteredWebsites : [])
-                    }}
-                    checked={selectedWebsites.length === filteredWebsites.length && filteredWebsites.length > 0}
-                  />
-                </TableHead>
-                <TableHead className="whitespace-nowrap">Website</TableHead>
-                <TableHead className="hidden sm:table-cell">Status</TableHead>
-                <TableHead className="hidden sm:table-cell">Verified</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredWebsites.map((site) => (
-                <TableRow
-                  key={site.id}
-                  className={`
-                    transition-colors duration-200
-                    ${selectedWebsites.some((s) => s.id === site.id) ? "bg-emerald-50/50 dark:bg-emerald-900/20" : ""}
-                    ${site.status === "DEACTIVATED" ? "opacity-60" : ""}
-                    hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50
-                  `}
-                >
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={selectedWebsites.some((s) => s.id === site.id)}
-                      onChange={() => handleSelect(site)}
-                      disabled={site.status === "DEACTIVATED"}
-                      className={`rounded border-zinc-300 dark:border-zinc-600 scale-90 sm:scale-100 ${
-                        site.status === "DEACTIVATED" ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col min-w-[200px]">
-                      <div className="flex items-center gap-2">
-                        <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-zinc-400" />
-                        <span className="font-medium text-sm sm:text-base text-zinc-900 dark:text-white">
-                          {site.name}
-                        </span>
-                      </div>
-                      <a
-                        href={site.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 mt-1 flex items-center gap-1 truncate max-w-[200px] sm:max-w-full"
-                      >
-                        {site.url}
-                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                      </a>
-                      <div className="flex gap-2 mt-1 sm:hidden">
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${
-                            site.status === "ACTIVE"
-                              ? "bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-                              : site.status === "PENDING"
-                                ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800"
-                                : "bg-gradient-to-r from-zinc-500/20 to-zinc-600/20 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800"
-                          }`}
-                        >
-                          {site.status}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${
-                            site.isVerified
-                              ? "bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-                              : "bg-gradient-to-r from-zinc-500/20 to-zinc-600/20 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800"
-                          }`}
-                        >
-                          {site.isVerified ? "Yes" : "No"}
-                        </Badge>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Badge
-                      variant="outline"
-                      className={`
-                        ${
-                          site.status === "ACTIVE"
-                            ? "bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-                            : site.status === "PENDING"
-                              ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800"
-                              : "bg-gradient-to-r from-zinc-500/20 to-zinc-600/20 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800"
-                        }
-                      `}
-                    >
-                      {site.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Badge
-                      variant="outline"
-                      className={`
-                        ${
-                          site.isVerified
-                            ? "bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-                            : "bg-gradient-to-r from-zinc-500/20 to-zinc-600/20 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800"
-                        }
-                      `}
-                    >
-                      {site.isVerified ? "Yes" : "No"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {site.status === "DEACTIVATED" ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:from-emerald-500/20 hover:to-emerald-600/20 px-2 sm:px-4"
-                      >
-                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </Button>
-                    ) : site.status === "ACTIVE" ? (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="bg-gradient-to-r from-red-500/10 to-red-600/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 hover:from-red-500/20 hover:to-red-600/20 text-xs sm:text-sm px-2 sm:px-4"
-                          >
-                            Deactivate
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-[95vw] max-w-lg">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-lg sm:text-xl font-semibold text-red-600 dark:text-red-400">
-                              ⚠️ Warning: Permanent Deactivation
-                            </AlertDialogTitle>
-                            <div className="mt-4 space-y-4 text-zinc-700 dark:text-zinc-300">
-                              <AlertDialogDescription className="text-sm sm:text-base font-medium">
-                                THIS WEBSITE CANNOT BE REACTIVATED THROUGH THE DASHBOARD.
-                              </AlertDialogDescription>
-                              <AlertDialogDescription className="text-sm sm:text-base">
-                                If you need to reactivate this website in the future, you will need to contact developer
-                                support.
-                              </AlertDialogDescription>
-                              <AlertDialogDescription className="text-xs sm:text-sm italic">
-                                Are you sure you want to proceed with deactivation?
-                              </AlertDialogDescription>
-                            </div>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter className="mt-4 sm:mt-6 flex-col sm:flex-row gap-2 sm:gap-4">
-                            <AlertDialogCancel className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-sm sm:text-base w-full sm:w-auto">
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeactivate(site.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white text-sm sm:text-base w-full sm:w-auto"
-                            >
-                              Yes, Deactivate Website
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:from-emerald-500/20 hover:to-emerald-600/20 text-xs sm:text-sm px-2 sm:px-4"
-                        onClick={() => handleVerify(site.url)}
-                      >
-                        Verify
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {emptyRows.map((_, index) => (
-                <TableRow key={`empty-${index}`} className="h-16">
-                  <TableCell colSpan={5} className="text-center text-zinc-400 dark:text-zinc-500">
-                    {index === 2 && filteredWebsites.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full">
-                        <Globe className="w-8 h-8 mb-2" />
-                        <p className="text-sm">No websites added yet</p>
-                      </div>
-                    ) : (
-                      <div className="h-16 flex items-center justify-center">
-
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          {selectedWebsites.length > 0 ? <span className="font-mono text-[0.59rem] text-[#70f0c0]">{selectedWebsites.length} selected</span> : <span className="font-mono text-[0.59rem] text-[#727b89]">{websites.length} / {SITE_LIMIT} sites</span>}
+          {websites.length < SITE_LIMIT ? <WebsiteAddition onAddition={() => onWebsitesChange()} /> : null}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {filteredWebsites.length === 0 ? (
+        <div className="px-6 py-12 text-center">
+          <div className="mx-auto grid h-11 w-11 place-items-center rounded border border-[#70f0c0]/20 bg-[#70f0c0]/[0.07] text-[#70f0c0]"><Globe2 size={19} /></div>
+          <h3 className="mt-4 text-[0.85rem] font-[580] text-[#f3f3ee]">{websites.length ? "No sites match this search" : "Add your first site"}</h3>
+          <p className="mx-auto mt-2 max-w-sm text-[0.7rem] leading-5 text-[#9097a5]">{websites.length ? "Try a different name or domain." : "Verify a destination before publishing your first durable campaign."}</p>
+          {websites.length === 0 ? <div className="mt-5"><WebsiteAddition onAddition={() => onWebsitesChange()} /></div> : null}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[38rem] text-left">
+            <thead className="border-b border-white/[0.08] bg-white/[0.02]">
+              <tr className="font-mono text-[0.58rem] uppercase tracking-[0.08em] text-[#727b89]">
+                <th className="w-12 px-5 py-3 font-normal"><input type="checkbox" aria-label="Select all active sites" checked={allActiveSelected} onChange={(event) => toggleAll(event.target.checked)} className="h-3.5 w-3.5 accent-[#70f0c0]" /></th>
+                <th className="px-3 py-3 font-normal">Destination</th>
+                <th className="px-3 py-3 font-normal">Status</th>
+                <th className="px-3 py-3 font-normal">Verification</th>
+                <th className="px-5 py-3 text-right font-normal">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.08]">
+              {filteredWebsites.map((site) => {
+                const isSelected = selectedWebsites.some((selected) => selected.id === site.id)
+                const status = statusCopy[site.status]
+                return (
+                  <tr className={`transition-colors hover:bg-white/[0.025] ${site.status === "DEACTIVATED" ? "opacity-60" : ""} ${isSelected ? "bg-[#70f0c0]/[0.04]" : ""}`} key={site.id}>
+                    <td className="px-5 py-4 align-top"><input type="checkbox" aria-label={`Select ${site.name}`} checked={isSelected} disabled={site.status === "DEACTIVATED"} onChange={() => toggleSite(site)} className="h-3.5 w-3.5 accent-[#70f0c0] disabled:cursor-not-allowed" /></td>
+                    <td className="px-3 py-4 align-top">
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded border border-white/[0.1] bg-white/[0.03] text-[#9097a5]"><Globe2 size={13} /></span>
+                        <div className="min-w-0">
+                          <p className="truncate text-[0.76rem] font-[560] text-[#f3f3ee]">{site.name}</p>
+                          <a className="mt-1 inline-flex max-w-[17rem] items-center gap-1 truncate font-mono text-[0.6rem] text-[#9097a5] hover:text-[#70f0c0]" href={site.url} target="_blank" rel="noopener noreferrer">{hostname(site.url)} <ExternalLink aria-hidden="true" size={10} /></a>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 align-top"><span className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[0.56rem] ${status.className}`}><span className={`status-dot ${site.status === "ACTIVE" ? "status-dot--success" : site.status === "PENDING" ? "status-dot--warning" : ""}`} /> {status.label}</span></td>
+                    <td className="px-3 py-4 align-top"><span className="inline-flex items-center gap-1.5 font-mono text-[0.6rem] text-[#9097a5]">{site.isVerified ? <ShieldCheck aria-hidden="true" size={13} className="text-[#70f0c0]" /> : <RefreshCw aria-hidden="true" size={12} className="text-[#f5c86b]" />} {site.isVerified ? "Verified" : "Needs check"}</span></td>
+                    <td className="px-5 py-4 text-right align-top">
+                      {site.status === "PENDING" ? <span className="inline-flex gap-1.5"><button type="button" className="button-quiet !min-h-8 !px-2.5 !text-[0.62rem]" disabled={!site.verificationRecord} onClick={() => void copyVerificationRecord(site)}><Copy aria-hidden="true" size={12} /> TXT</button><button type="button" className="button-quiet !min-h-8 !px-2.5 !text-[0.62rem]" disabled={isVerifying === site.id} onClick={() => void handleVerify(site)}>{isVerifying === site.id ? <RefreshCw aria-hidden="true" size={12} className="animate-spin" /> : <ShieldCheck aria-hidden="true" size={12} />} Verify</button></span> : site.status === "ACTIVE" ? <AlertDialog><AlertDialogTrigger asChild><button type="button" className="inline-flex min-h-8 items-center gap-1.5 rounded border border-[#f28b8b]/20 px-2.5 text-[0.62rem] text-[#9097a5] transition-colors hover:border-[#f28b8b]/45 hover:text-[#f28b8b]" disabled={isDeactivating === site.id}>Deactivate</button></AlertDialogTrigger><AlertDialogContent className="border-white/[0.14] bg-[#151a22] text-[#f3f3ee]"><AlertDialogHeader><AlertDialogTitle className="text-base">Deactivate {site.name}?</AlertDialogTitle><AlertDialogDescription className="text-sm leading-6 text-[#9097a5]">New campaigns will stop targeting this site. Contact support if you need to reactivate it during the rollback window.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="border-white/[0.14] bg-transparent text-[#d9ded8] hover:bg-white/[0.07]">Cancel</AlertDialogCancel><AlertDialogAction className="bg-[#f28b8b] text-[#07090d] hover:bg-[#f5aaaa]" onClick={() => void handleDeactivate(site.id)}>Deactivate</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : <span className="inline-flex items-center gap-1.5 font-mono text-[0.58rem] text-[#727b89]"><X size={12} /> inactive</span>}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-4 border-t border-white/[0.08] px-5 py-3 font-mono text-[0.57rem] text-[#727b89]"><span>Active sites can receive campaigns.</span><span className="inline-flex items-center gap-1.5"><Plus aria-hidden="true" size={11} /> {Math.max(0, SITE_LIMIT - websites.length)} slots left</span></div>
+    </div>
   )
 }
-

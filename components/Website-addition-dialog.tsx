@@ -1,151 +1,64 @@
-import { Button } from "@/components/ui/button";
-import { Plus, Loader } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  AlertDialogDescription
-} from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "./ui/input";
-import axios from "axios";
-import { useState } from "react";
-import { Website } from "./Dashboard";
-import { toast } from '@/hooks/use-toast'
+"use client";
 
-type WebsiteAdditionProps = {
-  onAddition: (newWebsite: Website) => void;
-};
+import { useState } from "react";
+import { Check, Copy, Globe2, LoaderCircle, Plus } from "lucide-react";
+
+import { toast } from "@/hooks/use-toast";
+import type { Website } from "./Dashboard";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+
+type WebsiteAdditionProps = { onAddition: (newWebsite: Website) => void };
 
 export function WebsiteAddition({ onAddition }: WebsiteAdditionProps) {
-  const [name, setName] = useState('');
-  const [url, setUrl] = useState('');
+  const [name, setName] = useState("");
+  const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [record, setRecord] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const reset = () => { setName(""); setUrl(""); setRecord(null); setCopied(false); };
 
   const handleAddWebsite = async () => {
     setLoading(true);
     try {
-      const cleanedUrl = url.trim();
-      const response = await axios.post('/api/user/websites/new', {
-        name,
-        url: cleanedUrl,
-      });
-
-      if (response.status === 201) {
-        setName('');
-        setUrl('');
-        if (onAddition) {
-          //@ts-expect-error IDK
-          onAddition();
-        }
-        setIsOpen(false);
-
-        toast({
-          title: "Website Added",
-          description: "The website has been added successfully.",
-        });
-      } else if (response.data?.msg) {
-        toast({
-          title: "Error Adding Website",
-          description: response.data.msg,
-          variant: "destructive",
-        });
-      }
+      const response = await fetch("/api/user/websites/new", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, url: url.trim() }) });
+      const data = (await response.json()) as { message?: string; website?: Website; verificationRecord?: string };
+      if (!response.ok || !data.website || !data.verificationRecord) throw new Error(data.message || "Unable to add site");
+      onAddition(data.website);
+      setRecord(data.verificationRecord);
+      toast({ title: "Site added", description: "Add the DNS record, then verify the destination." });
     } catch (error) {
-      const errorMessage =
-        //@ts-expect-error will fix
-        error.response?.data?.msg || "An unexpected error occurred.";
-      toast({
-        title: "Error Adding Website",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+      toast({ title: "Could not add site", description: error instanceof Error ? error.message : "Try again.", variant: "destructive" });
+    } finally { setLoading(false); }
+  };
+
+  const copyRecord = async () => {
+    if (!record) return;
+    await navigator.clipboard.writeText(record);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1_500);
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant='outline'
-          className="gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-zinc-600/80 to-zinc-700/80 hover:bg-gradient-to-r hover:from-zinc-800/50 hover:to-zinc-900/50 text-white rounded-md transition-all shadow-md"
-        >
-          <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-          Add Website
-        </Button>
-      </AlertDialogTrigger>
-
-      <AlertDialogContent
-        className="w-[95vw] sm:w-full p-4 sm:p-6 rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 backdrop-blur-md max-w-lg mx-auto border border-zinc-600 dark:border-zinc-700 shadow-lg transition-all"
-      >
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-gray-100">
-            Add New Website
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-sm sm:text-base text-zinc-600 dark:text-gray-400">
-            Enter the name and URL of the website you&apos;d like to add.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
-          <div>
-            <Label className="block text-xs sm:text-sm font-medium text-zinc-600 dark:text-gray-300">
-              Website Name
-            </Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter website name"
-              className="mt-1 sm:mt-2 w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-500 rounded-md p-2 sm:p-3 text-sm sm:text-base text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-gray-400 transition-all shadow-md"
-            />
-          </div>
-
-          <div>
-            <Label className="block text-xs sm:text-sm font-medium text-zinc-600 dark:text-gray-300">
-              Website URL
-            </Label>
-            <Input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-              className="mt-1 sm:mt-2 w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-500 rounded-md p-2 sm:p-3 text-sm sm:text-base text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-gray-400 transition-all shadow-md"
-            />
-          </div>
-        </div>
-
-        <AlertDialogFooter className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 mt-3 sm:mt-4">
-          <AlertDialogCancel
-            className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base rounded-md text-zinc-600 dark:text-gray-300 border border-zinc-600 dark:border-zinc-500 hover:bg-zinc-700 dark:hover:bg-zinc-600 transition-all"
-            disabled={loading}
-          >
-            Cancel
-          </AlertDialogCancel>
-          <Button
-            onClick={handleAddWebsite}
-            disabled={loading}
-            className="w-full sm:w-auto gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-zinc-700/40 to-zinc-800/40 hover:bg-gradient-to-r hover:from-zinc-800/50 hover:to-zinc-900/50 text-white dark:text-gray-900 text-sm sm:text-base rounded-md transition-all flex items-center justify-center border border-zinc-600 dark:border-zinc-500 shadow-md"
-          >
-            {loading ? (
-              <>
-                <Loader className="h-3 w-3 sm:h-4 sm:w-4 animate-spin mr-1 sm:mr-2" />
-                Adding...
-              </>
-            ) : (
-              <>
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Add Website
-              </>
-            )}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
+      <DialogTrigger asChild><Button type="button" variant="outline" className="h-9 border-white/10 bg-white/[0.03] px-3 text-xs text-[#d9ded8] hover:border-[#70f0c0]/40 hover:bg-[#70f0c0]/[0.07] hover:text-[#70f0c0]"><Plus size={14} className="mr-1.5" /> Add site</Button></DialogTrigger>
+      <DialogContent className="border-white/10 bg-[#0d1118] text-[#f3f3ee] sm:max-w-lg">
+        <DialogHeader>
+          <div className="mb-3 grid size-10 place-items-center rounded-lg border border-[#70f0c0]/20 bg-[#70f0c0]/10 text-[#70f0c0]"><Globe2 size={18} /></div>
+          <DialogTitle className="text-xl tracking-[-.03em]">{record ? "Verify domain control" : "Add a destination"}</DialogTitle>
+          <DialogDescription className="leading-6 text-white/45">{record ? "Publish this TXT value at the root of your domain. DNS changes may take a few minutes to appear." : "Register one HTTPS origin. Paths, query strings, and credentials are intentionally rejected."}</DialogDescription>
+        </DialogHeader>
+        {record ? (
+          <div className="mt-4 space-y-3"><p className="font-mono text-[10px] uppercase tracking-[.14em] text-white/40">TXT record value</p><button type="button" onClick={copyRecord} className="flex w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#080a0f] p-4 text-left font-mono text-xs text-[#70f0c0] hover:border-[#70f0c0]/35"><span className="min-w-0 break-all">{record}</span>{copied ? <Check size={15} /> : <Copy size={15} />}</button></div>
+        ) : (
+          <div className="mt-4 grid gap-4"><div className="space-y-2"><Label htmlFor="site-name" className="text-xs text-white/55">Site name</Label><Input id="site-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Marketing site" className="border-white/10 bg-white/[.04] text-white placeholder:text-white/25 focus-visible:ring-[#70f0c0]" /></div><div className="space-y-2"><Label htmlFor="site-origin" className="text-xs text-white/55">HTTPS origin</Label><Input id="site-origin" type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" className="border-white/10 bg-white/[.04] text-white placeholder:text-white/25 focus-visible:ring-[#70f0c0]" /></div></div>
+        )}
+        <DialogFooter className="mt-5">{record ? <Button type="button" onClick={() => setIsOpen(false)} className="bg-[#70f0c0] text-[#07100c] hover:bg-[#8affd1]">Done</Button> : <Button type="button" onClick={handleAddWebsite} disabled={loading || name.trim().length < 2 || !url.trim()} className="bg-[#70f0c0] text-[#07100c] hover:bg-[#8affd1]">{loading ? <LoaderCircle size={15} className="mr-2 animate-spin" /> : <Plus size={15} className="mr-2" />} Add destination</Button>}</DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

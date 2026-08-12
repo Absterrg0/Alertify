@@ -4,8 +4,8 @@ import {z} from 'zod'
 
 
 const userSchema = z.object({
-    email:z.string().email(),
-    name:z.string().min(2)
+    email:z.email(),
+    name:z.string().trim().min(2).max(80)
 })
 
 

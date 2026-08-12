@@ -1,20 +1,12 @@
 
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Poppins } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/toaster";
 import { Analytics } from "@vercel/analytics/react";
 import { Suspense } from "react";
 import { ThemeProvider } from "@/components/theme-provider"
-
-// Google Font - Poppins
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-poppins",
-});
 
 // Local Fonts
 const geistSans = localFont({
@@ -35,12 +27,12 @@ export const metadata: Metadata = {
     template: '%s | Droplert',
     default: 'Droplert',
   },
-  description: "Free real-time website notifications to notify users effortlessly",
+  description: "Durable, scheduled website campaigns delivered through a lightweight SDK and HTTP feed.",
   applicationName: 'Droplert',
   keywords: [
-    'notifications', 'real-time', 'website alerts', 'user engagement', 'web service'
+    'website campaigns', 'scheduled announcements', 'website alerts', 'developer tools', 'HTTP feed'
   ],
-  authors: [{ name: 'Your Name', url: 'https://abstergo.dev' }],
+  authors: [{ name: 'Abstergo', url: 'https://abstergo.dev' }],
   creator: 'Abstergo',
   publisher: 'Abstergo',
   robots: {
@@ -55,7 +47,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Droplert",
-    description: "Free real-time website notifications to notify users effortlessly",
+    description: "Durable, scheduled website campaigns delivered through a lightweight SDK and HTTP feed.",
     url: "https://droplert.abstergo.dev",
     siteName: "Droplert",
     images: [
@@ -72,7 +64,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Droplert",
-    description: "Free real-time website notifications to notify users effortlessly",
+    description: "Durable, scheduled website campaigns delivered through a lightweight SDK and HTTP feed.",
     images: ["/DarkLogo.png"],
     site: "@Absterrg0",
     creator: "@Absterrg0",
@@ -92,13 +84,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: '#ffffff',
+  themeColor: '#07090d',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
       <ThemeProvider
       attribute="class"
       defaultTheme="system"

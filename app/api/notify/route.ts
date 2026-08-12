@@ -1,178 +1,132 @@
-import { NextRequest, NextResponse } from "next/server";
-import { logApiRequest } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
-import axios from "axios";
-import { Website } from "@/components/Dashboard";
+import {
+  campaignPublishSchema,
+  type CampaignPublishInput,
+} from "@/lib/campaigns/contracts";
+import { CampaignError, publishCampaign } from "@/lib/campaigns/service";
+import { checkCampaignLimit } from "@/lib/rate-limit";
 import prisma from "@/db";
+import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 
-enum AlertType {
-    ALERT = "ALERT",
-    ALERT_DIALOG = "ALERT_DIALOG",
-    TOAST = "TOAST",
-}
-
-enum StyleType {
-    NATIVE = "NATIVE",
-    GRADIENT = "GRADIENT",
-    LOGO = "LOGO",
-}
-
-interface Payload {
+type LegacyPayload = {
+  payload: {
     title: string;
     description: string;
-    selectedType: AlertType;
-    style: StyleType;
-    backgroundColor: string;
-    textColor: string;
-    borderColor: string;
-    fileName?: string;
-    uploadedFileUrl?:string;
-    routes:string[];
-    borderRadius:number;
+    selectedType: CampaignPublishInput["type"];
+    style?: "NATIVE" | "GRADIENT" | "LOGO";
+    preset?: CampaignPublishInput["preset"];
+    animation?: CampaignPublishInput["animation"];
+    position?: CampaignPublishInput["position"];
+    backgroundColor?: string;
+    textColor?: string;
+    borderColor?: string;
+    accentColor?: string;
+    uploadedFileUrl?: string;
+    routes?: string[];
+    borderRadius?: number;
+    durationMs?: number;
+    dismissible?: boolean;
+    startsAt?: string;
+    endsAt?: string | null;
+  };
+  websites: Array<{ id: string }>;
+};
+
+function fromLegacyBody(body: LegacyPayload) {
+  const payload = body.payload;
+  const preset =
+    payload.preset ??
+    (payload.style === "GRADIENT"
+      ? "AURORA"
+      : payload.style === "LOGO"
+        ? "EDITORIAL"
+        : "GLASS");
+
+  return {
+    title: payload.title,
+    description: payload.description,
+    type: payload.selectedType,
+    preset,
+    animation: payload.animation,
+    position: payload.position,
+    websiteIds: body.websites.map((website) => website.id),
+    routes: payload.routes,
+    startsAt: payload.startsAt,
+    endsAt: payload.endsAt,
+    dismissible: payload.dismissible,
+    durationMs: payload.durationMs,
+    appearance: {
+      backgroundColor: payload.backgroundColor,
+      textColor: payload.textColor,
+      accentColor: payload.accentColor,
+      borderColor: payload.borderColor,
+      borderRadius: payload.borderRadius,
+      imageUrl: payload.uploadedFileUrl || null,
+    },
+  };
 }
 
-interface InputProps {
-    payload: Payload;
-    websites: Website[];
+function isLegacyPayload(body: unknown): body is LegacyPayload {
+  if (!body || typeof body !== "object") return false;
+  const candidate = body as Partial<LegacyPayload>;
+  return Boolean(
+    candidate.payload &&
+    typeof candidate.payload === "object" &&
+    Array.isArray(candidate.websites),
+  );
 }
 
-interface NotificationResult {
-    website: string;
-    status: 'success' | 'failed' | 'error';
-    message: string;
-    error?: Error;
-}
+export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
 
-const WS_SERVER_URL = process.env.NEXT_PUBLIC_WEBSOCKET_SERVER_URL;
-
-export async function POST(req: NextRequest) {
-    try {
-        // 1. Authentication
-        const session = await auth();
-        if (!session?.user?.id) {
-            return NextResponse.json(
-                { msg: "Unauthorized" },
-                { status: 403 }
-            );
-        }
-
-        // 2. Get user data
-        const user = await prisma?.user.findUnique({
-            where: { id: session.user.id },
-            include: { websites: true }
-        });
-
-        if (!user) {
-            return NextResponse.json(
-                { msg: "User not found" },
-                { status: 404 }
-            );
-        }
-
-        // 3. Parse request body
-        const body: InputProps = await req.json();
-        const { payload, websites } = body;
-
-        if (websites.length === 0) {
-            return NextResponse.json({
-                msg: "Select at least 1 website"
-            }, {
-                status: 400
-            });
-        }
-
-        // 4. Create alert record
-        const alert = await prisma?.alert.create({
-            data: {
-                title: payload.title,
-                description: payload.description,
-                type: payload.selectedType,
-                style: payload.style,
-                userId: session.user.id,
-                backgroundColor: payload.backgroundColor,
-                textColor: payload.textColor,
-                borderColor: payload.borderColor,
-                imageUrl:payload.uploadedFileUrl
-                
-            },
-        });
-
-        // 5. Send notification to WebSocket server
-        const results: NotificationResult[] = [];
-        
-        try {
-            // Format payload for WebSocket server
-            const wsPayload = {
-                droplertId: user.droplertId,
-                websites: websites.map(w => w.url),
-                routes:payload.routes,
-                notification: {
-                    type: payload.selectedType.toLowerCase(),
-                    title: payload.title,
-                    message: payload.description,
-                    style: payload.style,
-                    backgroundColor: payload.backgroundColor,
-                    textColor: payload.textColor,
-                    borderColor: payload.borderColor,
-                    fileName:payload.fileName,
-                    routes:payload.routes,
-                    borderRadius:payload.borderRadius
-                }
-            };
-
-            // Send to WebSocket server
-            await axios.post(
-                `${WS_SERVER_URL}/notify`,
-                wsPayload,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${user.apiKey}`
-                    },
-                    timeout: 5000
-                }
-            );
-
-            // Log successful delivery
-            for (const website of websites) {
-                await logApiRequest(user.id, website.url, website.name,true);
-                results.push({
-                    website: website.name,
-                    status: 'success',
-                    message: "Notification sent successfully"
-                });
-            }
-        } catch (error) {
-            console.error('WebSocket server error:', error);
-            
-            // Log failed delivery
-            for (const website of websites) {
-                await logApiRequest(user.id, website.url, website.name,false);
-                results.push({
-                    website: website.name,
-                    status: 'error',
-                    message: 'Failed to send notification',
-                    error: error instanceof Error ? error : new Error('Unknown error')
-                });
-            }
-        }
-
-        // 6. Return response
-        return NextResponse.json({
-            msg: "Notification process completed",
-            results,
-            alertId: alert?.id,
-            status: 200
-        });
-
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            {
-                msg: "Error while processing notifications",
-                error: error instanceof Error ? error.message : "Unknown error"
-            },
-            { status: 500 }
-        );
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { plan: true },
+    });
+    if (!user || !(await checkCampaignLimit(session.user.id, user.plan))) {
+      return NextResponse.json(
+        { message: "Daily campaign limit reached for this plan" },
+        { status: 429 },
+      );
     }
+
+    const body = await request.json();
+    const input = campaignPublishSchema.parse(
+      isLegacyPayload(body) ? fromLegacyBody(body) : body,
+    );
+    const campaign = await publishCampaign(prisma, session.user.id, input);
+
+    return NextResponse.json(
+      {
+        message: "Campaign published",
+        campaignId: campaign.id,
+        revision: campaign.currentRevision,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    if (error instanceof ZodError || error instanceof SyntaxError) {
+      return NextResponse.json(
+        {
+          message: "Invalid campaign",
+          issues: error instanceof ZodError ? error.issues : undefined,
+        },
+        { status: 400 },
+      );
+    }
+    if (error instanceof CampaignError) {
+      return NextResponse.json({ message: error.message }, { status: error.status });
+    }
+
+    console.error("Failed to publish campaign", error);
+    return NextResponse.json(
+      { message: "Unable to publish campaign" },
+      { status: 500 },
+    );
+  }
 }
