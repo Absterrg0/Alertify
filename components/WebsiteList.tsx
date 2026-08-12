@@ -1,9 +1,22 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { Copy, ExternalLink, Globe2, Plus, RefreshCw, Search, ShieldCheck, X } from "lucide-react"
-import { WebsiteAddition } from "./Website-addition-dialog"
-import { toast } from "@/hooks/use-toast"
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Check,
+  Copy,
+  ExternalLink,
+  Globe2,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  TerminalSquare,
+  X,
+} from "lucide-react";
+
+import { WebsiteAddition } from "@/components/Website-addition-dialog";
+import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,190 +27,170 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "./ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
-export type WebsiteStatus = "PENDING" | "ACTIVE" | "DEACTIVATED"
+export type WebsiteStatus = "PENDING" | "ACTIVE" | "DEACTIVATED";
 
 export interface Website {
-  id: string
-  publicId: string
-  verificationRecord?: string
-  name: string
-  url: string
-  status: WebsiteStatus
-  isVerified: boolean
+  id: string;
+  publicId: string;
+  verificationRecord?: string;
+  verificationToken?: string;
+  verifiedAt?: string | null;
+  name: string;
+  url: string;
+  status: WebsiteStatus;
+  isVerified: boolean;
 }
 
 interface VerifiedWebsiteManagerProps {
-  websites: Website[]
-  selectedWebsites: Website[]
-  onWebsitesChange: (websites?: Website[]) => void | Promise<void>
-  onSelectedWebsitesChange: (selectedWebsites: Website[]) => void
+  websites: Website[];
+  selectedWebsites?: Website[];
+  onWebsitesChange: (websites?: Website[]) => void | Promise<void>;
+  onSelectedWebsitesChange?: (selectedWebsites: Website[]) => void;
 }
 
-const statusCopy: Record<WebsiteStatus, { label: string; className: string }> = {
-  ACTIVE: { label: "Active", className: "text-[#70f0c0] border-[#70f0c0]/25 bg-[#70f0c0]/[0.08]" },
-  PENDING: { label: "Pending", className: "text-[#f5c86b] border-[#f5c86b]/25 bg-[#f5c86b]/[0.08]" },
-  DEACTIVATED: { label: "Deactivated", className: "text-[#9097a5] border-white/[0.14] bg-white/[0.04]" },
-}
+const statusCopy: Record<WebsiteStatus, { label: string; detail: string }> = {
+  ACTIVE: { label: "Active", detail: "Verified and targetable" },
+  PENDING: { label: "Pending", detail: "DNS record required" },
+  DEACTIVATED: { label: "Deactivated", detail: "No longer targetable" },
+};
 
-const SITE_LIMIT = 6
+const SITE_LIMIT = 6;
 
 function hostname(url: string) {
   try {
-    return new URL(url).hostname
+    return new URL(url).hostname;
   } catch {
-    return url.replace(/^https?:\/\//, "").split("/")[0]
+    return url.replace(/^https?:\/\//, "").split("/")[0];
   }
+}
+
+function sortWebsites(items: Website[]) {
+  const order: Record<WebsiteStatus, number> = { ACTIVE: 0, PENDING: 1, DEACTIVATED: 2 };
+  return [...items].sort((a, b) => order[a.status] - order[b.status]);
 }
 
 export default function VerifiedWebsiteManager({
   websites,
-  selectedWebsites,
+  selectedWebsites = [],
   onWebsitesChange,
   onSelectedWebsitesChange,
 }: VerifiedWebsiteManagerProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isVerifying, setIsVerifying] = useState<string | null>(null)
-  const [isDeactivating, setIsDeactivating] = useState<string | null>(null)
-
-  const copyVerificationRecord = async (site: Website) => {
-    if (!site.verificationRecord) return
-    await navigator.clipboard.writeText(site.verificationRecord)
-    toast({ title: "TXT value copied", description: `Add it to ${hostname(site.url)}, then verify.` })
-  }
-
-  const sortWebsites = (items: Website[]) => {
-    const order: Record<WebsiteStatus, number> = { ACTIVE: 0, PENDING: 1, DEACTIVATED: 2 }
-    return [...items].sort((a, b) => order[a.status] - order[b.status])
-  }
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<WebsiteStatus | "ALL">("ALL");
+  const [selectedId, setSelectedId] = useState<string | null>(websites[0]?.id ?? null);
+  const [isVerifying, setIsVerifying] = useState<string | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const filteredWebsites = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase()
-    return websites.filter((site) => {
-      if (!query) return true
-      return site.name.toLowerCase().includes(query) || site.url.toLowerCase().includes(query)
-    })
-  }, [searchTerm, websites])
+    const query = searchTerm.trim().toLowerCase();
+    return sortWebsites(websites).filter((site) => {
+      const matchesStatus = statusFilter === "ALL" || site.status === statusFilter;
+      const matchesQuery = !query || site.name.toLowerCase().includes(query) || site.url.toLowerCase().includes(query);
+      return matchesStatus && matchesQuery;
+    });
+  }, [searchTerm, statusFilter, websites]);
 
-  const activeFiltered = filteredWebsites.filter((site) => site.status !== "DEACTIVATED")
-  const allActiveSelected = activeFiltered.length > 0 && activeFiltered.every((site) => selectedWebsites.some((selected) => selected.id === site.id))
+  const selectedSite = websites.find((site) => site.id === selectedId) ?? null;
+  const activeSites = websites.filter((site) => site.status === "ACTIVE" && site.isVerified);
+  const pendingSites = websites.filter((site) => site.status === "PENDING");
+  const deactivatedSites = websites.filter((site) => site.status === "DEACTIVATED");
+  const selectedIds = new Set(selectedWebsites.map((site) => site.id));
+  const visibleTargetable = filteredWebsites.filter((site) => site.status === "ACTIVE" && site.isVerified);
+  const allVisibleSelected = visibleTargetable.length > 0 && visibleTargetable.every((site) => selectedIds.has(site.id));
+
+  const copy = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(label);
+      window.setTimeout(() => setCopied(null), 1_500);
+      toast({ title: "Copied", description: label === "id" ? "Public site ID copied." : "DNS TXT value copied." });
+    } catch {
+      toast({ title: "Copy failed", description: "Copy the value manually from the panel.", variant: "destructive" });
+    }
+  };
 
   const handleVerify = async (site: Website) => {
-    setIsVerifying(site.id)
+    setIsVerifying(site.id);
     try {
-      const response = await fetch("/api/notify/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: site.id }) })
-      if (!response.ok) {
-        const result = (await response.json()) as { message?: string }
-        throw new Error(result.message || "Verification failed")
-      }
-      const updated = websites.map((item) => item.id === site.id ? { ...item, status: "ACTIVE" as const, isVerified: true } : item)
-      await onWebsitesChange(sortWebsites(updated))
-      toast({ title: "Site verified", description: `${site.name} is ready for campaigns.` })
+      const response = await fetch("/api/notify/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: site.id }) });
+      const result = (await response.json()) as { message?: string };
+      if (!response.ok) throw new Error(result.message || "Verification failed");
+      await onWebsitesChange(sortWebsites(websites.map((item) => item.id === site.id ? { ...item, status: "ACTIVE" as const, isVerified: true, verifiedAt: new Date().toISOString() } : item)));
+      toast({ title: "Site verified", description: `${site.name} is ready for campaign targeting.` });
     } catch (error) {
-      console.error("Error during verification:", error)
-      toast({ title: "Verification failed", description: "Check the URL and try again.", variant: "destructive" })
+      toast({ title: "Verification failed", description: error instanceof Error ? error.message : "Check the DNS record and try again.", variant: "destructive" });
     } finally {
-      setIsVerifying(null)
+      setIsVerifying(null);
     }
-  }
+  };
 
-  const handleDeactivate = async (id: string) => {
-    setIsDeactivating(id)
+  const handleDeactivate = async (site: Website) => {
+    setIsDeactivating(site.id);
     try {
-      const response = await fetch(`/api/user/websites/update/${id}`, { method: "POST" })
-      if (!response.ok) throw new Error("Deactivation failed")
-      const updated = websites.map((item) => item.id === id ? { ...item, status: "DEACTIVATED" as const, isVerified: false } : item)
-      onSelectedWebsitesChange(selectedWebsites.filter((site) => site.id !== id))
-      await onWebsitesChange(sortWebsites(updated))
-      toast({ title: "Site deactivated", description: "It will no longer receive new campaigns." })
+      const response = await fetch(`/api/user/websites/update/${site.id}`, { method: "POST" });
+      const result = (await response.json()) as { msg?: string };
+      if (!response.ok) throw new Error(result.msg || "Deactivation failed");
+      onSelectedWebsitesChange?.(selectedWebsites.filter((item) => item.id !== site.id));
+      await onWebsitesChange(sortWebsites(websites.map((item) => item.id === site.id ? { ...item, status: "DEACTIVATED" as const, isVerified: false } : item)));
+      toast({ title: "Site deactivated", description: "It will no longer receive new campaigns." });
     } catch (error) {
-      console.error("Error deactivating website:", error)
-      toast({ title: "Could not deactivate site", variant: "destructive" })
+      toast({ title: "Could not deactivate site", description: error instanceof Error ? error.message : "Try again.", variant: "destructive" });
     } finally {
-      setIsDeactivating(null)
+      setIsDeactivating(null);
     }
-  }
+  };
 
   const toggleSite = (site: Website) => {
-    if (site.status === "DEACTIVATED") return
-    const isSelected = selectedWebsites.some((selected) => selected.id === site.id)
-    onSelectedWebsitesChange(isSelected ? selectedWebsites.filter((selected) => selected.id !== site.id) : [...selectedWebsites, site])
-  }
+    if (site.status !== "ACTIVE" || !site.isVerified || !onSelectedWebsitesChange) return;
+    onSelectedWebsitesChange(selectedIds.has(site.id) ? selectedWebsites.filter((item) => item.id !== site.id) : [...selectedWebsites, site]);
+  };
 
   const toggleAll = (checked: boolean) => {
+    if (!onSelectedWebsitesChange) return;
     if (checked) {
-      const selected = [...selectedWebsites]
-      activeFiltered.forEach((site) => {
-        if (!selected.some((item) => item.id === site.id)) selected.push(site)
-      })
-      onSelectedWebsitesChange(selected)
+      const next = [...selectedWebsites];
+      visibleTargetable.forEach((site) => { if (!selectedIds.has(site.id)) next.push(site); });
+      onSelectedWebsitesChange(next);
     } else {
-      onSelectedWebsitesChange(selectedWebsites.filter((selected) => !activeFiltered.some((site) => site.id === selected.id)))
+      onSelectedWebsitesChange(selectedWebsites.filter((site) => !visibleTargetable.some((visible) => visible.id === site.id)));
     }
-  }
+  };
 
   return (
-    <div className="surface-card overflow-hidden">
-      <div className="flex flex-col gap-4 border-b border-white/[0.1] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="relative w-full sm:max-w-[18rem]">
-          <Search aria-hidden="true" size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#727b89]" />
-          <input className="dashboard-input w-full pl-9 pr-3" type="search" placeholder="Search sites or domains" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} aria-label="Search sites or domains" />
-        </div>
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
-          {selectedWebsites.length > 0 ? <span className="font-mono text-[0.59rem] text-[#70f0c0]">{selectedWebsites.length} selected</span> : <span className="font-mono text-[0.59rem] text-[#727b89]">{websites.length} / {SITE_LIMIT} sites</span>}
-          {websites.length < SITE_LIMIT ? <WebsiteAddition onAddition={() => onWebsitesChange()} /> : null}
-        </div>
+    <div className="workspace-sites-registry">
+      <div className="workspace-site-metrics" aria-label="Site counts">
+        <button type="button" className={statusFilter === "ALL" ? "is-active" : ""} onClick={() => setStatusFilter("ALL")}><strong>{websites.length}</strong><span>All sites</span></button>
+        <button type="button" className={statusFilter === "ACTIVE" ? "is-active" : ""} onClick={() => setStatusFilter("ACTIVE")}><strong>{activeSites.length}</strong><span>Active</span></button>
+        <button type="button" className={statusFilter === "PENDING" ? "is-active" : ""} onClick={() => setStatusFilter("PENDING")}><strong>{pendingSites.length}</strong><span>Pending</span></button>
+        <button type="button" className={statusFilter === "DEACTIVATED" ? "is-active" : ""} onClick={() => setStatusFilter("DEACTIVATED")}><strong>{deactivatedSites.length}</strong><span>Deactivated</span></button>
       </div>
-
-      {filteredWebsites.length === 0 ? (
-        <div className="px-6 py-12 text-center">
-          <div className="mx-auto grid h-11 w-11 place-items-center rounded border border-[#70f0c0]/20 bg-[#70f0c0]/[0.07] text-[#70f0c0]"><Globe2 size={19} /></div>
-          <h3 className="mt-4 text-[0.85rem] font-[580] text-[#f3f3ee]">{websites.length ? "No sites match this search" : "Add your first site"}</h3>
-          <p className="mx-auto mt-2 max-w-sm text-[0.7rem] leading-5 text-[#9097a5]">{websites.length ? "Try a different name or domain." : "Verify a destination before publishing your first durable campaign."}</p>
-          {websites.length === 0 ? <div className="mt-5"><WebsiteAddition onAddition={() => onWebsitesChange()} /></div> : null}
+      <div className="workspace-panel workspace-sites-panel">
+        <div className="workspace-panel__header workspace-panel__header--inline">
+          <label className="workspace-search"><Search aria-hidden="true" size={15} /><span className="sr-only">Search sites</span><input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search site name or origin" /></label>
+          <div className="workspace-site-actions"><span>{websites.length} / {SITE_LIMIT} slots</span>{websites.length < SITE_LIMIT ? <WebsiteAddition onAddition={() => void onWebsitesChange()} /> : null}</div>
         </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[38rem] text-left">
-            <thead className="border-b border-white/[0.08] bg-white/[0.02]">
-              <tr className="font-mono text-[0.58rem] uppercase tracking-[0.08em] text-[#727b89]">
-                <th className="w-12 px-5 py-3 font-normal"><input type="checkbox" aria-label="Select all active sites" checked={allActiveSelected} onChange={(event) => toggleAll(event.target.checked)} className="h-3.5 w-3.5 accent-[#70f0c0]" /></th>
-                <th className="px-3 py-3 font-normal">Destination</th>
-                <th className="px-3 py-3 font-normal">Status</th>
-                <th className="px-3 py-3 font-normal">Verification</th>
-                <th className="px-5 py-3 text-right font-normal">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.08]">
-              {filteredWebsites.map((site) => {
-                const isSelected = selectedWebsites.some((selected) => selected.id === site.id)
-                const status = statusCopy[site.status]
-                return (
-                  <tr className={`transition-colors hover:bg-white/[0.025] ${site.status === "DEACTIVATED" ? "opacity-60" : ""} ${isSelected ? "bg-[#70f0c0]/[0.04]" : ""}`} key={site.id}>
-                    <td className="px-5 py-4 align-top"><input type="checkbox" aria-label={`Select ${site.name}`} checked={isSelected} disabled={site.status === "DEACTIVATED"} onChange={() => toggleSite(site)} className="h-3.5 w-3.5 accent-[#70f0c0] disabled:cursor-not-allowed" /></td>
-                    <td className="px-3 py-4 align-top">
-                      <div className="flex items-start gap-2.5">
-                        <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded border border-white/[0.1] bg-white/[0.03] text-[#9097a5]"><Globe2 size={13} /></span>
-                        <div className="min-w-0">
-                          <p className="truncate text-[0.76rem] font-[560] text-[#f3f3ee]">{site.name}</p>
-                          <a className="mt-1 inline-flex max-w-[17rem] items-center gap-1 truncate font-mono text-[0.6rem] text-[#9097a5] hover:text-[#70f0c0]" href={site.url} target="_blank" rel="noopener noreferrer">{hostname(site.url)} <ExternalLink aria-hidden="true" size={10} /></a>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-3 py-4 align-top"><span className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[0.56rem] ${status.className}`}><span className={`status-dot ${site.status === "ACTIVE" ? "status-dot--success" : site.status === "PENDING" ? "status-dot--warning" : ""}`} /> {status.label}</span></td>
-                    <td className="px-3 py-4 align-top"><span className="inline-flex items-center gap-1.5 font-mono text-[0.6rem] text-[#9097a5]">{site.isVerified ? <ShieldCheck aria-hidden="true" size={13} className="text-[#70f0c0]" /> : <RefreshCw aria-hidden="true" size={12} className="text-[#f5c86b]" />} {site.isVerified ? "Verified" : "Needs check"}</span></td>
-                    <td className="px-5 py-4 text-right align-top">
-                      {site.status === "PENDING" ? <span className="inline-flex gap-1.5"><button type="button" className="button-quiet !min-h-8 !px-2.5 !text-[0.62rem]" disabled={!site.verificationRecord} onClick={() => void copyVerificationRecord(site)}><Copy aria-hidden="true" size={12} /> TXT</button><button type="button" className="button-quiet !min-h-8 !px-2.5 !text-[0.62rem]" disabled={isVerifying === site.id} onClick={() => void handleVerify(site)}>{isVerifying === site.id ? <RefreshCw aria-hidden="true" size={12} className="animate-spin" /> : <ShieldCheck aria-hidden="true" size={12} />} Verify</button></span> : site.status === "ACTIVE" ? <AlertDialog><AlertDialogTrigger asChild><button type="button" className="inline-flex min-h-8 items-center gap-1.5 rounded border border-[#f28b8b]/20 px-2.5 text-[0.62rem] text-[#9097a5] transition-colors hover:border-[#f28b8b]/45 hover:text-[#f28b8b]" disabled={isDeactivating === site.id}>Deactivate</button></AlertDialogTrigger><AlertDialogContent className="border-white/[0.14] bg-[#151a22] text-[#f3f3ee]"><AlertDialogHeader><AlertDialogTitle className="text-base">Deactivate {site.name}?</AlertDialogTitle><AlertDialogDescription className="text-sm leading-6 text-[#9097a5]">New campaigns will stop targeting this site. Contact support if you need to reactivate it during the rollback window.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="border-white/[0.14] bg-transparent text-[#d9ded8] hover:bg-white/[0.07]">Cancel</AlertDialogCancel><AlertDialogAction className="bg-[#f28b8b] text-[#07090d] hover:bg-[#f5aaaa]" onClick={() => void handleDeactivate(site.id)}>Deactivate</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : <span className="inline-flex items-center gap-1.5 font-mono text-[0.58rem] text-[#727b89]"><X size={12} /> inactive</span>}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <div className="flex items-center justify-between gap-4 border-t border-white/[0.08] px-5 py-3 font-mono text-[0.57rem] text-[#727b89]"><span>Active sites can receive campaigns.</span><span className="inline-flex items-center gap-1.5"><Plus aria-hidden="true" size={11} /> {Math.max(0, SITE_LIMIT - websites.length)} slots left</span></div>
+        {filteredWebsites.length === 0 ? <div className="workspace-empty workspace-empty--large"><Globe2 size={19} /><div><strong>{websites.length ? "No sites match this view." : "Add your first site."}</strong><p>{websites.length ? "Try a different search or status filter." : "Register an HTTPS origin before publishing campaigns."}</p></div>{websites.length === 0 ? <WebsiteAddition onAddition={() => void onWebsitesChange()} /> : null}</div> : <>
+          <div className="workspace-sites-select-all">{onSelectedWebsitesChange ? <label><input type="checkbox" checked={allVisibleSelected} onChange={(event) => toggleAll(event.target.checked)} /> {selectedWebsites.length ? `${selectedWebsites.length} active target${selectedWebsites.length === 1 ? "" : "s"} selected` : "Select active sites to target"}</label> : <span>Active sites are the only targetable destinations.</span>}{onSelectedWebsitesChange && selectedWebsites.length > 0 ? <Link href={`/alert?sites=${selectedWebsites.map((site) => site.id).join(",")}`}>Compose with selected <ArrowRight size={13} /></Link> : <span>{onSelectedWebsitesChange ? "Choose a site to continue" : ""}</span>}</div>
+          <div className="workspace-site-list" role="list">
+            {filteredWebsites.map((site) => {
+              const targetable = site.status === "ACTIVE" && site.isVerified;
+              const selected = selectedIds.has(site.id);
+              const status = statusCopy[site.status];
+              return <article key={site.id} className={`workspace-site-row ${selectedId === site.id ? "is-focused" : ""} ${site.status === "DEACTIVATED" ? "is-deactivated" : ""}`} role="listitem" tabIndex={0} onClick={() => setSelectedId(site.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(site.id); } }}>
+                <div className="workspace-site-row__select">{onSelectedWebsitesChange ? <input type="checkbox" aria-label={`Select ${site.name}`} checked={selected} disabled={!targetable} onClick={(event) => event.stopPropagation()} onChange={() => toggleSite(site)} /> : <Globe2 size={17} />}</div>
+                <div className="workspace-site-row__identity"><strong>{site.name}</strong><a href={site.url} target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()}>{hostname(site.url)} <ExternalLink size={11} /></a></div>
+                <span className={`workspace-status-badge workspace-status-badge--${site.status.toLowerCase()}`}><i aria-hidden="true" /> {status.label}</span>
+                <span className="workspace-site-row__detail">{status.detail}</span>
+                <div className="workspace-site-row__action">{site.status === "PENDING" ? <button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={(event) => { event.stopPropagation(); if (site.verificationRecord) void copy(site.verificationRecord, "record"); }} disabled={!site.verificationRecord}><Copy size={13} /> TXT</button> : site.status === "ACTIVE" ? <AlertDialog><AlertDialogTrigger asChild><button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={(event) => event.stopPropagation()} disabled={isDeactivating === site.id}><X size={13} /> Deactivate</button></AlertDialogTrigger><AlertDialogContent className="workspace-dialog"><AlertDialogHeader><AlertDialogTitle>Deactivate {site.name}?</AlertDialogTitle><AlertDialogDescription>New campaigns will stop targeting this site. Existing records remain in the registry.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="workspace-button workspace-button--quiet">Cancel</AlertDialogCancel><AlertDialogAction className="workspace-button workspace-button--danger" onClick={() => void handleDeactivate(site)}>Deactivate</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : <span className="workspace-mono-muted">inactive</span>}</div>
+              </article>;
+            })}
+          </div>
+        </>}
+      </div>
+      {selectedSite ? <aside className="workspace-site-inspector" aria-label={`${selectedSite.name} details`}><div className="workspace-site-inspector__head"><div><span className="workspace-eyebrow">Destination record</span><h2>{selectedSite.name}</h2></div><span className={`workspace-status-badge workspace-status-badge--${selectedSite.status.toLowerCase()}`}><i aria-hidden="true" /> {statusCopy[selectedSite.status].label}</span></div><dl className="workspace-detail-list"><div><dt>Canonical origin</dt><dd><a href={selectedSite.url} target="_blank" rel="noopener noreferrer">{selectedSite.url} <ExternalLink size={11} /></a></dd></div><div><dt>Public site ID</dt><dd><button type="button" className="workspace-copy-value" onClick={() => void copy(selectedSite.publicId, "id")}>{selectedSite.publicId}<span>{copied === "id" ? <Check size={13} /> : <Copy size={13} />}</span></button></dd></div><div><dt>Verified time</dt><dd>{selectedSite.verifiedAt ? new Date(selectedSite.verifiedAt).toLocaleString() : "Not verified yet"}</dd></div></dl>{selectedSite.status === "PENDING" ? <div className="workspace-dns-card"><div><TerminalSquare size={15} /><strong>Publish this DNS TXT record</strong></div><p>Add the value at the root of the canonical origin, then recheck verification.</p><div className="workspace-dns-field"><span>_droplert-verification</span><button type="button" onClick={() => selectedSite.verificationRecord && void copy(selectedSite.verificationRecord, "record")} disabled={!selectedSite.verificationRecord}>{selectedSite.verificationRecord ?? "Unavailable"}{copied === "record" ? <Check size={13} /> : <Copy size={13} />}</button></div><button type="button" className="workspace-button workspace-button--primary workspace-button--full" disabled={isVerifying === selectedSite.id} onClick={() => void handleVerify(selectedSite)}>{isVerifying === selectedSite.id ? <RefreshCw className="animate-spin" size={14} /> : <ShieldCheck size={14} />} Recheck verification</button></div> : selectedSite.status === "ACTIVE" ? <div className="workspace-install-card"><div><ShieldCheck size={15} /><strong>SDK installation context</strong></div><p>Pass this public ID to <code>Droplert</code> from your verified app. The owner credential stays private.</p><code>siteId=&quot;{selectedSite.publicId}&quot;</code><Link href={`/alert?sites=${selectedSite.id}`} className="workspace-button workspace-button--quiet workspace-button--full">Target this site <ArrowRight size={13} /></Link></div> : <div className="workspace-site-inactive-note"><X size={15} /><p>This destination is deactivated and cannot receive new campaigns.</p></div>}</aside> : null}
     </div>
-  )
+  );
 }

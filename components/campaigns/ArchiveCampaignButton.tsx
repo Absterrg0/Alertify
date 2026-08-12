@@ -3,11 +3,23 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Archive, LoaderCircle } from "lucide-react";
+import type { MouseEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-export function ArchiveCampaignButton({ campaignId }: { campaignId: string }) {
+export function ArchiveCampaignButton({ campaignId, onClick }: { campaignId: string; onClick?: (event: MouseEvent<HTMLButtonElement>) => void }) {
   const router = useRouter();
   const { toast } = useToast();
   const [pending, setPending] = useState(false);
@@ -32,9 +44,23 @@ export function ArchiveCampaignButton({ campaignId }: { campaignId: string }) {
   };
 
   return (
-    <Button onClick={archive} disabled={pending} size="sm" variant="ghost" className="text-white/45 hover:bg-white/5 hover:text-white">
-      {pending ? <LoaderCircle className="mr-2 animate-spin" size={14} /> : <Archive className="mr-2" size={14} />}
-      Archive
-    </Button>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button onClick={onClick} disabled={pending} size="sm" variant="ghost" className="workspace-archive-button">
+          {pending ? <LoaderCircle className="mr-2 animate-spin" size={14} /> : <Archive className="mr-2" size={14} />}
+          Archive
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="workspace-dialog">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Archive this campaign?</AlertDialogTitle>
+          <AlertDialogDescription>Archiving removes the record from active site feeds. Its immutable revision and recorded events remain available in the registry.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="workspace-button workspace-button--quiet">Cancel</AlertDialogCancel>
+          <AlertDialogAction className="workspace-button workspace-button--danger" onClick={() => void archive()}>Archive campaign</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

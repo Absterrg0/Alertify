@@ -1,545 +1,248 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
-  Activity,
   AlertCircle,
   ArrowRight,
-  BarChart3,
-  Bell,
+  Check,
   CheckCircle2,
-  ChevronRight,
-  Code2,
+  Clock3,
   FileText,
   Globe2,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  MessageSquare,
-  MoreHorizontal,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Plus,
   Radio,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  X,
-} from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-import { DroplertMark } from "@/components/brand/DroplertMark"
-import OnboardingModal from "@/components/OnboardingModal"
-import VerifiedWebsiteManager from "./WebsiteList"
-import NotificationPage from "./RecentAlerts"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+  RefreshCw,
+  TerminalSquare,
+} from "lucide-react";
 
-type NotificationType = "ALERT" | "ALERT_DIALOG" | "TOAST"
-type CampaignPreset = "MINIMAL" | "GLASS" | "AURORA" | "EDITORIAL" | "NEON"
+import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
+
+const DASHBOARD_REFERENCE_TIME = Date.now();
 
 export type Website = {
-  id: string
-  publicId: string
-  verificationRecord?: string
-  name: string
-  url: string
-  isVerified: boolean
-  status: "PENDING" | "ACTIVE" | "DEACTIVATED"
-}
+  id: string;
+  publicId: string;
+  verificationRecord?: string;
+  verificationToken?: string;
+  verifiedAt?: string | null;
+  name: string;
+  url: string;
+  isVerified: boolean;
+  status: "PENDING" | "ACTIVE" | "DEACTIVATED";
+};
 
 export type Alert = {
-  id: string
-  title: string
-  description: string
-  backgroundColor: string
-  type: "ALERT" | "ALERT_DIALOG" | "TOAST"
-  textColor: string
-  borderColor: string
-  imageUrl?: string
-}
+  id: string;
+  title: string;
+  description: string;
+  backgroundColor: string;
+  type: "ALERT" | "ALERT_DIALOG" | "TOAST";
+  textColor: string;
+  borderColor: string;
+  imageUrl?: string;
+  status?: string;
+  createdAt?: string | Date;
+};
+
+type CampaignSummary = {
+  id: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  currentRevision: number;
+  startsAt: string;
+  endsAt: string | null;
+  createdAt: string;
+  revisions: Array<{
+    title: string;
+    description: string;
+    type: "ALERT" | "ALERT_DIALOG" | "TOAST";
+    preset: string;
+  }>;
+  targets: Array<{ website: { id: string; name: string } }>;
+  _count: { deliveryEvents: number };
+};
 
 type RequestLog = {
-  id: string
-  endpoint: string
-  name?: string
-  timestamp: string | Date
-  success: boolean
+  id: string;
+  endpoint: string;
+  name?: string;
+  timestamp: string;
+  success: boolean;
+};
+
+type ResourceState<T> = {
+  data: T;
+  loading: boolean;
+  error: boolean;
+};
+
+const emptyResource = <T,>(data: T): ResourceState<T> => ({ data, loading: true, error: false });
+
+function formatDate(value: string | Date) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-const SITE_LIMIT = 6
-
-const navItems = [
-  { label: "Overview", href: "#overview", icon: LayoutDashboard, current: true },
-  { label: "Campaigns", href: "#campaigns", icon: Bell },
-  { label: "Sites", href: "#sites", icon: Globe2 },
-  { label: "Analytics", href: "#analytics", icon: BarChart3 },
-  { label: "Settings", href: "/profile", icon: Settings },
-]
-
-const notificationOptions: Array<{
-  type: NotificationType
-  label: string
-  description: string
-  icon: typeof AlertCircle
-  route: string
-}> = [
-  {
-    type: "ALERT",
-    label: "Inline alert",
-    description: "A persistent strip for high-signal updates.",
-    icon: AlertCircle,
-    route: "/alert",
-  },
-  {
-    type: "TOAST",
-    label: "Toast",
-    description: "A compact note that stays out of the way.",
-    icon: Bell,
-    route: "/toast",
-  },
-  {
-    type: "ALERT_DIALOG",
-    label: "Alert dialog",
-    description: "A focused prompt for decisions that need attention.",
-    icon: MessageSquare,
-    route: "/alert_dialog",
-  },
-]
-
-const presetOptions: Array<{
-  value: CampaignPreset
-  label: string
-  detail: string
-  swatch: string
-}> = [
-  { value: "MINIMAL", label: "Minimal", detail: "quiet / direct", swatch: "dashboard-preset-swatch--minimal" },
-  { value: "GLASS", label: "Glass", detail: "soft / layered", swatch: "dashboard-preset-swatch--glass" },
-  { value: "AURORA", label: "Aurora", detail: "luminous / calm", swatch: "dashboard-preset-swatch--aurora" },
-  { value: "EDITORIAL", label: "Editorial", detail: "warm / considered", swatch: "dashboard-preset-swatch--editorial" },
-  { value: "NEON", label: "Neon", detail: "sharp / high-signal", swatch: "dashboard-preset-swatch--neon" },
-]
-
-function formatTimestamp(timestamp: string | Date) {
-  const date = new Date(timestamp)
-  if (Number.isNaN(date.getTime())) return "—"
-  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+function campaignLabel(campaign: CampaignSummary) {
+  const revision = campaign.revisions[0];
+  return revision?.title || "Untitled campaign";
 }
 
-function DashboardSkeleton({ lines = 3 }: { lines?: number }) {
+function campaignState(campaign: CampaignSummary) {
+  if (campaign.status === "ARCHIVED") return "Archived";
+  if (campaign.status === "DRAFT") return "Draft";
+  return new Date(campaign.startsAt).getTime() > Date.now() ? "Scheduled" : "Published";
+}
+
+function ResourceError({ label, onRetry }: { label: string; onRetry: () => void }) {
   return (
-    <div className="space-y-3" aria-label="Loading">
-      {Array.from({ length: lines }).map((_, index) => (
-        <div className="flex animate-pulse items-center gap-3" key={index}>
-          <div className="h-8 w-8 rounded bg-white/[0.06]" />
-          <div className="flex-1 space-y-2">
-            <div className="h-2.5 w-2/5 rounded bg-white/[0.08]" />
-            <div className="h-2 w-3/5 rounded bg-white/[0.05]" />
-          </div>
-          <div className="h-2 w-12 rounded bg-white/[0.06]" />
-        </div>
-      ))}
+    <div className="workspace-empty workspace-empty--error">
+      <AlertCircle aria-hidden="true" size={17} />
+      <div>
+        <strong>{label} could not be loaded.</strong>
+        <p>Try the request again to refresh this part of the workspace.</p>
+      </div>
+      <button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={onRetry}>
+        <RefreshCw size={13} /> Retry
+      </button>
     </div>
-  )
+  );
 }
 
-function RequestLogCard({ logs, loading, error }: { logs: RequestLog[]; loading: boolean; error: boolean }) {
+function ResourceLoading({ label }: { label: string }) {
+  return <div className="workspace-loading" role="status" aria-label={`Loading ${label}`}><span /><span /><span /></div>;
+}
+
+function Checklist({ websites, campaigns }: { websites: Website[]; campaigns: CampaignSummary[] }) {
+  const activeSites = websites.filter((site) => site.status === "ACTIVE" && site.isVerified);
+  const hasPending = websites.some((site) => site.status === "PENDING");
+  const hasPublishedCampaign = campaigns.some((campaign) => campaign.status === "PUBLISHED");
+  const steps = [
+    { label: "Add a site", detail: "Register the exact HTTPS origin.", complete: websites.length > 0, href: "/sites" },
+    { label: "Publish the DNS TXT record", detail: "Prove ownership for a pending origin.", complete: websites.length > 0 && !hasPending, href: "/sites" },
+    { label: "Verify the origin", detail: "Recheck until the site is active.", complete: activeSites.length > 0, href: "/sites" },
+    { label: "Install the SDK", detail: "Mount Droplert with a public site ID in your app.", complete: false, href: "/sites" },
+    { label: "Publish a campaign", detail: "Send the first durable record to a verified site.", complete: hasPublishedCampaign, href: "/campaigns" },
+  ];
+  const completeCount = steps.filter((step) => step.complete).length;
+
+  if (completeCount === steps.length) {
+    return <section className="workspace-success-strip"><CheckCircle2 size={18} /><div><strong>Workspace is ready.</strong><span>Sites, SDK connection, and the first campaign are in place.</span></div><Link href="/campaigns">Open registry <ArrowRight size={14} /></Link></section>;
+  }
+
   return (
-    <section className="surface-card surface-card--quiet overflow-hidden">
-      <div className="flex items-start justify-between gap-4 border-b border-white/[0.1] px-5 py-4">
-        <div>
-          <p className="eyebrow">Request history</p>
-          <h2 className="mt-1 text-[0.95rem] font-[580] tracking-[-0.02em] text-[#f3f3ee]">Latest delivery events</h2>
-        </div>
-        <Activity aria-hidden="true" size={16} className="text-[#70f0c0]" />
+    <section className="workspace-panel workspace-checklist" aria-labelledby="setup-title">
+      <div className="workspace-panel__header">
+        <div><span className="workspace-eyebrow">First-run path / {completeCount} of {steps.length}</span><h2 id="setup-title">Prepare a destination for delivery.</h2><p>Each step reflects the state Droplert can verify from this workspace.</p></div>
+        <TerminalSquare aria-hidden="true" size={18} />
       </div>
-      <div className="px-5 py-3">
-        {loading ? (
-          <DashboardSkeleton lines={4} />
-        ) : error ? (
-          <div className="flex items-center gap-2 py-5 text-[0.72rem] text-[#f28b8b]"><AlertCircle size={14} /> Request history is temporarily unavailable.</div>
-        ) : logs.length === 0 ? (
-          <div className="py-6 text-center">
-            <Radio aria-hidden="true" size={18} className="mx-auto text-[#727b89]" />
-            <p className="mt-2 text-[0.75rem] font-[560] text-[#f3f3ee]">No delivery events yet</p>
-            <p className="mx-auto mt-1 max-w-xs text-[0.68rem] leading-5 text-[#9097a5]">Impressions, clicks, and dismissals appear after a published campaign reaches visitors.</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-white/[0.08]">
-            {logs.slice(0, 6).map((log) => (
-              <div className="flex items-center gap-3 py-3" key={log.id}>
-                <span className={`status-dot ${log.success ? "status-dot--success" : "status-dot--danger"}`} aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-mono text-[0.66rem] text-[#d9ded8]">{log.name || log.endpoint}</p>
-                  <p className="mt-0.5 text-[0.62rem] text-[#727b89]">{formatTimestamp(log.timestamp)}</p>
-                </div>
-                <span className="font-mono text-[0.58rem] text-[#70f0c0]">recorded</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <ol className="workspace-checklist__items">
+        {steps.map((step, index) => (
+          <li key={step.label} className={step.complete ? "is-complete" : ""}>
+            <span className="workspace-checklist__number">{step.complete ? <Check size={13} /> : String(index + 1).padStart(2, "0")}</span>
+            <div><strong>{step.label}</strong><span>{step.detail}</span></div>
+            {!step.complete ? <Link href={step.href} aria-label={`Open ${step.label}`}>{index === 3 ? "View guide" : "Open"} <ArrowRight size={13} /></Link> : <span className="workspace-checklist__done">done</span>}
+          </li>
+        ))}
+      </ol>
     </section>
-  )
+  );
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const { data: session } = useSession()
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [selectedType, setSelectedType] = useState<NotificationType>("ALERT")
-  const [selectedPreset, setSelectedPreset] = useState<CampaignPreset>("GLASS")
-  const [alerts, setAlerts] = useState<Alert[]>([])
-  const [websites, setWebsites] = useState<Website[]>([])
-  const [selectedWebsites, setSelectedWebsites] = useState<Website[]>([])
-  const [requestLogs, setRequestLogs] = useState<RequestLog[]>([])
-  const [isWebsitesLoading, setIsWebsitesLoading] = useState(true)
-  const [isAlertsLoading, setIsAlertsLoading] = useState(true)
-  const [isRequestsLoading, setIsRequestsLoading] = useState(true)
-  const [websiteError, setWebsiteError] = useState(false)
-  const [alertError, setAlertError] = useState(false)
-  const [requestError, setRequestError] = useState(false)
+  const [websites, setWebsites] = useState<ResourceState<Website[]>>(emptyResource([]));
+  const [campaigns, setCampaigns] = useState<ResourceState<CampaignSummary[]>>(emptyResource([]));
+  const [logs, setLogs] = useState<ResourceState<RequestLog[]>>(emptyResource([]));
 
-  const sortWebsites = (items: Website[]) => {
-    const order: Record<Website["status"], number> = { ACTIVE: 0, PENDING: 1, DEACTIVATED: 2 }
-    return [...items].sort((a, b) => order[a.status] - order[b.status])
-  }
-
-  const fetchWebsites = async () => {
-    setIsWebsitesLoading(true)
-    setWebsiteError(false)
+  const loadWebsites = useCallback(async () => {
+    setWebsites((current) => ({ ...current, loading: true, error: false }));
     try {
-      const response = await fetch("/api/user/websites/list")
-      if (!response.ok) throw new Error("Unable to load sites")
-      const result = (await response.json()) as { websites: Website[] }
-      setWebsites(sortWebsites(result.websites || []))
-    } catch (error) {
-      console.error("Error fetching websites:", error)
-      setWebsiteError(true)
-      toast({ title: "Could not load sites", description: "Try refreshing the workspace.", variant: "destructive" })
-    } finally {
-      setIsWebsitesLoading(false)
+      const response = await fetch("/api/user/websites/list");
+      if (!response.ok) throw new Error("Unable to load sites");
+      const result = (await response.json()) as { websites?: Website[] };
+      setWebsites({ data: result.websites ?? [], loading: false, error: false });
+    } catch {
+      setWebsites((current) => ({ ...current, loading: false, error: true }));
     }
-  }
+  }, []);
 
-  const fetchAlerts = async () => {
-    setIsAlertsLoading(true)
-    setAlertError(false)
+  const loadCampaigns = useCallback(async () => {
+    setCampaigns((current) => ({ ...current, loading: true, error: false }));
     try {
-      const response = await fetch("/api/user/alerts/list")
-      if (!response.ok) throw new Error("Unable to load campaigns")
-      const result = (await response.json()) as { response?: Alert[] }
-      setAlerts(result.response || [])
-    } catch (error) {
-      console.error("Error fetching alerts:", error)
-      setAlertError(true)
-      toast({ title: "Could not load campaigns", description: "Try refreshing the workspace.", variant: "destructive" })
-    } finally {
-      setIsAlertsLoading(false)
+      const response = await fetch("/api/campaigns");
+      if (!response.ok) throw new Error("Unable to load campaigns");
+      const result = (await response.json()) as { campaigns?: CampaignSummary[] };
+      setCampaigns({ data: result.campaigns ?? [], loading: false, error: false });
+    } catch {
+      setCampaigns((current) => ({ ...current, loading: false, error: true }));
     }
-  }
+  }, []);
 
-  const fetchRequestLogs = async () => {
-    setIsRequestsLoading(true)
-    setRequestError(false)
+  const loadLogs = useCallback(async () => {
+    setLogs((current) => ({ ...current, loading: true, error: false }));
     try {
-      const response = await fetch("/api/user/getApiLogs")
-      if (!response.ok) throw new Error("Unable to load request history")
-      const result = (await response.json()) as { logs?: RequestLog[] }
-      setRequestLogs(result.logs || [])
-    } catch (error) {
-      console.error("Error fetching request history:", error)
-      setRequestError(true)
-    } finally {
-      setIsRequestsLoading(false)
+      const response = await fetch("/api/user/getApiLogs");
+      if (!response.ok) throw new Error("Unable to load delivery events");
+      const result = (await response.json()) as { logs?: RequestLog[] };
+      setLogs({ data: result.logs ?? [], loading: false, error: false });
+    } catch {
+      setLogs((current) => ({ ...current, loading: false, error: true }));
     }
-  }
+  }, []);
 
-  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- initial network hydration intentionally reuses the retry functions */
   useEffect(() => {
-    void Promise.all([fetchWebsites(), fetchAlerts(), fetchRequestLogs()])
-  }, [])
-  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+    const timeout = window.setTimeout(() => {
+      void Promise.all([loadWebsites(), loadCampaigns(), loadLogs()]);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [loadCampaigns, loadLogs, loadWebsites]);
 
-  const handleWebsitesChange = async (updated?: Website[]) => {
-    if (updated) {
-      setWebsites(sortWebsites(updated))
-      return
-    }
-    await fetchWebsites()
-  }
-
-  const activeSites = useMemo(() => websites.filter((site) => site.status === "ACTIVE"), [websites])
-  const recordedEvents = requestLogs.length
-  const activityBuckets = useMemo(() => {
-    if (requestLogs.length === 0) return []
-
-    const orderedLogs = [...requestLogs].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    const bucketCount = Math.min(8, Math.max(4, orderedLogs.length))
-    const buckets = Array.from({ length: bucketCount }, () => ({ count: 0, label: "" }))
-
-    orderedLogs.forEach((log, index) => {
-      const bucket = buckets[Math.min(bucketCount - 1, Math.floor((index / orderedLogs.length) * bucketCount))]
-      bucket.count += 1
-      bucket.label = formatTimestamp(log.timestamp)
-    })
-
-    const maxCount = Math.max(...buckets.map((bucket) => bucket.count), 1)
-    return buckets.map((bucket) => ({
-      ...bucket,
-      height: Math.round((bucket.count / maxCount) * 100),
-    }))
-  }, [requestLogs])
-
-  const handleCustomize = () => {
-    if (selectedWebsites.length === 0) {
-      toast({ title: "Select at least one site", description: "Choose an active site before composing.", variant: "destructive" })
-      return
-    }
-    if (selectedWebsites.some((website) => website.status !== "ACTIVE")) {
-      toast({ title: "Verify your selected sites first", variant: "destructive" })
-      return
-    }
-    const option = notificationOptions.find((item) => item.type === selectedType) || notificationOptions[0]
-    const query = new URLSearchParams({
-      sites: selectedWebsites.map((website) => website.id).join(","),
-      preset: selectedPreset,
-    })
-    router.push(`${option.route}?${query.toString()}`)
-  }
-
-  const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "Builder"
-  const accountInitial = userName.slice(0, 1).toUpperCase()
+  const activeSites = websites.data.filter((site) => site.status === "ACTIVE" && site.isVerified);
+  const pendingSites = websites.data.filter((site) => site.status === "PENDING");
+  const publishedCount = campaigns.data.filter((campaign) => campaign.status === "PUBLISHED" && new Date(campaign.startsAt).getTime() <= DASHBOARD_REFERENCE_TIME).length;
+  const scheduledCount = campaigns.data.filter((campaign) => campaign.status === "PUBLISHED" && new Date(campaign.startsAt).getTime() > DASHBOARD_REFERENCE_TIME).length;
+  const latestCampaigns = useMemo(() => campaigns.data.slice(0, 3), [campaigns.data]);
+  const latestLog = logs.data[0];
+  const recommendedHref = activeSites.length === 0 ? "/sites" : publishedCount === 0 ? "/campaigns" : "/analytics";
+  const recommendedLabel = activeSites.length === 0 ? "Verify a site" : publishedCount === 0 ? "Compose your first campaign" : "Inspect delivery";
 
   return (
-    <div className="dashboard-surface min-h-screen overflow-x-hidden">
-      <div className="flex min-h-screen">
-        <aside className={`dashboard-sidebar fixed inset-y-0 left-0 z-50 hidden shrink-0 flex-col px-3 py-5 transition-[width] duration-200 lg:flex ${sidebarCollapsed ? "w-[4.9rem]" : "w-[15rem]"}`}>
-          <div className={`mb-8 flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between px-2"}`}>
-            <DroplertMark compact showWordmark={!sidebarCollapsed} />
-            {!sidebarCollapsed ? (
-              <button type="button" className="button-icon !h-8 !w-8 !border-0 !text-[#9097a5] hover:!text-[#f3f3ee]" aria-label="Collapse sidebar" onClick={() => setSidebarCollapsed(true)}>
-                <PanelLeftClose aria-hidden="true" size={15} />
-              </button>
-            ) : null}
-          </div>
-          {sidebarCollapsed ? (
-            <button type="button" className="button-icon mx-auto mb-5 !h-8 !w-8 !border-0 !text-[#9097a5] hover:!text-[#f3f3ee]" aria-label="Expand sidebar" onClick={() => setSidebarCollapsed(false)}>
-              <PanelLeftOpen aria-hidden="true" size={15} />
-            </button>
-          ) : null}
-          {!sidebarCollapsed ? <p className="mb-2 px-3 font-mono text-[0.58rem] uppercase tracking-[0.13em] text-[#727b89]">Workspace</p> : null}
-          <nav aria-label="Dashboard navigation" className="space-y-1">
-            {navItems.map(({ label, href, icon: Icon, current }) => (
-              <a className="dashboard-nav-link" aria-current={current ? "page" : undefined} href={href} key={label} title={sidebarCollapsed ? label : undefined}>
-                <Icon aria-hidden="true" size={16} />
-                {!sidebarCollapsed ? <span>{label}</span> : null}
-              </a>
-            ))}
-          </nav>
-          {!sidebarCollapsed ? (
-            <div className="mt-auto space-y-4">
-              <div className="rounded-lg border border-white/[0.1] bg-white/[0.03] p-3">
-                <div className="flex items-center gap-2">
-                  <span className="status-dot status-dot--success" />
-                  <span className="font-mono text-[0.58rem] text-[#c8cec9]">feed status</span>
-                </div>
-                <p className="mt-2 text-[0.68rem] leading-5 text-[#727b89]">HTTP delivery is ready for your active sites.</p>
-              </div>
-              <div className="flex items-center gap-2 border-t border-white/[0.1] pt-4">
-                <div className="grid h-8 w-8 shrink-0 place-items-center rounded bg-[#9a8cff]/15 font-mono text-[0.7rem] text-[#d6d1ff]">{accountInitial}</div>
-                <div className="min-w-0">
-                  <p className="truncate text-[0.69rem] font-[560] text-[#f3f3ee]">{userName}</p>
-                  <p className="font-mono text-[0.56rem] text-[#727b89]">Builder workspace</p>
-                </div>
-              </div>
-            </div>
-          ) : null}
-        </aside>
-
-        <div className={`min-w-0 flex-1 transition-[padding] duration-200 ${sidebarCollapsed ? "lg:pl-[4.9rem]" : "lg:pl-[15rem]"}`}>
-          <header className="sticky top-0 z-30 border-b border-white/[0.1] bg-[#07090d]/90 backdrop-blur-xl">
-            <div className="mx-auto flex min-h-[4.4rem] max-w-[100rem] items-center justify-between gap-4 px-5 sm:px-8">
-              <div className="flex items-center gap-3">
-                <button type="button" className="button-icon lg:hidden" aria-expanded={mobileNavOpen} aria-controls="mobile-dashboard-navigation" aria-label={mobileNavOpen ? "Close dashboard navigation" : "Open dashboard navigation"} onClick={() => setMobileNavOpen((open) => !open)}>
-                  {mobileNavOpen ? <X size={16} /> : <Menu size={16} />}
-                </button>
-                <div className="lg:hidden"><DroplertMark compact /></div>
-                <div className="hidden items-center gap-2 lg:flex">
-                  <span className="eyebrow">Control room</span>
-                  <ChevronRight aria-hidden="true" size={13} className="text-[#727b89]" />
-                  <span className="font-mono text-[0.62rem] text-[#9097a5]">Overview</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button type="button" className="inline-flex items-center gap-2 rounded border border-white/[0.12] bg-white/[0.03] px-2 py-1.5 text-left transition-colors hover:border-white/[0.25]" aria-label="Open account menu">
-                      <span className="grid h-6 w-6 place-items-center rounded bg-[#9a8cff]/15 font-mono text-[0.62rem] text-[#d6d1ff]">{accountInitial}</span>
-                      <span className="hidden max-w-[8rem] truncate text-[0.68rem] text-[#d9ded8] sm:block">{userName}</span>
-                      <MoreHorizontal aria-hidden="true" size={14} className="text-[#727b89]" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-52 border-white/[0.14] bg-[#151a22] p-2 text-[#f3f3ee] shadow-2xl">
-                    <Link className="flex items-center gap-2 rounded px-2 py-2 text-[0.72rem] text-[#c9cec9] hover:bg-white/[0.07]" href="/profile"><Settings size={14} /> Profile settings</Link>
-                    <button type="button" className="mt-1 flex w-full items-center gap-2 rounded px-2 py-2 text-[0.72rem] text-[#f28b8b] hover:bg-[#f28b8b]/[0.08]" onClick={() => void signOut({ redirectTo: "/getstarted" })}><LogOut size={14} /> Sign out</button>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            {mobileNavOpen ? (
-              <div id="mobile-dashboard-navigation" className="border-t border-white/[0.1] bg-[#0b0e14] px-5 py-3 lg:hidden">
-                <nav aria-label="Mobile dashboard navigation" className="grid gap-1 sm:grid-cols-5">
-                  {navItems.map(({ label, href, icon: Icon, current }) => (
-                    <a key={label} href={href} aria-current={current ? "page" : undefined} onClick={() => setMobileNavOpen(false)} className="dashboard-nav-link">
-                      <Icon aria-hidden="true" size={15} /> {label}
-                    </a>
-                  ))}
-                </nav>
-              </div>
-            ) : null}
-          </header>
-
-          <main id="overview" className="mx-auto w-full max-w-[100rem] px-5 py-8 sm:px-8 sm:py-10">
-            <div className="flex flex-col justify-between gap-6 border-b border-white/[0.12] pb-8 sm:flex-row sm:items-end">
-              <div>
-                <p className="eyebrow">Workspace overview / durable delivery</p>
-                <h1 className="mt-3 max-w-xl text-3xl font-[560] tracking-[-0.065em] text-[#f3f3ee] sm:text-4xl">Good to see you, {userName}.</h1>
-                <p className="mt-3 max-w-2xl text-[0.89rem] leading-7 text-[#9097a5]">Monitor active campaigns, verify destinations, and publish the next announcement from one calm workspace.</p>
-              </div>
-              <Link href="#campaigns" className="button-mint shrink-0 self-start sm:self-auto"><Plus aria-hidden="true" size={15} /> New campaign</Link>
-            </div>
-
-            <section aria-label="Workspace metrics" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <article className="surface-card surface-card--quiet p-4">
-                <div className="flex items-center justify-between"><span className="metric-label">Active sites</span><Globe2 aria-hidden="true" size={15} className="text-[#70f0c0]" /></div>
-                <p className="metric-value mt-4">{isWebsitesLoading ? "—" : activeSites.length}</p>
-                <p className="mt-2 text-[0.65rem] text-[#727b89]">{websites.length} total destinations</p>
-              </article>
-              <article className="surface-card surface-card--quiet p-4">
-                <div className="flex items-center justify-between"><span className="metric-label">Published history</span><FileText aria-hidden="true" size={15} className="text-[#9a8cff]" /></div>
-                <p className="metric-value mt-4">{isAlertsLoading ? "—" : alerts.length}</p>
-                <p className="mt-2 text-[0.65rem] text-[#727b89]">campaign records available</p>
-              </article>
-              <article className="surface-card surface-card--quiet p-4">
-                <div className="flex items-center justify-between"><span className="metric-label">Recorded events</span><CheckCircle2 aria-hidden="true" size={15} className="text-[#70f0c0]" /></div>
-                <p className="metric-value mt-4">{isRequestsLoading ? "—" : recordedEvents}</p>
-                <p className="mt-2 text-[0.65rem] text-[#727b89]">{recordedEvents ? "impressions, clicks, and dismissals" : "waiting for first campaign event"}</p>
-              </article>
-              <article className="surface-card surface-card--quiet p-4">
-                <div className="flex items-center justify-between"><span className="metric-label">Site capacity</span><ShieldCheck aria-hidden="true" size={15} className="text-[#f5c86b]" /></div>
-                <p className="metric-value mt-4">{websites.length}<span className="text-base font-normal tracking-normal text-[#727b89]"> / {SITE_LIMIT}</span></p>
-                <p className="mt-2 text-[0.65rem] text-[#727b89]">destinations in this workspace</p>
-              </article>
-            </section>
-
-            <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.32fr)_minmax(20rem,0.68fr)]">
-              <div className="min-w-0 space-y-8">
-                <section id="campaigns" className="surface-card overflow-hidden">
-                  <div className="flex flex-col justify-between gap-4 border-b border-white/[0.1] px-5 py-5 sm:flex-row sm:items-start sm:px-6">
-                    <div>
-                      <p className="eyebrow">Compose a campaign</p>
-                      <h2 className="mt-1 text-xl font-[560] tracking-[-0.045em] text-[#f3f3ee]">Choose the surface first.</h2>
-                      <p className="mt-2 max-w-xl text-[0.75rem] leading-5 text-[#9097a5]">Select an active destination, then hand off to the focused composer for content and scheduling.</p>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 font-mono text-[0.58rem] text-[#70f0c0]"><Sparkles aria-hidden="true" size={12} /> BUILDER</span>
-                  </div>
-                  <div className="px-5 py-5 sm:px-6">
-                    <div className="grid gap-2 md:grid-cols-3">
-                      {notificationOptions.map(({ type, label, description, icon: Icon }) => {
-                        const selected = selectedType === type
-                        return (
-                          <button key={type} type="button" aria-pressed={selected} onClick={() => setSelectedType(type)} className={`rounded border px-3 py-3 text-left transition-colors ${selected ? "border-[#70f0c0]/60 bg-[#70f0c0]/[0.09]" : "border-white/[0.12] bg-white/[0.02] hover:border-white/[0.26] hover:bg-white/[0.04]"}`}>
-                            <div className="flex items-center justify-between gap-2"><Icon aria-hidden="true" size={16} className={selected ? "text-[#70f0c0]" : "text-[#9097a5]"} /><span className="font-mono text-[0.56rem] text-[#727b89]">{type === "ALERT_DIALOG" ? "DIALOG" : type}</span></div>
-                            <strong className="mt-3 block text-[0.75rem] font-[580] text-[#f3f3ee]">{label}</strong>
-                            <span className="mt-1 block text-[0.65rem] leading-5 text-[#9097a5]">{description}</span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                    <div className="mt-6 border-t border-white/[0.1] pt-5">
-                      <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-                        <div>
-                          <p className="font-mono text-[0.61rem] uppercase tracking-[0.08em] text-[#9097a5]">Appearance preset</p>
-                          <p className="mt-1 text-[0.68rem] leading-5 text-[#727b89]">Choose the visual system that opens in the focused composer. You can tune its palette and shape there.</p>
-                        </div>
-                        <span className="font-mono text-[0.57rem] uppercase tracking-[0.08em] text-[#70f0c0]">{selectedPreset.toLowerCase()} / 5 systems</span>
-                      </div>
-                      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                        {presetOptions.map((option) => {
-                          const selected = selectedPreset === option.value
-                          return (
-                            <button
-                              key={option.value}
-                              type="button"
-                              aria-pressed={selected}
-                              onClick={() => setSelectedPreset(option.value)}
-                              className={`dashboard-preset-card ${selected ? "dashboard-preset-card--selected" : ""}`}
-                            >
-                              <span className={`dashboard-preset-swatch ${option.swatch}`} aria-hidden="true"><span /></span>
-                              <span className="mt-2 block text-[0.68rem] font-[580] text-[#f3f3ee]">{option.label}</span>
-                              <span className="mt-0.5 block font-mono text-[0.52rem] text-[#727b89]">{option.detail}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                    <div className="mt-5 flex flex-col gap-3 border-t border-white/[0.1] pt-5 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="font-mono text-[0.59rem] text-[#727b89]">Next: motion, routes, schedule, and optional action.</p>
-                      <div className="flex items-center justify-end gap-4">
-                        <button type="button" className="button-mint !min-h-10 !px-3.5 !text-[0.72rem]" onClick={handleCustomize}>Continue with {selectedPreset.toLowerCase()} <ArrowRight aria-hidden="true" size={14} /></button>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section id="sites">
-                  <div className="mb-4 flex items-end justify-between gap-4">
-                    <div><p className="eyebrow">Destinations</p><h2 className="mt-1 text-xl font-[560] tracking-[-0.045em] text-[#f3f3ee]">Your sites</h2></div>
-                    <span className="font-mono text-[0.59rem] text-[#727b89]">{selectedWebsites.length} selected</span>
-                  </div>
-                  {isWebsitesLoading ? <div className="surface-card p-5"><DashboardSkeleton lines={4} /></div> : websiteError ? <div className="surface-card p-6"><div className="flex items-center justify-between gap-4"><div><p className="text-[0.78rem] font-[560] text-[#f3f3ee]">Sites could not be loaded.</p><p className="mt-1 text-[0.68rem] text-[#9097a5]">The workspace will keep your selection once the request succeeds.</p></div><button type="button" className="button-quiet !min-h-9 !px-3 !text-[0.68rem]" onClick={() => void fetchWebsites()}>Retry</button></div></div> : <VerifiedWebsiteManager websites={websites} selectedWebsites={selectedWebsites} onWebsitesChange={handleWebsitesChange} onSelectedWebsitesChange={setSelectedWebsites} />}
-                </section>
-
-                <section id="analytics" className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                  <div className="surface-card surface-card--quiet p-5">
-                    <div className="flex items-start justify-between gap-4"><div><p className="eyebrow">Pulse</p><h2 className="mt-1 text-[0.95rem] font-[580] text-[#f3f3ee]">Recent feed activity</h2></div><BarChart3 aria-hidden="true" size={16} className="text-[#9a8cff]" /></div>
-                    {isRequestsLoading ? (
-                      <div className="mt-7 flex h-32 items-end gap-2 border-b border-white/[0.1] px-1" aria-label="Loading activity">
-                        {[34, 52, 42, 68, 48, 62, 38, 56].map((height, index) => <div key={index} className="h-full flex-1 animate-pulse rounded-t-sm bg-white/[0.06]" style={{ transform: `scaleY(${height / 100})`, transformOrigin: "bottom" }} />)}
-                      </div>
-                    ) : requestError ? (
-                      <div className="mt-7 flex h-32 items-center justify-center border-y border-white/[0.1] text-center"><p className="max-w-[15rem] text-[0.68rem] leading-5 text-[#f28b8b]">Activity is temporarily unavailable. Retry the workspace request to view delivery checks.</p></div>
-                    ) : activityBuckets.length === 0 ? (
-                      <div className="mt-7 flex h-32 flex-col items-center justify-center border-y border-white/[0.1] text-center"><Radio aria-hidden="true" size={18} className="text-[#727b89]" /><p className="mt-2 text-[0.72rem] font-[560] text-[#f3f3ee]">No delivery events yet</p><p className="mt-1 max-w-[15rem] text-[0.63rem] leading-5 text-[#9097a5]">The pulse chart will use actual impressions, clicks, and dismissals.</p></div>
-                    ) : (
-                      <div className="mt-7 flex h-32 items-end gap-2 border-b border-white/[0.1] px-1">
-                        {activityBuckets.map((bucket, index) => <div key={`${bucket.label}-${index}`} className="group relative flex h-full flex-1 items-end" title={`${bucket.count} event${bucket.count === 1 ? "" : "s"}`}><div className="w-full rounded-t-sm bg-[#70f0c0]" style={{ height: `${bucket.height}%` }} /><span className="absolute -top-5 left-1/2 hidden -translate-x-1/2 whitespace-nowrap font-mono text-[0.52rem] text-[#9097a5] group-hover:block">{bucket.count} event{bucket.count === 1 ? "" : "s"}</span></div>)}
-                      </div>
-                    )}
-                    <div className="mt-3 flex items-center justify-between gap-4 font-mono text-[0.57rem] text-[#727b89]"><span className="truncate">{activityBuckets.length ? `${activityBuckets[0].label} → ${activityBuckets.at(-1)?.label}` : "waiting for first event"}</span><span className="shrink-0 text-[#70f0c0]">{activityBuckets.length ? `${requestLogs.length} events` : "—"}</span></div>
-                  </div>
-                  <RequestLogCard logs={requestLogs} loading={isRequestsLoading} error={requestError} />
-                </section>
-              </div>
-
-              <aside className="space-y-8">
-                <OnboardingModal />
-                <section className="surface-card surface-card--quiet overflow-hidden">
-                  <div className="flex items-start justify-between gap-4 border-b border-white/[0.1] px-5 py-4"><div><p className="eyebrow">Campaign history</p><h2 className="mt-1 text-[0.95rem] font-[580] text-[#f3f3ee]">Recent announcements</h2></div><Link href="#campaigns" aria-label="Create campaign" className="text-[#9097a5] hover:text-[#70f0c0]"><Plus size={16} /></Link></div>
-                  <div className="p-3">{isAlertsLoading ? <DashboardSkeleton lines={3} /> : alertError ? <div className="flex items-center gap-2 px-2 py-5 text-[0.7rem] text-[#f28b8b]"><AlertCircle size={14} /> Campaign history is unavailable.</div> : <NotificationPage alerts={alerts} />}</div>
-                </section>
-              </aside>
-            </div>
-          </main>
-
-          <footer className="border-t border-white/[0.1] px-5 py-7 sm:px-8">
-            <div className="mx-auto flex max-w-[100rem] flex-col justify-between gap-3 font-mono text-[0.58rem] text-[#727b89] sm:flex-row"><span>Droplert / Builder workspace</span><span className="inline-flex items-center gap-1.5"><Code2 size={12} /> sdk + durable feed</span></div>
-          </footer>
+    <WorkspaceShell hideNewCampaign>
+      <main className="workspace-page workspace-page--overview">
+        <div className="workspace-page__intro">
+          <div><span className="workspace-eyebrow">Overview / durable delivery</span><h1>Keep the next product moment moving.</h1><p>One concise view of destinations, campaign records, and the latest delivery signal.</p></div>
+          <Link className="workspace-button workspace-button--primary" href="/alert"><FileText size={15} /> New campaign <ArrowRight size={14} /></Link>
         </div>
-      </div>
-    </div>
-  )
+
+        <section className="workspace-metric-grid" aria-label="Workspace summary">
+          <article className="workspace-metric"><div><span>Active sites</span><Globe2 size={15} /></div><strong>{websites.loading ? "—" : activeSites.length}</strong><small>{websites.loading ? "Loading destinations" : `${pendingSites.length} pending / ${websites.data.length} total`}</small></article>
+          <article className="workspace-metric"><div><span>Published</span><CheckCircle2 size={15} /></div><strong>{campaigns.loading ? "—" : publishedCount}</strong><small>{campaigns.loading ? "Loading campaigns" : `${scheduledCount} scheduled`}</small></article>
+          <article className="workspace-metric"><div><span>Recorded events</span><Radio size={15} /></div><strong>{logs.loading ? "—" : logs.data.length}</strong><small>{logs.loading ? "Loading event feed" : "delivery events returned"}</small></article>
+          <article className="workspace-metric workspace-metric--signal"><div><span>Next action</span><Clock3 size={15} /></div><strong className="workspace-metric__action">{recommendedLabel}</strong><small><Link href={recommendedHref}>Open destination <ArrowRight size={12} /></Link></small></article>
+        </section>
+
+        <div className="workspace-overview-grid">
+          <div className="workspace-overview-main">
+            {websites.error || campaigns.error || logs.error ? (
+              <section className="workspace-panel workspace-panel--notice"><span className="workspace-eyebrow">Resource status</span><h2>Some workspace data needs another read.</h2><p>Independent resources can be retried without losing the rest of the overview.</p><div className="workspace-retry-row">{websites.error ? <button type="button" onClick={() => void loadWebsites()}>Retry sites</button> : null}{campaigns.error ? <button type="button" onClick={() => void loadCampaigns()}>Retry campaigns</button> : null}{logs.error ? <button type="button" onClick={() => void loadLogs()}>Retry events</button> : null}</div></section>
+            ) : null}
+            <Checklist websites={websites.data} campaigns={campaigns.data} />
+
+            <section className="workspace-panel workspace-panel--compact" aria-labelledby="recent-campaigns-title">
+              <div className="workspace-panel__header workspace-panel__header--inline"><div><span className="workspace-eyebrow">Campaign registry</span><h2 id="recent-campaigns-title">Recent campaigns</h2></div><Link href="/campaigns">View all <ArrowRight size={13} /></Link></div>
+              {campaigns.loading ? <ResourceLoading label="campaigns" /> : campaigns.error ? <ResourceError label="Campaigns" onRetry={() => void loadCampaigns()} /> : latestCampaigns.length === 0 ? <div className="workspace-empty"><FileText size={17} /><div><strong>No campaigns have been published.</strong><p>Choose a surface and create the first durable record.</p></div><Link href="/alert" className="workspace-button workspace-button--quiet workspace-button--compact">Start composing <ArrowRight size={13} /></Link></div> : <div className="workspace-list workspace-list--campaigns">{latestCampaigns.map((campaign) => <Link key={campaign.id} href="/campaigns" className="workspace-list__row"><span className="workspace-list__marker" aria-hidden="true" /><span className="workspace-list__body"><strong>{campaignLabel(campaign)}</strong><small>{campaign.revisions[0]?.type.replace("_", " ") ?? "Campaign"} · {campaign.targets.length} site{campaign.targets.length === 1 ? "" : "s"}</small></span><span className="workspace-list__meta"><b>{campaignState(campaign)}</b><small>rev {campaign.currentRevision}</small></span><ArrowRight size={14} /></Link>)}</div>}
+            </section>
+          </div>
+
+          <aside className="workspace-overview-side">
+            <section className="workspace-panel workspace-panel--compact" aria-labelledby="signal-title">
+              <div className="workspace-panel__header workspace-panel__header--inline"><div><span className="workspace-eyebrow">Latest signal</span><h2 id="signal-title">Delivery event</h2></div><Link href="/analytics" aria-label="Open analytics"><ArrowRight size={15} /></Link></div>
+              {logs.loading ? <ResourceLoading label="delivery events" /> : logs.error ? <ResourceError label="Delivery events" onRetry={() => void loadLogs()} /> : latestLog ? <div className="workspace-signal"><span className="workspace-signal__icon"><Radio size={16} /></span><div><strong>{latestLog.name || "Recorded delivery event"}</strong><p>{latestLog.endpoint}</p><small>{formatDate(latestLog.timestamp)}</small></div><span className="workspace-signal__status">recorded</span></div> : <div className="workspace-empty workspace-empty--small"><Radio size={16} /><div><strong>No delivery events yet.</strong><p>Events appear when a published campaign reaches a visitor.</p></div></div>}
+            </section>
+            <section className="workspace-panel workspace-panel--compact workspace-install-note"><span className="workspace-eyebrow">Installation context</span><h2>Public reader, private publishing.</h2><p>The SDK uses a public site ID. Workspace authorization and campaign records stay on the owner side.</p><Link href="/sites">View install context <ArrowRight size={13} /></Link></section>
+          </aside>
+        </div>
+      </main>
+    </WorkspaceShell>
+  );
 }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, Copy, Globe2, LoaderCircle, Plus } from "lucide-react";
 
 import { toast } from "@/hooks/use-toast";
-import type { Website } from "./Dashboard";
+import type { Website } from "./WebsiteList";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";

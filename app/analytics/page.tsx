@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
-import DashboardPage from "@/components/Dashboard";
+import AnalyticsPage from "@/components/AnalyticsPage";
 import { auth } from "@/lib/auth";
 
-export default async function DashBoard() {
+export default async function AnalyticsRoute() {
   const session = await auth();
   if (!session?.user?.id) redirect("/getstarted");
-  return <DashboardPage />;
+  return <AnalyticsPage />;
 }

@@ -33,9 +33,9 @@ export default function AuthPage() {
       <section className="flex min-h-screen flex-col px-5 py-6 sm:px-10 lg:px-14 xl:px-20">
         <div className="flex items-center justify-between lg:justify-end"><div className="lg:hidden"><DroplertMark compact /></div><Link href="/" className="inline-flex items-center gap-2 text-xs text-[#9097a5] hover:text-[#f3f3ee]"><ArrowLeft size={14} /> Back to product</Link></div>
         <div className="my-auto w-full max-w-md self-center py-12">
-          <p className="eyebrow">Welcome back</p>
-          <h2 className="mt-3 text-3xl font-[580] tracking-[-.05em] sm:text-4xl">Open your workspace.</h2>
-          <p className="mt-3 text-sm leading-6 text-[#9097a5]">Use the identity connected to your Droplert sites. Authentication is handled by your chosen provider.</p>
+          <p className="eyebrow">Continue</p>
+          <h2 className="mt-3 text-3xl font-[580] tracking-[-.05em] sm:text-4xl">Continue to your workspace.</h2>
+          <p className="mt-3 text-sm leading-6 text-[#9097a5]">Choose an identity provider to continue. A workspace is created automatically for new users, then you can add verified sites and publish campaigns.</p>
           <div className="mt-8"><AuthForm /></div>
           <p className="mt-8 border-t border-white/10 pt-5 text-xs leading-5 text-[#727b89]">By continuing, you acknowledge that campaign content and aggregate delivery events are stored for your workspace.</p>
         </div>

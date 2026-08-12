@@ -1,5 +1,9 @@
 import { CampaignComposer } from "@/components/campaigns/CampaignComposer";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function ToastCampaignPage() {
+export default async function ToastCampaignPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/getstarted");
   return <CampaignComposer type="TOAST" />;
 }

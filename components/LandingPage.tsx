@@ -165,10 +165,10 @@ export default function LandingPage() {
                 <span className="dispatch-kicker__mark" aria-hidden="true" /> DL / 0001 — DURABLE CAMPAIGN DELIVERY
               </p>
               <h1 className="dispatch-hero__title" id="hero-title">
-                Publish the message. Keep the connection <span>out of your stack.</span>
+                Move from product moment to <span>visible campaign.</span>
               </h1>
               <p className="dispatch-hero__copy">
-                Droplert delivers scheduled in-page messages through a durable HTTP feed. The React client revalidates visible pages roughly every 15 minutes with ETag / 304, so there is no permanent WebSocket or browser secret to operate.
+                Droplert gives technical teams a quiet way to compose, verify, publish, and inspect in-page campaigns. A durable HTTP feed keeps each message available to the next page load without operating a permanent connection or exposing an owner credential.
               </p>
               <div className="dispatch-hero__actions">
                 <Link className="dispatch-button dispatch-button--cobalt" href="/getstarted">
@@ -411,20 +411,22 @@ export default function LandingPage() {
                   <span>app/layout.tsx</span>
                   <span>REACT / NEXT APP ROUTER</span>
                 </div>
-                <pre aria-label="Droplert React installation example"><code><span className="dispatch-code__keyword">import</span> &#123; Droplert &#125; <span className="dispatch-code__keyword">from</span> <span className="dispatch-code__string">&quot;droplert/react&quot;</span>
-<span className="dispatch-code__keyword">import</span> <span className="dispatch-code__string">&quot;droplert/styles.css&quot;</span>
+                <pre aria-label="Droplert React installation example"><code><span className="dispatch-code__comment">$ npm install droplert-cli</span>
 
-<span className="dispatch-code__keyword">export default function</span> RootLayout(&#123; children &#125;) &#123;
-  <span className="dispatch-code__tag">return</span> (
-    &lt;&gt;
-      &#123;children&#125;
-      &lt;Droplert
-        siteId=<span className="dispatch-code__string">&quot;site_public_id&quot;</span>
-        apiUrl=<span className="dispatch-code__string">&quot;https://droplert.abstergo.dev&quot;</span>
-      /&gt;
-    &lt;/&gt;
-  )
-&#125;</code></pre>
+                  <span className="dispatch-code__keyword">import</span> &#123; Droplert &#125; <span className="dispatch-code__keyword">from</span> <span className="dispatch-code__string">&quot;droplert/react&quot;</span>
+                  <span className="dispatch-code__keyword">import</span> <span className="dispatch-code__string">&quot;droplert/styles.css&quot;</span>
+
+                  <span className="dispatch-code__keyword">export default function</span> RootLayout(&#123; children &#125;) &#123;
+                  <span className="dispatch-code__tag">return</span> (
+                  &lt;&gt;
+                  &#123;children&#125;
+                  &lt;Droplert
+                  siteId=<span className="dispatch-code__string">&quot;site_public_id&quot;</span>
+                  apiUrl=<span className="dispatch-code__string">&quot;https://droplert.abstergo.dev&quot;</span>
+                  /&gt;
+                  &lt;/&gt;
+                  )
+                  &#125;</code></pre>
                 <div className="dispatch-code-block__foot">
                   <span>FEED / PUBLIC READ</span>
                   <span>NO BROWSER SECRET</span>
