@@ -66,7 +66,7 @@ export function WorkspaceShell({
           </button>
         </div>
 
-        {!collapsed ? <p className="workspace-sidebar__label">Workspace / owner view</p> : null}
+        {!collapsed ? <p className="workspace-sidebar__label">Owner workspace</p> : null}
         <nav className="workspace-nav" aria-label="Workspace destinations">
           {navigation.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
@@ -91,8 +91,7 @@ export function WorkspaceShell({
             <div className="workspace-feed-status">
               <span className="workspace-status-dot workspace-status-dot--active" aria-hidden="true" />
               <div>
-                <p>HTTP feed ready</p>
-                <span>Verified destinations can receive published records.</span>
+                <p>Feed is available for verified sites.</p>
               </div>
             </div>
             <div className="workspace-user workspace-user--sidebar">

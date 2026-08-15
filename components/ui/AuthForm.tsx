@@ -20,10 +20,10 @@ export function AuthForm() {
     setError(null);
     try {
       const result = await signIn(provider, { callbackUrl: "/dashboard", redirect: false });
-      if (result?.error) throw new Error("The provider could not complete sign-in.");
+      if (result?.error) throw new Error("The provider could not complete sign in.");
       if (result?.url) window.location.assign(result.url);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The provider could not complete sign-in. Try again.");
+      setError(cause instanceof Error ? cause.message : "The provider could not complete sign in. Try again.");
       setPendingProvider(null);
     }
   };
