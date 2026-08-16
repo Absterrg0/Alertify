@@ -66,15 +66,8 @@ export function WorkspaceShell({
           </button>
         </div>
 
-        {!collapsed ? (
-          <div className="workspace-workspace-badge">
-            <span className="workspace-status-dot workspace-status-dot--active" aria-hidden="true" />
-            <span>Owner workspace</span>
-          </div>
-        ) : null}
-
+        {!collapsed ? <p className="workspace-sidebar__label">Workspace / owner view</p> : null}
         <nav className="workspace-nav" aria-label="Workspace destinations">
-          <p className="workspace-nav__section-label">Workspace</p>
           {navigation.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
             return (
@@ -97,7 +90,10 @@ export function WorkspaceShell({
           <div className="workspace-sidebar__footer">
             <div className="workspace-feed-status">
               <span className="workspace-status-dot workspace-status-dot--active" aria-hidden="true" />
-              <span>Feed active</span>
+              <div>
+                <p>HTTP feed ready</p>
+                <span>Verified destinations can receive published records.</span>
+              </div>
             </div>
             <div className="workspace-user workspace-user--sidebar">
               <span className="workspace-avatar" aria-hidden="true">{initial}</span>
@@ -124,11 +120,11 @@ export function WorkspaceShell({
               {mobileOpen ? <X size={17} /> : <Menu size={17} />}
             </button>
             <div className="workspace-mobile-brand"><DroplertMark compact /></div>
-            <nav className="workspace-context" aria-label="Current location">
-              <Link href="/dashboard" className="workspace-context__home">Droplert</Link>
+            <div className="workspace-context">
+              <span>Droplert / workspace</span>
               <ChevronRight aria-hidden="true" size={13} />
               <strong>{currentContext}</strong>
-            </nav>
+            </div>
           </div>
           <div className="workspace-topbar__right">
             {!hideNewCampaign ? (

@@ -247,71 +247,15 @@ export default function DashboardPage() {
     <WorkspaceShell hideNewCampaign>
       <main className="workspace-page workspace-page--overview">
         <div className="workspace-page__intro">
-          <div>
-            <span className="workspace-eyebrow">Overview</span>
-            <h1>Campaign workspace</h1>
-            <p>Sites, campaigns, and delivery signals — all in one place.</p>
-          </div>
-          <div className="workspace-page__intro-actions">
-            <Link className="workspace-button workspace-button--quiet workspace-button--compact" href="/sites">
-              <Globe2 size={13} /> Add site
-            </Link>
-            <Link className="workspace-button workspace-button--primary" href="/alert">
-              <FileText size={15} /> New campaign <ArrowRight size={14} />
-            </Link>
-          </div>
+          <div><span className="workspace-eyebrow">Overview / durable delivery</span><h1>Keep the next product moment moving.</h1><p>One concise view of destinations, campaign records, and the latest delivery signal.</p></div>
+          <Link className="workspace-button workspace-button--primary" href="/alert"><FileText size={15} /> New campaign <ArrowRight size={14} /></Link>
         </div>
 
         <section className="workspace-metric-grid" aria-label="Workspace summary">
-          <article className="workspace-metric">
-            <div className="workspace-metric__header">
-              <span className="workspace-metric__label">Active sites</span>
-              <Globe2 size={18} className="workspace-metric__icon" aria-hidden="true" />
-            </div>
-            <strong className="workspace-metric__value">{websites.loading ? "—" : activeSites.length}</strong>
-            <div className="workspace-metric__footer">
-              <small>{websites.loading ? "Loading destinations" : `${pendingSites.length} pending`}</small>
-              <div className="workspace-metric__bar" aria-hidden="true">
-                <div className="workspace-metric__bar-fill" style={{ width: websites.loading ? "0%" : `${Math.min(100, (activeSites.length / Math.max(websites.data.length, 1)) * 100)}%` }} />
-              </div>
-            </div>
-          </article>
-          <article className="workspace-metric">
-            <div className="workspace-metric__header">
-              <span className="workspace-metric__label">Published</span>
-              <CheckCircle2 size={18} className="workspace-metric__icon" aria-hidden="true" />
-            </div>
-            <strong className="workspace-metric__value">{campaigns.loading ? "—" : publishedCount}</strong>
-            <div className="workspace-metric__footer">
-              <small>{campaigns.loading ? "Loading campaigns" : `${scheduledCount} scheduled`}</small>
-              <div className="workspace-metric__bar" aria-hidden="true">
-                <div className="workspace-metric__bar-fill" style={{ width: campaigns.loading ? "0%" : `${Math.min(100, (publishedCount / Math.max(campaigns.data.length, 1)) * 100)}%` }} />
-              </div>
-            </div>
-          </article>
-          <article className="workspace-metric">
-            <div className="workspace-metric__header">
-              <span className="workspace-metric__label">Recorded events</span>
-              <Radio size={18} className="workspace-metric__icon" aria-hidden="true" />
-            </div>
-            <strong className="workspace-metric__value">{logs.loading ? "—" : logs.data.length}</strong>
-            <div className="workspace-metric__footer">
-              <small>{logs.loading ? "Loading event feed" : "Latest returned events"}</small>
-              <div className="workspace-metric__bar" aria-hidden="true">
-                <div className="workspace-metric__bar-fill" style={{ width: logs.loading || logs.data.length === 0 ? "0%" : "100%" }} />
-              </div>
-            </div>
-          </article>
-          <article className="workspace-metric workspace-metric--signal">
-            <div className="workspace-metric__header">
-              <span className="workspace-metric__label">Next action</span>
-              <Clock3 size={18} className="workspace-metric__icon" aria-hidden="true" />
-            </div>
-            <strong className="workspace-metric__value workspace-metric__action">{recommendedLabel}</strong>
-            <div className="workspace-metric__footer">
-              <small><Link href={recommendedHref}>Open destination <ArrowRight size={12} /></Link></small>
-            </div>
-          </article>
+          <article className="workspace-metric"><div><span>Active sites</span><Globe2 size={15} /></div><strong>{websites.loading ? "—" : activeSites.length}</strong><small>{websites.loading ? "Loading destinations" : `${pendingSites.length} pending / ${websites.data.length} total`}</small></article>
+          <article className="workspace-metric"><div><span>Published</span><CheckCircle2 size={15} /></div><strong>{campaigns.loading ? "—" : publishedCount}</strong><small>{campaigns.loading ? "Loading campaigns" : `${scheduledCount} scheduled`}</small></article>
+          <article className="workspace-metric"><div><span>Recorded events</span><Radio size={15} /></div><strong>{logs.loading ? "—" : logs.data.length}</strong><small>{logs.loading ? "Loading event feed" : "Latest returned events"}</small></article>
+          <article className="workspace-metric workspace-metric--signal"><div><span>Next action</span><Clock3 size={15} /></div><strong className="workspace-metric__action">{recommendedLabel}</strong><small><Link href={recommendedHref}>Open destination <ArrowRight size={12} /></Link></small></article>
         </section>
 
         <div className="workspace-overview-grid">
