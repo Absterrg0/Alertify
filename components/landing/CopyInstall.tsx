@@ -36,7 +36,7 @@ export function CopyInstall({ framed = true }: CopyInstallProps) {
           className={cn(
             "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white",
             LANDING_INTERACTIVE,
-            "hover:bg-white/10",
+            "hover:bg-violet-500/20 hover:text-violet-300 transition-colors",
           )}
         >
           {copied ? <CheckIcon aria-hidden="true" size={16} /> : <CopySimpleIcon aria-hidden="true" size={16} />}
@@ -44,7 +44,53 @@ export function CopyInstall({ framed = true }: CopyInstallProps) {
         </button>
       </div>
       <pre className="overflow-x-auto px-4 pb-4 font-[var(--font-geist-mono),ui-monospace,monospace] text-sm leading-6 text-[#cfcfcf]">
-        <code>{INSTALL_SNIPPET}</code>
+        <code>
+          <span className="text-[#8b949e]">{"import "}</span>
+          <span className="text-[#f0f6fc]">{"{ Droplert } "}</span>
+          <span className="text-[#8b949e]">{"from "}</span>
+          <span className="text-[#8b5cf6]">{'"droplert/react"'}</span>
+          {"\n"}
+          <span className="text-[#8b949e]">{"import "}</span>
+          <span className="text-[#8b5cf6]">{'"droplert/styles.css"'}</span>
+          {"\n\n"}
+          <span className="text-[#8b949e]">{"export default function "}</span>
+          <span className="text-[#06b6d4]">{"AppLayout"}</span>
+          <span className="text-[#f0f6fc]">{"({ children }) {"}</span>
+          {"\n"}
+          {"  "}
+          <span className="text-[#8b949e]">{"return ("}</span>
+          {"\n"}
+          {"    "}
+          <span className="text-[#f0f6fc]">{"<>"}</span>
+          {"\n"}
+          {"      "}
+          <span className="text-[#f0f6fc]">{"{children}"}</span>
+          {"\n"}
+          {"      "}
+          <span className="text-[#f0f6fc]">{"<"}</span>
+          <span className="text-[#06b6d4]">{"Droplert"}</span>
+          {"\n"}
+          {"        "}
+          <span className="text-[#7c3aed]">{"siteId"}</span>
+          <span className="text-[#f0f6fc]">{"="}</span>
+          <span className="text-[#8b5cf6]">{'"site_public_id"'}</span>
+          {"\n"}
+          {"        "}
+          <span className="text-[#7c3aed]">{"apiUrl"}</span>
+          <span className="text-[#f0f6fc]">{"="}</span>
+          <span className="text-[#8b5cf6]">{'"https://droplert.abstergo.fyi"'}</span>
+          {"\n"}
+          {"      "}
+          <span className="text-[#f0f6fc]">{"/>"}</span>
+          {"\n"}
+          {"    "}
+          <span className="text-[#f0f6fc]">{"</>"}</span>
+          {"\n"}
+          {"  "}
+          <span className="text-[#8b949e]">{")"}</span>
+          {"\n"}
+          <span className="text-[#f0f6fc]">{"}"}</span>
+        </code>
       </pre>
       {error ? (
         <p role="alert" className="px-4 pb-4 text-sm text-[#f28b8b]">
@@ -59,8 +105,8 @@ export function CopyInstall({ framed = true }: CopyInstallProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-[#181818] p-2">
-      <div className="rounded-lg bg-[#1f1f1f]">{body}</div>
+    <div className="overflow-hidden rounded-2xl bg-[#0d1117] p-2">
+      <div className="rounded-lg bg-[#161b22]">{body}</div>
     </div>
   )
 }

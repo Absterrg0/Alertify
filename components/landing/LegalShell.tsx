@@ -12,7 +12,7 @@ type LegalShellProps = {
 
 export function LegalShell({ title, children }: LegalShellProps) {
   return (
-    <div className="landing-page min-h-screen bg-black text-white">
+    <div className="landing-page min-h-screen bg-[#030712] text-white">
       <a className="landing-skip" href="#content">
         Skip to content
       </a>

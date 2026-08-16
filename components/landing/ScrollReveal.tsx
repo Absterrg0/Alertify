@@ -37,8 +37,8 @@ export function ScrollReveal({ children, className }: ScrollRevealProps) {
       ref={ref}
       className={cn(
         "transition-all duration-1000 ease-[cubic-bezier(0.32,0.72,0,1)]",
-        "motion-reduce:translate-y-0 motion-reduce:blur-0 motion-reduce:opacity-100 motion-reduce:transition-none",
-        visible ? "translate-y-0 blur-0 opacity-100" : "translate-y-16 blur-md opacity-0",
+        "motion-reduce:translate-y-0 motion-reduce:blur-none motion-reduce:opacity-100 motion-reduce:transition-none",
+        visible ? "translate-y-0 blur-none opacity-100" : "translate-y-16 blur-md opacity-0",
         className,
       )}
     >

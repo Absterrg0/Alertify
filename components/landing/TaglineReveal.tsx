@@ -5,8 +5,8 @@ import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { LANDING_MOTION } from "@/components/landing/constants"
 
-const MUTED = "rgba(255, 255, 255, 0.3)"
-const FULL = "#ffffff"
+const MUTED = "rgba(139, 148, 158, 0.5)"
+const FULL = "#f0f6fc"
 
 const TAGLINE_LINES = [
   ["The", "message", "stays", "on", "the", "page"],
@@ -91,7 +91,7 @@ export function TaglineReveal() {
     <section
       ref={sectionRef}
       aria-label="Product tagline"
-      className="bg-black px-4 py-24 sm:px-6 md:px-8"
+      className="bg-[#030712] px-4 py-24 sm:px-6 md:px-8"
     >
       <div className="mx-auto max-w-[680px]">
         <p className="text-4xl font-semibold leading-tight text-balance md:text-5xl lg:text-6xl">

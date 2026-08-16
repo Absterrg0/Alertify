@@ -74,7 +74,7 @@ export function IslandNav() {
         <nav
           aria-label="Primary"
           className={cn(
-            "pointer-events-auto mx-auto mt-6 flex w-max items-center gap-3 rounded-full border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-xl",
+            "pointer-events-auto mx-auto mt-6 flex w-max items-center gap-3 rounded-full border border-white/[0.1] bg-[#030712]/85 px-3 py-2 backdrop-blur-xl",
             LANDING_MOTION,
           )}
         >
@@ -90,7 +90,7 @@ export function IslandNav() {
                   className={cn(
                     "text-sm font-semibold",
                     LANDING_INTERACTIVE,
-                    link.current ? "text-white" : "text-white/60 hover:text-white",
+                    link.current ? "text-white" : "text-[#8b949e] hover:text-white",
                   )}
                 >
                   {link.label}
@@ -100,7 +100,7 @@ export function IslandNav() {
                   key={link.label}
                   href={link.href}
                   className={cn(
-                    "text-sm font-semibold text-white/60 hover:text-white",
+                    "text-sm font-semibold text-[#8b949e] hover:text-white",
                     LANDING_INTERACTIVE,
                   )}
                 >
@@ -110,9 +110,9 @@ export function IslandNav() {
             )}
             <Link
               href="/getstarted"
-              className={cn("text-sm font-semibold text-white/60 hover:text-white", LANDING_INTERACTIVE)}
+              className={cn("inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500 transition-colors", LANDING_MOTION)}
             >
-              Sign in
+              Get started
             </Link>
           </div>
 
@@ -122,7 +122,7 @@ export function IslandNav() {
             className={cn(
               "relative grid size-8 place-items-center rounded-full text-white",
               LANDING_INTERACTIVE,
-              "hover:bg-white/10",
+              "hover:bg-white/[0.06]",
             )}
             aria-expanded={open}
             aria-controls={overlayId}
@@ -158,7 +158,7 @@ export function IslandNav() {
         aria-hidden={!open}
         inert={!open}
         className={cn(
-          "fixed inset-0 z-40 bg-black/80 backdrop-blur-3xl",
+          "fixed inset-0 z-40 bg-[#030712]/90 backdrop-blur-3xl",
           LANDING_MOTION,
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         )}

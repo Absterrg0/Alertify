@@ -14,9 +14,8 @@ export function PrimaryCta({ className, onClick }: PrimaryCtaProps) {
       href="/getstarted"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center justify-center rounded-lg bg-white px-3 py-2 text-base font-semibold text-black",
+        "landing-cta-button inline-flex items-center justify-center rounded-lg border px-3 py-2 text-base font-semibold",
         LANDING_INTERACTIVE,
-        "hover:bg-[#e8e8e8]",
         className,
       )}
     >
