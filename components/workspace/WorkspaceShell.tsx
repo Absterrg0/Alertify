@@ -62,13 +62,13 @@ export function WorkspaceShell({
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={() => setCollapsed((value) => !value)}
           >
-            {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
+            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
           </button>
         </div>
 
         {!collapsed ? <p className="workspace-sidebar__label">Workspace / owner view</p> : null}
         <nav className="workspace-nav" aria-label="Workspace destinations">
-          {navigation.map(({ label, href, icon: Icon }) => {
+            {navigation.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
             return (
               <Link
@@ -79,7 +79,7 @@ export function WorkspaceShell({
                 title={collapsed ? label : undefined}
                 onClick={() => setMobileOpen(false)}
               >
-                <Icon aria-hidden="true" size={16} />
+                <Icon aria-hidden="true" size={15} />
                 {!collapsed ? <span>{label}</span> : null}
               </Link>
             );
@@ -117,19 +117,19 @@ export function WorkspaceShell({
               aria-label={mobileOpen ? "Close workspace navigation" : "Open workspace navigation"}
               onClick={() => setMobileOpen((value) => !value)}
             >
-              {mobileOpen ? <X size={17} /> : <Menu size={17} />}
+              {mobileOpen ? <X size={16} /> : <Menu size={16} />}
             </button>
             <div className="workspace-mobile-brand"><DroplertMark compact /></div>
             <div className="workspace-context">
               <span>Droplert / workspace</span>
-              <ChevronRight aria-hidden="true" size={13} />
+              <ChevronRight aria-hidden="true" size={10} />
               <strong>{currentContext}</strong>
             </div>
           </div>
           <div className="workspace-topbar__right">
             {!hideNewCampaign ? (
               <Link className="workspace-button workspace-button--primary workspace-button--compact" href="/alert" aria-label="New campaign">
-                <BellPlus aria-hidden="true" size={14} />
+                <BellPlus aria-hidden="true" size={13} />
                 <span>New campaign</span>
               </Link>
             ) : null}
@@ -139,8 +139,8 @@ export function WorkspaceShell({
                 <span className="workspace-user__text"><strong>{userName}</strong><small>Account</small></span>
               </summary>
               <div className="workspace-account-popover">
-                <Link href="/profile"><Settings size={14} /> Profile settings</Link>
-                <button type="button" onClick={() => void signOut({ redirectTo: "/getstarted" })}><LogOut size={14} /> Sign out</button>
+                <Link href="/profile"><Settings size={13} /> Profile settings</Link>
+                <button type="button" onClick={() => void signOut({ redirectTo: "/getstarted" })}><LogOut size={13} /> Sign out</button>
               </div>
             </details>
           </div>
@@ -153,7 +153,7 @@ export function WorkspaceShell({
                 const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
                 return (
                   <Link key={href} href={href} aria-label={label} aria-current={active ? "page" : undefined} onClick={() => setMobileOpen(false)} className="workspace-nav__link">
-                    <Icon aria-hidden="true" size={16} /><span className="workspace-mobile-nav-label">{label}</span>
+                    <Icon aria-hidden="true" size={15} /><span className="workspace-mobile-nav-label">{label}</span>
                   </Link>
                 );
               })}

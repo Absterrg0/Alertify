@@ -1,10 +1,10 @@
 .stage {
   position: relative;
   display: grid;
-  min-height: 430px;
+  min-height: 420px;
   place-items: center;
   overflow: hidden;
-  padding: 32px;
+  padding: 28px;
   border: 1px solid rgb(196 204 218 / 14%);
   border-radius: 2px;
   background: #0e131b;
@@ -29,7 +29,7 @@
   top: 1.75rem;
   right: 1.75rem;
   left: 1.75rem;
-  height: 38px;
+  height: 36px;
   z-index: -1;
   border-bottom: 1px solid rgb(196 204 218 / 9%);
 }
@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 38px;
+  height: 36px;
   padding: 0 14px;
   border-bottom: 1px solid rgb(196 204 218 / 9%);
 }
@@ -64,9 +64,9 @@
   position: relative;
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: 12px;
   width: min(420px, 100%);
-  padding: 18px;
+  padding: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: min(var(--radius), 4px);
@@ -121,8 +121,8 @@
 
 .icon {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--accent) 70%, var(--border));
   border-radius: 2px;
@@ -136,7 +136,7 @@
 
 .copy strong {
   display: block;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.3;
@@ -151,7 +151,7 @@
 
 .copy span {
   display: inline-block;
-  margin-top: 11px;
+  margin-top: 10px;
   color: var(--accent);
   font-family: inherit;
   font-size: 12px;
@@ -179,12 +179,12 @@
 
 @media (max-width: 540px) {
   .stage {
-    min-height: 330px;
+    min-height: 320px;
     padding: 20px;
   }
 
   .browser {
-    inset: 18px;
+    inset: 20px;
   }
 
   .notification {
