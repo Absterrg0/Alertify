@@ -3624,7 +3624,7 @@
 @media (max-width: 1180px) {
   .workspace-composer-layout { grid-template-columns: 12rem minmax(0, 1fr); }
   .workspace-composer-preview { grid-column: 2; position: static; }
-  .workspace-composer-preview .stage { min-height: 300px; }
+  .workspace-composer-preview .stage { min-height: 18.75rem; }
   .workspace-composer-rail { grid-row: span 2; }
 }
 
@@ -3694,7 +3694,7 @@
   .workspace-composer-rail li button > span:nth-child(2) strong { font-size: 0.59rem; }
   .workspace-composer-rail li button > span:first-child { width: 1.1rem; height: 1.1rem; }
   .workspace-composer-preview { width: 100%; }
-  .workspace-composer-preview .stage { min-height: 280px; }
+  .workspace-composer-preview .stage { min-height: 17.5rem; }
   .workspace-editor-section { padding: 1rem; }
   .workspace-editor-footer { align-items: flex-start; flex-direction: column; }
   .workspace-editor-footer .workspace-button { width: 100%; }
