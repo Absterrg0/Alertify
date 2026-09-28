@@ -18,8 +18,9 @@ export default function AuthPage() {
       <section className="auth__story" aria-labelledby="auth-story-title">
         <DroplertMark />
         <div className="auth__story-body">
-          <p className="lp-chip lp-chip--green">Owner workspace</p>
+          <p className="lp-label">Owner workspace</p>
           <h1 id="auth-story-title">Publish product moments without running a realtime stack.</h1>
+          <p className="auth__intro">Manage verified sites, shape accessible announcement surfaces, and schedule durable campaigns from one workspace.</p>
           <ul className="auth__principles">
             {principles.map(({ icon: Icon, title, copy, tone }) => (
               <li key={title} className={`auth__principle auth__principle--${tone}`}>
@@ -38,8 +39,7 @@ export default function AuthPage() {
           <Link href="/" className="auth__back"><ArrowLeft aria-hidden="true" size={15} /> Back to product</Link>
         </div>
         <div className="auth__card">
-          <p className="lp-chip lp-chip--yellow">Sign in</p>
-          <h2>Continue to your workspace.</h2>
+          <h2>Sign in to Droplert</h2>
           <p className="auth__lede">Choose an identity provider. New accounts get a workspace automatically — then add a verified site and publish.</p>
           <AuthForm />
           <p className="auth__legal">By continuing, you acknowledge that campaign content and aggregate delivery events are stored for your workspace.</p>
