@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
@@ -19,6 +19,7 @@ import {
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
 
 const DASHBOARD_REFERENCE_TIME = Date.now();
+const subscribeNoop = () => () => {};
 
 export type Website = {
   id: string;
@@ -240,7 +241,10 @@ export default function DashboardPage() {
   const latestLog = logs.data[0];
   const recommendedHref = activeSites.length === 0 ? "/sites" : publishedCount === 0 ? "/campaigns" : "/analytics";
   const recommendedLabel = activeSites.length === 0 ? "Verify a site" : publishedCount === 0 ? "Compose your first campaign" : "Inspect delivery";
-  const sdkIdentity = session?.user?.id ?? session?.user?.email?.toLowerCase() ?? null;
+  // The server has no client session; read it only after hydration so markup matches.
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const sessionUser = hydrated ? session?.user : undefined;
+  const sdkIdentity = sessionUser?.id ?? sessionUser?.email?.toLowerCase() ?? null;
   const sdkConfirmationStorageKey = sdkIdentity ? `droplert:sdk-reader-installed:${sdkIdentity}` : null;
 
   return (
