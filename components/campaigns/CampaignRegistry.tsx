@@ -5,10 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Bell,
-  CalendarClock,
+  BellRing,
   CheckCircle2,
-  FileText,
-  Globe2,
   MessageSquare,
   PanelsTopLeft,
   Search,
@@ -16,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { ArchiveCampaignButton } from "@/components/campaigns/ArchiveCampaignButton";
+import { Badge, Card, EmptyState, NewCampaignMenu, PageHeader, Tabs, type BadgeTone } from "@/components/workspace/ui";
 
 export type CampaignRegistryRecord = {
   id: string;
@@ -47,7 +46,14 @@ type TypeFilter = "ALL" | "ALERT" | "TOAST" | "ALERT_DIALOG";
 const typeLabels: Record<Exclude<TypeFilter, "ALL">, string> = {
   ALERT: "Inline alert",
   TOAST: "Toast",
-  ALERT_DIALOG: "Alert dialog",
+  ALERT_DIALOG: "Dialog",
+};
+
+const statusMeta: Record<Exclude<StatusFilter, "ALL">, { label: string; tone: BadgeTone }> = {
+  PUBLISHED: { label: "Live", tone: "green" },
+  SCHEDULED: { label: "Scheduled", tone: "amber" },
+  DRAFT: { label: "Draft", tone: "blue" },
+  ARCHIVED: { label: "Archived", tone: "neutral" },
 };
 
 function formatDate(value: string) {
@@ -63,13 +69,17 @@ function getStatus(campaign: CampaignRegistryRecord): Exclude<StatusFilter, "ALL
 }
 
 function StatusBadge({ status }: { status: Exclude<StatusFilter, "ALL"> }) {
-  return <span className={`workspace-status-badge workspace-status-badge--${status.toLowerCase()}`}><i aria-hidden="true" /> {status[0] + status.slice(1).toLowerCase()}</span>;
+  return <Badge tone={statusMeta[status].tone}>{statusMeta[status].label}</Badge>;
 }
 
 function TypeIcon({ type }: { type: CampaignRegistryRecord["revisions"][number]["type"] }) {
-  if (type === "TOAST") return <Bell size={16} />;
-  if (type === "ALERT_DIALOG") return <MessageSquare size={16} />;
-  return <PanelsTopLeft size={16} />;
+  if (type === "TOAST") return <Bell size={15} />;
+  if (type === "ALERT_DIALOG") return <MessageSquare size={15} />;
+  return <PanelsTopLeft size={15} />;
+}
+
+function titleCase(value: string) {
+  return value.charAt(0) + value.slice(1).toLowerCase();
 }
 
 export function CampaignRegistry({ campaigns }: { campaigns: CampaignRegistryRecord[] }) {
@@ -111,72 +121,132 @@ export function CampaignRegistry({ campaigns }: { campaigns: CampaignRegistryRec
     return accumulator;
   }, { ALL: 0, PUBLISHED: 0, SCHEDULED: 0, ARCHIVED: 0, DRAFT: 0 }), [campaigns]);
 
+  const statusOptions = (["ALL", "PUBLISHED", "SCHEDULED", "DRAFT", "ARCHIVED"] as const).map((value) => ({
+    value,
+    label: value === "ALL" ? "All" : statusMeta[value].label,
+    count: counts[value],
+  }));
+
   return (
-    <main className="workspace-page workspace-page--registry">
-      <div className="workspace-page__intro workspace-page__intro--registry">
-        <div><span className="workspace-eyebrow">Campaign registry / immutable records</span><h1>Every message has a place in the feed.</h1><p>Search published, scheduled, draft, and archived revisions without losing the delivery context around them.</p></div>
-        <div className="workspace-format-actions" aria-label="Choose a campaign format">
-          <span>New campaign</span>
-          <Link href="/alert" title="Create inline alert"><PanelsTopLeft size={14} /> Alert</Link>
-          <Link href="/toast" title="Create toast"><Bell size={14} /> Toast</Link>
-          <Link href="/alert_dialog" title="Create alert dialog"><MessageSquare size={14} /> Dialog</Link>
-        </div>
-      </div>
+    <main className="app-page">
+      <PageHeader
+        title="Campaigns"
+        description="Every published, scheduled, and archived revision across your sites."
+        actions={<NewCampaignMenu />}
+      />
 
-      <section className="workspace-registry-toolbar" aria-label="Campaign filters">
-        <label className="workspace-search"><Search aria-hidden="true" size={15} /><span className="sr-only">Search campaigns</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search title, preset, or destination" /></label>
-        <div className="workspace-filter-row">
-          <label><span className="sr-only">Filter by status</span><select value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)}>{(["ALL", "PUBLISHED", "SCHEDULED", "DRAFT", "ARCHIVED"] as const).map((value) => <option key={value} value={value}>{value === "ALL" ? `All records · ${counts.ALL}` : `${value[0] + value.slice(1).toLowerCase()} · ${counts[value]}`}</option>)}</select></label>
-          <label><span className="sr-only">Filter by type</span><select value={type} onChange={(event) => setType(event.target.value as TypeFilter)}><option value="ALL">All surfaces</option>{Object.entries(typeLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-        </div>
-      </section>
-
-      {filtered.length === 0 ? (
-        <section className="workspace-panel workspace-empty workspace-empty--large"><FileText size={20} /><div><strong>{campaigns.length === 0 ? "No campaigns yet." : "No records match those filters."}</strong><p>{campaigns.length === 0 ? "Start with a focused surface and publish it to a verified site." : "Try a different title, status, or campaign type."}</p></div>{campaigns.length === 0 ? <Link className="workspace-button workspace-button--primary workspace-button--compact" href="/alert">Compose campaign <ArrowRight size={13} /></Link> : <button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={() => { setQuery(""); setStatus("ALL"); setType("ALL"); }}>Clear filters</button>}</section>
+      {campaigns.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={<BellRing size={18} />}
+            title="No campaigns yet"
+            description="Pick a surface, target a verified site, and publish your first campaign."
+            action={<NewCampaignMenu />}
+          />
+        </Card>
       ) : (
-        <div className="workspace-registry-layout">
-          <section className="workspace-registry-list" aria-label="Campaign records">
-            <div className="workspace-registry-list__head"><span>{filtered.length} visible record{filtered.length === 1 ? "" : "s"}</span><span>Click a record to inspect</span></div>
-            {filtered.map((campaign) => {
-              const revision = campaign.revisions[0];
-              const currentStatus = getStatus(campaign);
-              const isSelected = selectedId === campaign.id;
-              return (
-                <article
-                  key={campaign.id}
-                  className={`workspace-campaign-row ${isSelected ? "is-selected" : ""}`}
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={isSelected}
-                  onClick={() => selectCampaign(campaign.id)}
-                  onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectCampaign(campaign.id); } }}
-                >
-                  <div className="workspace-campaign-row__icon"><TypeIcon type={revision?.type ?? "ALERT"} /></div>
-                  <div className="workspace-campaign-row__main"><div className="workspace-campaign-row__tags"><StatusBadge status={currentStatus} /><span>{revision?.type ? typeLabels[revision.type] : "Campaign"}</span><span>{revision?.preset ?? "—"}</span></div><h2>{revision?.title ?? "Untitled campaign"}</h2><p>{revision?.description ?? "No description provided."}</p><div className="workspace-campaign-row__meta"><span><Globe2 size={12} /> {campaign.targets.length ? campaign.targets.map((target) => target.website.name).join(", ") : "No target sites"}</span><span><CalendarClock size={12} /> {formatDate(campaign.startsAt)}</span></div></div>
-                  <div className="workspace-campaign-row__side"><span>rev {campaign.currentRevision}</span><strong>{campaign.deliveryEventCount}</strong><small>events</small>{currentStatus === "PUBLISHED" || currentStatus === "SCHEDULED" ? <ArchiveCampaignButton campaignId={campaign.id} onClick={(event) => event.stopPropagation()} /> : null}</div>
-                </article>
-              );
-            })}
-          </section>
-          <CampaignInspector campaign={selected} onClose={() => { setInspectorClosed(true); setSelectedId(null); }} />
-        </div>
+        <>
+          <div className="app-toolbar">
+            <Tabs label="Filter by status" value={status} options={statusOptions} onChange={setStatus} />
+            <div className="app-toolbar__end">
+              <label className="app-search">
+                <Search aria-hidden="true" size={15} />
+                <span className="sr-only">Search campaigns</span>
+                <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search campaigns" />
+              </label>
+              <label>
+                <span className="sr-only">Filter by surface</span>
+                <select className="app-select" value={type} onChange={(event) => setType(event.target.value as TypeFilter)}>
+                  <option value="ALL">All surfaces</option>
+                  {Object.entries(typeLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div className={`app-split ${selected ? "" : "app-split--full"}`}>
+            <Card flush className="app-table-card">
+              {filtered.length === 0 ? (
+                <EmptyState
+                  icon={<Search size={18} />}
+                  title="No campaigns match"
+                  description="Try a different search, status, or surface."
+                  action={<button type="button" className="app-btn app-btn--secondary app-btn--sm" onClick={() => { setQuery(""); setStatus("ALL"); setType("ALL"); }}>Clear filters</button>}
+                />
+              ) : (
+                <div className="app-table app-table--campaigns" role="list" aria-label="Campaigns">
+                  <div className="app-table__head" aria-hidden="true">
+                    <span>Campaign</span>
+                    <span>Status</span>
+                    <span>Sites</span>
+                    <span>Starts</span>
+                    <span className="is-numeric">Events</span>
+                  </div>
+                  {filtered.map((campaign) => {
+                    const revision = campaign.revisions[0];
+                    const isSelected = visibleSelectedId === campaign.id;
+                    return (
+                      <div
+                        key={campaign.id}
+                        role="listitem"
+                        className={`app-table__row ${isSelected ? "is-selected" : ""}`}
+                      >
+                        <button type="button" className="app-table__select" aria-pressed={isSelected} onClick={() => selectCampaign(campaign.id)}>
+                          <span className="sr-only">Inspect {revision?.title ?? "campaign"}</span>
+                        </button>
+                        <span className="app-table__primary">
+                          <span className="app-type-icon"><TypeIcon type={revision?.type ?? "ALERT"} /></span>
+                          <span>
+                            <strong>{revision?.title ?? "Untitled campaign"}</strong>
+                            <small>{revision?.type ? typeLabels[revision.type] : "Campaign"} · {revision ? titleCase(revision.preset) : "—"}</small>
+                          </span>
+                        </span>
+                        <span><StatusBadge status={getStatus(campaign)} /></span>
+                        <span className="app-table__muted">{campaign.targets.length ? campaign.targets.map((target) => target.website.name).join(", ") : "—"}</span>
+                        <span className="app-table__muted">{formatDate(campaign.startsAt)}</span>
+                        <span className="is-numeric">{campaign.deliveryEventCount}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+
+            {selected ? <CampaignInspector campaign={selected} onClose={() => { setInspectorClosed(true); setSelectedId(null); }} /> : null}
+          </div>
+        </>
       )}
     </main>
   );
 }
 
-function CampaignInspector({ campaign, onClose }: { campaign: CampaignRegistryRecord | null; onClose: () => void }) {
-  if (!campaign) return <aside className="workspace-inspector workspace-inspector--empty"><FileText size={18} /><strong>Select a campaign record.</strong><p>The immutable revision, destinations, and delivery count will appear here.</p></aside>;
+function CampaignInspector({ campaign, onClose }: { campaign: CampaignRegistryRecord; onClose: () => void }) {
   const revision = campaign.revisions[0];
   const status = getStatus(campaign);
+  const canArchive = status === "PUBLISHED" || status === "SCHEDULED";
   return (
-    <aside className="workspace-inspector" aria-label="Campaign details">
-      <div className="workspace-inspector__head"><div><span className="workspace-eyebrow">Record inspector</span><h2>{revision?.title ?? "Untitled campaign"}</h2></div><button type="button" className="workspace-icon-button" aria-label="Close campaign inspector" onClick={onClose}><X size={15} /></button></div>
-      <div className="workspace-inspector__status"><StatusBadge status={status} /><span>Revision {campaign.currentRevision}</span></div>
-      <p className="workspace-inspector__description">{revision?.description ?? "No description provided."}</p>
-      <dl className="workspace-detail-list"><div><dt>Surface</dt><dd>{revision?.type ? typeLabels[revision.type] : "—"} / {revision?.preset ?? "—"}</dd></div><div><dt>Targets</dt><dd>{campaign.targets.length ? campaign.targets.map((target) => target.website.name).join(", ") : "No sites"}</dd></div><div><dt>Schedule</dt><dd>{formatDate(campaign.startsAt)}{campaign.endsAt ? ` → ${formatDate(campaign.endsAt)}` : " → open"}</dd></div><div><dt>Recorded events</dt><dd>{campaign.deliveryEventCount}</dd></div><div><dt>Routes</dt><dd>{revision?.routeRules?.length ? revision.routeRules.join(", ") : "All routes"}</dd></div><div><dt>Published</dt><dd>{campaign.createdAt ? formatDate(campaign.createdAt) : "—"}</dd></div></dl>
-      <div className="workspace-inspector__note"><CheckCircle2 size={15} /><span>Published revisions are immutable. Archive is the available lifecycle action.</span></div>
-      <Link href="/analytics" className="workspace-button workspace-button--quiet workspace-button--full">Inspect delivery events <ArrowRight size={13} /></Link>
+    <aside className="app-card app-inspector" aria-label="Campaign details">
+      <div className="app-inspector__head">
+        <div>
+          <StatusBadge status={status} />
+          <h2>{revision?.title ?? "Untitled campaign"}</h2>
+        </div>
+        <button type="button" className="app-icon-btn" aria-label="Close campaign details" onClick={onClose}><X size={15} /></button>
+      </div>
+      <p className="app-inspector__description">{revision?.description ?? "No description provided."}</p>
+      <dl className="app-details">
+        <div><dt>Surface</dt><dd>{revision?.type ? typeLabels[revision.type] : "—"} · {revision ? titleCase(revision.preset) : "—"}</dd></div>
+        <div><dt>Sites</dt><dd>{campaign.targets.length ? campaign.targets.map((target) => target.website.name).join(", ") : "No sites"}</dd></div>
+        <div><dt>Routes</dt><dd className="app-mono">{revision?.routeRules?.length ? revision.routeRules.join(", ") : "All routes"}</dd></div>
+        <div><dt>Window</dt><dd>{formatDate(campaign.startsAt)} → {campaign.endsAt ? formatDate(campaign.endsAt) : "open"}</dd></div>
+        <div><dt>Events</dt><dd>{campaign.deliveryEventCount}</dd></div>
+        <div><dt>Revision</dt><dd>{campaign.currentRevision} · created {formatDate(campaign.createdAt)}</dd></div>
+      </dl>
+      <p className="app-inspector__note"><CheckCircle2 aria-hidden="true" size={14} /> Published revisions are immutable. Archiving removes the campaign from site feeds.</p>
+      <div className="app-inspector__actions">
+        <Link href="/analytics" className="app-btn app-btn--secondary app-btn--sm">View events <ArrowRight size={13} /></Link>
+        {canArchive ? <ArchiveCampaignButton campaignId={campaign.id} /> : null}
+      </div>
     </aside>
   );
 }

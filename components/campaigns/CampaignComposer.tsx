@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -11,9 +12,7 @@ import {
   Globe2,
   LoaderCircle,
   Play,
-  Route,
   Send,
-  Sparkles,
 } from "lucide-react";
 
 import { toast } from "@/hooks/use-toast";
@@ -22,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { NotificationPreview, type PreviewConfig } from "@/components/notifications/NotificationPreview";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
+import { EmptyState, PageHeader } from "@/components/workspace/ui";
 
 type Website = {
   id: string;
@@ -183,51 +183,281 @@ export function CampaignComposer({ type }: { type: ComposerType }) {
   const stepReady = (id: StepId) => id === "message" ? title.trim().length >= 2 && description.trim().length >= 2 && !durationError : id === "surface" ? true : id === "audience" ? selectedWebsiteIds.length > 0 && !routeError : !scheduleError;
   const goNext = () => { const index = stepMeta.findIndex((item) => item.id === step); if (index < stepMeta.length - 1) setStep(stepMeta[index + 1].id); };
 
+  const stepIndex = stepMeta.findIndex((item) => item.id === step);
+  const goBack = () => { if (stepIndex > 0) setStep(stepMeta[stepIndex - 1].id); };
+  const routeCount = routes.split(/[\n,]/).filter((route) => route.trim()).length;
+  const publishButton = (
+    <button type="button" className="app-btn app-btn--primary" onClick={publish} disabled={isPending}>
+      {isPending ? <LoaderCircle className="animate-spin" size={15} /> : scheduled ? <Clock3 size={15} /> : <Send size={15} />}
+      {scheduled ? "Schedule" : "Publish"}
+    </button>
+  );
+
   return (
-    <WorkspaceShell context={`Compose / ${typeLabel(type)}`} hideNewCampaign>
-      <main className="workspace-page workspace-page--composer">
-        <header className="workspace-composer-header">
-          <div className="workspace-composer-header__title">
-            <button type="button" className="workspace-back-link" onClick={() => router.push("/campaigns")}><ArrowLeft size={14} /> Campaigns</button>
-            <h1>New {typeLabel(type).toLowerCase()}</h1>
-            <p>Shape the record, confirm its destination, then publish one immutable revision.</p>
-          </div>
-          <div className="workspace-composer-header__action">
-            <span className={`workspace-readiness ${ready ? "is-ready" : ""}`}><i aria-hidden="true" /> {ready ? "Ready to publish" : `${readiness.filter(Boolean).length} of ${readiness.length} checks`}</span>
-            <button type="button" className="workspace-button workspace-button--primary" onClick={publish} disabled={isPending}>{isPending ? <LoaderCircle className="animate-spin" size={15} /> : scheduled ? <Clock3 size={15} /> : <Send size={15} />}{scheduled ? "Schedule" : "Publish"}</button>
-          </div>
-        </header>
-        <div className="workspace-composer-layout">
-          <section className="workspace-composer-editor" aria-label="Campaign editor">
-            <nav className="workspace-stepper" aria-label="Campaign studio steps"><ol>{stepMeta.map((item) => <li key={item.id}><button type="button" className={step === item.id ? "is-active" : ""} aria-current={step === item.id ? "step" : undefined} onClick={() => setStep(item.id)}><span className={`workspace-stepper__index ${stepReady(item.id) ? "is-ready" : ""}`}>{stepReady(item.id) ? <Check size={12} /> : item.number}</span><span className="workspace-stepper__text"><strong>{item.label}</strong><small>{item.hint}</small></span></button></li>)}</ol></nav>
-            {step === "message" ? <section className="workspace-editor-section is-current" aria-labelledby="message-title"><EditorHeading number="01" title="Message" description="Give visitors one clear thought, then enough context to act." id="message-title" /><div className="workspace-form-stack"><Field label="Title" hint={`${title.length} / 80`}><Input value={title} maxLength={80} onChange={(event) => setTitle(event.target.value)} aria-invalid={title.trim().length < 2} /></Field><Field label="Description" hint={`${description.length} / 320`}><Textarea value={description} maxLength={320} rows={5} onChange={(event) => setDescription(event.target.value)} aria-invalid={description.trim().length < 2} /></Field><div className="workspace-form-two"><Field label="Icon"><select value={icon} onChange={(event) => setIcon(event.target.value as PreviewConfig["icon"])}>{(["BELL", "SPARKLES", "CHECK", "WARNING", "INFO"] as const).map((value) => <option key={value} value={value}>{value.toLowerCase()}</option>)}</select></Field><div className="workspace-duration-field"><Field label="Visible for"><div className="workspace-inline-input"><Input id="campaign-duration" type="number" min={3} max={60} step={1} inputMode="numeric" value={durationSeconds} onChange={(event) => setDurationSeconds(event.target.value)} aria-invalid={durationError !== null} aria-describedby={durationError ? "campaign-duration-error" : undefined} /><span>seconds</span></div></Field>{durationError ? <p id="campaign-duration-error" className="workspace-field-error"><CircleAlert aria-hidden="true" size={13} /> {durationError}</p> : null}</div></div><ToggleRow title="Dismissible" description="Let visitors close the campaign." checked={dismissible} onChange={setDismissible} /></div><EditorContinue onClick={goNext} label="Choose a surface" /></section> : null}
-            {step === "surface" ? <section className="workspace-editor-section is-current" aria-labelledby="surface-title"><EditorHeading number="02" title="Surface" description="Start with a specimen, then tune the appearance contract." id="surface-title" /><div className="workspace-preset-grid">{presets.map((option) => <button key={option.value} type="button" className={`workspace-preset-option ${preset === option.value ? "is-selected" : ""}`} aria-pressed={preset === option.value} onClick={() => resetPreset(option.value)}><span className={`workspace-preset-specimen workspace-preset-specimen--${option.value.toLowerCase()}`} aria-hidden="true"><i /></span><strong>{option.label}</strong><small>{option.detail}</small></button>)}</div><button type="button" className="workspace-reset-button" onClick={() => resetPreset(preset)}><Sparkles size={13} /> Reset {preset.toLowerCase()} defaults</button><div className="workspace-form-color-grid"><ColorField label="Surface" value={backgroundColor} onChange={setBackgroundColor} /><ColorField label="Text" value={textColor} onChange={setTextColor} /><ColorField label="Accent" value={accentColor} onChange={setAccentColor} /><ColorField label="Border" value={borderColor} onChange={setBorderColor} /></div><Field label="Animation"><div className="workspace-choice-row">{animations.map((value) => <button key={value} type="button" className={animation === value ? "is-selected" : ""} aria-pressed={animation === value} onClick={() => { setAnimation(value); setReplayKey((key) => key + 1); }}>{value}</button>)}</div></Field><Field label="Position"><div className="workspace-choice-grid">{positions.map(([value, label]) => <button key={value} type="button" className={position === value ? "is-selected" : ""} aria-pressed={position === value} onClick={() => setPosition(value)}>{label}</button>)}</div></Field><Field label={`Corner radius · ${borderRadius}px`}><input className="workspace-range" type="range" min={0} max={32} value={borderRadius} onChange={(event) => setBorderRadius(Number(event.target.value))} /></Field><EditorContinue onClick={goNext} label="Set the audience" /></section> : null}
-            {step === "audience" ? <section className="workspace-editor-section is-current" aria-labelledby="audience-title"><EditorHeading number="03" title="Audience" description="Only verified ACTIVE sites can receive a campaign. Route rules are evaluated by the installed client." id="audience-title" /><Field label="Verified active sites" hint={selectedWebsiteIds.length ? `${selectedWebsiteIds.length} selected` : "Required"}><div className="workspace-target-list">{activeSites.length ? activeSites.map((website) => { const selected = selectedWebsiteIds.includes(website.id); return <button type="button" key={website.id} className={selected ? "is-selected" : ""} aria-pressed={selected} onClick={() => setSelectedWebsiteIds((current) => selected ? current.filter((id) => id !== website.id) : [...current, website.id])}><span><Globe2 size={16} /><span><strong>{website.name}</strong><small>{website.url}</small></span></span>{selected ? <Check size={15} /> : null}</button>; }) : <div className="workspace-empty workspace-empty--small"><CircleAlert size={16} /><div><strong>No verified active sites yet.</strong><p>Add and verify a destination before publishing.</p></div><a href="/sites">Open Sites <ArrowRight size={13} /></a></div>}</div></Field><Field label="Route rules" hint="One per line or comma separated"><div className="workspace-route-input"><Route size={15} /><Textarea value={routes} onChange={(event) => setRoutes(event.target.value)} rows={4} placeholder="/*\n/pricing\n/dashboard/*" aria-invalid={Boolean(routeError)} /></div>{routeError ? <p className="workspace-field-error"><CircleAlert size={13} /> {routeError}</p> : <p className="workspace-field-help">Use <code>{"/*"}</code> for every route, or an exact path such as <code>/changelog</code>. Wildcards must end with <code>{"/*"}</code>.</p>}</Field><EditorContinue onClick={goNext} label="Set delivery timing" /></section> : null}
-            {step === "delivery" ? <section className="workspace-editor-section is-current" aria-labelledby="delivery-title"><EditorHeading number="04" title="Delivery" description="Choose when this record enters the feed and whether visitors can dismiss it." id="delivery-title" /><ToggleRow title="Schedule campaign" description="Publish now or define a future delivery window." checked={scheduled} onChange={setScheduled} />{scheduled ? <div className="workspace-form-two"><Field label="Starts"><Input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></Field><Field label="Ends · optional"><Input type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></Field></div> : <div className="workspace-delivery-now"><Clock3 size={16} /><div><strong>Publish immediately</strong><p>The campaign will use the current time as its feed start.</p></div></div>}{scheduleError ? <p className="workspace-field-error"><CircleAlert size={13} /> {scheduleError}</p> : null}<div className="workspace-delivery-summary"><div><span>Surface</span><strong>{typeLabel(type)} / {preset}</strong></div><div><span>Targets</span><strong>{selectedWebsiteIds.length ? `${selectedWebsiteIds.length} verified site${selectedWebsiteIds.length === 1 ? "" : "s"}` : "None selected"}</strong></div><div><span>Routes</span><strong>{routes.split(/[\n,]/).filter((route) => route.trim()).length || 0} rule{routes.split(/[\n,]/).filter((route) => route.trim()).length === 1 ? "" : "s"}</strong></div></div><div className="workspace-cta-block"><ToggleRow title="Add action" description="Optional HTTPS destination." checked={ctaEnabled} onChange={setCtaEnabled} />{ctaEnabled ? <div className="workspace-form-two"><Field label="Button label"><Input value={ctaLabel} onChange={(event) => setCtaLabel(event.target.value)} /></Field><Field label="Destination"><Input type="url" value={ctaUrl} onChange={(event) => setCtaUrl(event.target.value)} placeholder="https://example.com/update" /></Field></div> : null}{ctaError ? <p className="workspace-field-error"><CircleAlert size={13} /> {ctaError}</p> : null}</div><div className="workspace-final-action"><div><strong>{ready ? "Ready to publish" : "Finish the checks"}</strong><span>{ready ? "The request will create an immutable revision." : "Missing fields are called out in the editor."}</span></div><button type="button" className="workspace-button workspace-button--primary" onClick={publish} disabled={isPending}>{isPending ? <LoaderCircle className="animate-spin" size={15} /> : <Send size={15} />}{scheduled ? "Schedule campaign" : "Publish campaign"}</button></div></section> : null}
+    <WorkspaceShell>
+      <main className="app-page app-page--wide">
+        <PageHeader
+          back={{ href: "/campaigns", label: "Campaigns" }}
+          title={`New ${typeLabel(type).toLowerCase()}`}
+          description="Write the message, choose where it appears, then publish an immutable revision."
+          actions={
+            <>
+              <span className={`app-readiness ${ready ? "is-ready" : ""}`}>
+                <i aria-hidden="true" />
+                {ready ? "Ready to publish" : `${readiness.filter(Boolean).length} of ${readiness.length} checks passed`}
+              </span>
+              {publishButton}
+            </>
+          }
+        />
+
+        <div className="app-composer">
+          <section className="app-card app-composer__editor" aria-label="Campaign editor">
+            <nav className="app-steps" aria-label="Campaign steps">
+              <ol>
+                {stepMeta.map((item, index) => (
+                  <li key={item.id}>
+                    <button type="button" className={step === item.id ? "is-active" : undefined} aria-current={step === item.id ? "step" : undefined} onClick={() => setStep(item.id)}>
+                      <span className={`app-steps__index ${stepReady(item.id) && step !== item.id ? "is-ready" : ""}`}>
+                        {stepReady(item.id) && step !== item.id ? <Check size={11} strokeWidth={3} /> : index + 1}
+                      </span>
+                      <span className="app-steps__text">
+                        <strong>{item.label}</strong>
+                        <small>{item.hint}</small>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+
+            <div className="app-composer__body">
+              {step === "message" ? (
+                <>
+                  <SectionIntro id="message-title" title="Message" description="One clear thought, with enough context to act on it." />
+                  <Field label="Title" hint={`${title.length}/80`} htmlFor="campaign-title">
+                    <Input id="campaign-title" className="app-input" value={title} maxLength={80} onChange={(event) => setTitle(event.target.value)} aria-invalid={title.trim().length < 2} />
+                  </Field>
+                  <Field label="Description" hint={`${description.length}/320`} htmlFor="campaign-description">
+                    <Textarea id="campaign-description" className="app-input app-textarea" value={description} maxLength={320} rows={4} onChange={(event) => setDescription(event.target.value)} aria-invalid={description.trim().length < 2} />
+                  </Field>
+                  <div className="app-form-row">
+                    <Field label="Icon" htmlFor="campaign-icon">
+                      <select id="campaign-icon" className="app-select app-select--block" value={icon} onChange={(event) => setIcon(event.target.value as PreviewConfig["icon"])}>
+                        {(["BELL", "SPARKLES", "CHECK", "WARNING", "INFO"] as const).map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="Visible for" htmlFor="campaign-duration" error={durationError}>
+                      <div className="app-input-group">
+                        <Input id="campaign-duration" className="app-input" type="number" min={3} max={60} step={1} inputMode="numeric" value={durationSeconds} onChange={(event) => setDurationSeconds(event.target.value)} aria-invalid={durationError !== null} aria-describedby={durationError ? "campaign-duration-error" : undefined} />
+                        <span>seconds</span>
+                      </div>
+                    </Field>
+                  </div>
+                  <ToggleRow title="Dismissible" description="Let visitors close the campaign." checked={dismissible} onChange={setDismissible} />
+                </>
+              ) : null}
+
+              {step === "surface" ? (
+                <>
+                  <SectionIntro id="surface-title" title="Appearance" description="Start from a preset, then fine-tune colors, motion, and placement." />
+                  <div className="app-field">
+                    <span className="app-label">Preset</span>
+                    <div className="app-presets" role="group" aria-label="Preset">
+                      {presets.map((option) => (
+                        <button key={option.value} type="button" className={`app-preset ${preset === option.value ? "is-selected" : ""}`} aria-pressed={preset === option.value} onClick={() => resetPreset(option.value)}>
+                          <span className={`app-preset__swatch app-preset__swatch--${option.value.toLowerCase()}`} aria-hidden="true"><i /></span>
+                          <strong>{option.label}</strong>
+                          <small>{option.detail}</small>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="app-field">
+                    <div className="app-field__label">
+                      <span className="app-label">Colors</span>
+                      <button type="button" className="app-link-btn" onClick={() => resetPreset(preset)}>Reset to preset</button>
+                    </div>
+                    <div className="app-colors">
+                      <ColorField label="Surface" value={backgroundColor} onChange={setBackgroundColor} />
+                      <ColorField label="Text" value={textColor} onChange={setTextColor} />
+                      <ColorField label="Accent" value={accentColor} onChange={setAccentColor} />
+                      <ColorField label="Border" value={borderColor} onChange={setBorderColor} />
+                    </div>
+                  </div>
+                  <div className="app-field">
+                    <span className="app-label">Animation</span>
+                    <div className="app-segmented" role="group" aria-label="Animation">
+                      {animations.map((value) => (
+                        <button key={value} type="button" className={animation === value ? "is-selected" : undefined} aria-pressed={animation === value} onClick={() => { setAnimation(value); setReplayKey((key) => key + 1); }}>{titleCase(value)}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="app-field">
+                    <span className="app-label">Position</span>
+                    <div className="app-segmented" role="group" aria-label="Position">
+                      {positions.map(([value, label]) => (
+                        <button key={value} type="button" className={position === value ? "is-selected" : undefined} aria-pressed={position === value} onClick={() => setPosition(value)}>{label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <Field label="Corner radius" hint={`${borderRadius}px`} htmlFor="campaign-radius">
+                    <input id="campaign-radius" className="app-range" type="range" min={0} max={32} value={borderRadius} onChange={(event) => setBorderRadius(Number(event.target.value))} />
+                  </Field>
+                </>
+              ) : null}
+
+              {step === "audience" ? (
+                <>
+                  <SectionIntro id="audience-title" title="Audience" description="Choose verified sites and the routes where the campaign can appear." />
+                  <div className="app-field">
+                    <div className="app-field__label">
+                      <span className="app-label">Sites</span>
+                      <small>{selectedWebsiteIds.length ? `${selectedWebsiteIds.length} selected` : "Required"}</small>
+                    </div>
+                    {activeSites.length ? (
+                      <div className="app-choice-list" role="group" aria-label="Verified sites">
+                        {activeSites.map((website) => {
+                          const selected = selectedWebsiteIds.includes(website.id);
+                          return (
+                            <button type="button" key={website.id} className={`app-choice ${selected ? "is-selected" : ""}`} aria-pressed={selected} onClick={() => setSelectedWebsiteIds((current) => selected ? current.filter((id) => id !== website.id) : [...current, website.id])}>
+                              <span className="app-choice__check" aria-hidden="true">{selected ? <Check size={12} strokeWidth={3} /> : null}</span>
+                              <span className="app-choice__text">
+                                <strong>{website.name}</strong>
+                                <small>{website.url}</small>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <EmptyState compact icon={<Globe2 size={18} />} title="No verified sites yet" description="Add and verify a site before publishing." action={<Link href="/sites" className="app-btn app-btn--secondary app-btn--sm">Open Sites</Link>} />
+                    )}
+                  </div>
+                  <Field
+                    label="Route rules"
+                    hint="One per line"
+                    htmlFor="campaign-routes"
+                    error={routeError}
+                    help={<>Use <code>{"/*"}</code> for every route or an exact path like <code>/changelog</code>. Wildcards must end in <code>{"/*"}</code>.</>}
+                  >
+                    <Textarea id="campaign-routes" className="app-input app-textarea app-mono" value={routes} onChange={(event) => setRoutes(event.target.value)} rows={4} placeholder={"/*\n/pricing\n/dashboard/*"} aria-invalid={Boolean(routeError)} />
+                  </Field>
+                </>
+              ) : null}
+
+              {step === "delivery" ? (
+                <>
+                  <SectionIntro id="delivery-title" title="Delivery" description="Decide when the campaign enters the feed, and add an optional action." />
+                  <ToggleRow title="Schedule for later" description="Publish now, or set a start and optional end time." checked={scheduled} onChange={setScheduled} />
+                  {scheduled ? (
+                    <div className="app-form-row">
+                      <Field label="Starts" htmlFor="campaign-starts"><Input id="campaign-starts" className="app-input" type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></Field>
+                      <Field label="Ends" hint="Optional" htmlFor="campaign-ends"><Input id="campaign-ends" className="app-input" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></Field>
+                    </div>
+                  ) : (
+                    <p className="app-note"><Clock3 aria-hidden="true" size={14} /> The campaign goes live as soon as you publish.</p>
+                  )}
+                  {scheduleError ? <p className="app-field__error"><CircleAlert aria-hidden="true" size={13} /> {scheduleError}</p> : null}
+                  <ToggleRow title="Add a call to action" description="Link to an HTTPS page from the campaign." checked={ctaEnabled} onChange={setCtaEnabled} />
+                  {ctaEnabled ? (
+                    <div className="app-form-row">
+                      <Field label="Button label" htmlFor="campaign-cta-label"><Input id="campaign-cta-label" className="app-input" value={ctaLabel} onChange={(event) => setCtaLabel(event.target.value)} /></Field>
+                      <Field label="Link" htmlFor="campaign-cta-url"><Input id="campaign-cta-url" className="app-input" type="url" value={ctaUrl} onChange={(event) => setCtaUrl(event.target.value)} placeholder="https://example.com/update" /></Field>
+                    </div>
+                  ) : null}
+                  {ctaError ? <p className="app-field__error"><CircleAlert aria-hidden="true" size={13} /> {ctaError}</p> : null}
+                  <dl className="app-summary">
+                    <div><dt>Surface</dt><dd>{typeLabel(type)} · {titleCase(preset)}</dd></div>
+                    <div><dt>Sites</dt><dd>{selectedWebsiteIds.length ? `${selectedWebsiteIds.length} verified` : "None selected"}</dd></div>
+                    <div><dt>Routes</dt><dd>{routeCount} rule{routeCount === 1 ? "" : "s"}</dd></div>
+                  </dl>
+                </>
+              ) : null}
+            </div>
+
+            <div className="app-composer__footer">
+              <button type="button" className="app-btn app-btn--ghost" onClick={goBack} disabled={stepIndex === 0}><ArrowLeft size={14} /> Back</button>
+              {stepIndex < stepMeta.length - 1 ? (
+                <button type="button" className="app-btn app-btn--secondary" onClick={goNext}>Next: {stepMeta[stepIndex + 1].label} <ArrowRight size={14} /></button>
+              ) : publishButton}
+            </div>
           </section>
-          <aside className="workspace-composer-preview"><div className="workspace-preview-head"><div><span className="workspace-eyebrow">Live client preview</span><h2>{typeLabel(type)}</h2></div><button type="button" onClick={() => setReplayKey((value) => value + 1)}><Play size={13} /> Replay</button></div><NotificationPreview config={preview} replayKey={replayKey} /><div className="workspace-preview-summary"><div><span>Preset</span><strong>{preset}</strong></div><div><span>Motion</span><strong>{animation}</strong></div><div><span>Position</span><strong>{position.replaceAll("_", " ")}</strong></div></div><div className="workspace-readiness-card"><div><span className={`workspace-readiness ${ready ? "is-ready" : ""}`}><i aria-hidden="true" /> {ready ? "Ready" : "Needs attention"}</span></div><ul><li className={title.trim().length >= 2 && description.trim().length >= 2 && !durationError ? "is-complete" : ""}><span>{title.trim().length >= 2 && description.trim().length >= 2 && !durationError ? <Check size={12} /> : "01"}</span> Message has a title, description, and valid duration</li><li className={selectedWebsiteIds.length > 0 ? "is-complete" : ""}><span>{selectedWebsiteIds.length > 0 ? <Check size={12} /> : "02"}</span> Verified active destination selected</li><li className={!routeError && !scheduleError && !ctaError ? "is-complete" : ""}><span>{!routeError && !scheduleError && !ctaError ? <Check size={12} /> : "03"}</span> Routes and timing are valid</li></ul></div></aside>
+
+          <aside className="app-card app-composer__preview" aria-label="Live preview">
+            <div className="app-card__header">
+              <div>
+                <h2>Preview</h2>
+                <p>{typeLabel(type)} · {titleCase(preset)}</p>
+              </div>
+              <button type="button" className="app-btn app-btn--ghost app-btn--sm" onClick={() => setReplayKey((value) => value + 1)}><Play size={13} /> Replay</button>
+            </div>
+            <div className="app-card__body app-composer__preview-body">
+              <NotificationPreview config={preview} replayKey={replayKey} />
+              <dl className="app-details app-details--compact">
+                <div><dt>Motion</dt><dd>{titleCase(animation)}</dd></div>
+                <div><dt>Position</dt><dd>{titleCase(position.replaceAll("_", " "))}</dd></div>
+                <div><dt>Duration</dt><dd>{parsedDurationSeconds ?? "—"} s{dismissible ? " · dismissible" : ""}</dd></div>
+              </dl>
+              <ul className="app-checks" aria-label="Publish checks">
+                <li className={title.trim().length >= 2 && description.trim().length >= 2 && !durationError ? "is-complete" : undefined}><span>{title.trim().length >= 2 && description.trim().length >= 2 && !durationError ? <Check size={11} strokeWidth={3} /> : null}</span> Message is complete</li>
+                <li className={selectedWebsiteIds.length > 0 ? "is-complete" : undefined}><span>{selectedWebsiteIds.length > 0 ? <Check size={11} strokeWidth={3} /> : null}</span> A verified site is selected</li>
+                <li className={!routeError && !scheduleError && !ctaError ? "is-complete" : undefined}><span>{!routeError && !scheduleError && !ctaError ? <Check size={11} strokeWidth={3} /> : null}</span> Routes and timing are valid</li>
+              </ul>
+            </div>
+          </aside>
         </div>
       </main>
     </WorkspaceShell>
   );
 }
 
-function EditorHeading({ number, title, description, id }: { number: string; title: string; description: string; id: string }) {
-  return <div className="workspace-editor-heading"><span>{number}</span><div><h2 id={id}>{title}</h2><p>{description}</p></div></div>;
+function titleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 
-function EditorContinue({ onClick, label }: { onClick: () => void; label: string }) {
-  return <div className="workspace-editor-footer"><span>Next section can be revisited before publish.</span><button type="button" className="workspace-button workspace-button--quiet" onClick={onClick}>{label} <ArrowRight size={14} /></button></div>;
+function SectionIntro({ id, title, description }: { id: string; title: string; description: string }) {
+  return (
+    <div className="app-section-intro">
+      <h2 id={id}>{title}</h2>
+      <p>{description}</p>
+    </div>
+  );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return <label className="workspace-field"><span className="workspace-field__label"><span>{label}</span>{hint ? <small>{hint}</small> : null}</span>{children}</label>;
+function Field({ label, hint, htmlFor, error, help, children }: { label: string; hint?: string; htmlFor: string; error?: string | null; help?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="app-field">
+      <div className="app-field__label">
+        <label className="app-label" htmlFor={htmlFor}>{label}</label>
+        {hint ? <small>{hint}</small> : null}
+      </div>
+      {children}
+      {error ? <p className="app-field__error" id={`${htmlFor}-error`}><CircleAlert aria-hidden="true" size={13} /> {error}</p> : help ? <p className="app-field__help">{help}</p> : null}
+    </div>
+  );
 }
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <Field label={label}><span className="workspace-color-field"><input type="color" value={value} onChange={(event) => onChange(event.target.value)} /><code>{value}</code></span></Field>;
+  return (
+    <label className="app-color">
+      <input type="color" value={value} onChange={(event) => onChange(event.target.value)} aria-label={`${label} color`} />
+      <span>
+        <small>{label}</small>
+        <code>{value}</code>
+      </span>
+    </label>
+  );
 }
 
 function ToggleRow({ title, description, checked, onChange }: { title: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
-  return <div className="workspace-toggle-row"><div><strong>{title}</strong><span>{description}</span></div><Switch checked={checked} onCheckedChange={onChange} /></div>;
+  return (
+    <div className="app-toggle">
+      <div>
+        <strong>{title}</strong>
+        <span>{description}</span>
+      </div>
+      <Switch checked={checked} onCheckedChange={onChange} aria-label={title} />
+    </div>
+  );
 }

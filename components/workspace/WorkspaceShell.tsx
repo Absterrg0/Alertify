@@ -5,167 +5,147 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
   BarChart3,
-  BellPlus,
-  ChevronRight,
-  LayoutDashboard,
+  BellRing,
+  ChevronsUpDown,
+  Globe2,
+  LayoutGrid,
   LogOut,
   Menu,
-  PanelLeftClose,
-  PanelLeftOpen,
   Settings,
-  Globe2,
   X,
 } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { DroplertMark } from "@/components/brand/DroplertMark";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const subscribeNoop = () => () => {};
 
 const navigation = [
-  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Campaigns", href: "/campaigns", icon: BellPlus },
+  { label: "Overview", href: "/dashboard", icon: LayoutGrid },
+  { label: "Campaigns", href: "/campaigns", icon: BellRing },
   { label: "Sites", href: "/sites", icon: Globe2 },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Settings", href: "/profile", icon: Settings },
 ] as const;
 
-type WorkspaceShellProps = {
-  children: React.ReactNode;
-  context?: string;
-  className?: string;
-  hideNewCampaign?: boolean;
-};
+const composerRoutes = ["/alert", "/toast", "/alert_dialog"];
 
-export function WorkspaceShell({
-  children,
-  context,
-  className = "",
-  hideNewCampaign = false,
-}: WorkspaceShellProps) {
+function isActive(pathname: string, href: string) {
+  if (pathname === href) return true;
+  if (href === "/campaigns" && composerRoutes.includes(pathname)) return true;
+  return href !== "/dashboard" && pathname.startsWith(`${href}/`);
+}
+
+export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
 
   // The server never has the client session, so identity renders only after hydration.
   const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
   const sessionUser = hydrated ? session?.user : undefined;
   const userName = sessionUser?.name || sessionUser?.email?.split("@")[0] || "Workspace member";
+  const userEmail = sessionUser?.email ?? "";
   const initial = userName.slice(0, 1).toUpperCase();
-  const currentItem = navigation.find((item) => pathname === item.href);
-  const currentContext = context ?? currentItem?.label ?? "Workspace";
+
+  /* eslint-disable react-hooks/set-state-in-effect -- route changes close the mobile drawer. */
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen]);
+
+  const navLink = ({ label, href, icon: Icon }: (typeof navigation)[number] | { label: string; href: string; icon: typeof Settings }) => (
+    <Link
+      key={href}
+      href={href}
+      className="app-nav__link"
+      aria-current={isActive(pathname, href) ? "page" : undefined}
+    >
+      <Icon aria-hidden="true" size={16} />
+      <span>{label}</span>
+    </Link>
+  );
 
   return (
-    <div className={`workspace-shell ${className}`}>
-      <aside className={`workspace-sidebar ${collapsed ? "workspace-sidebar--collapsed" : ""}`} aria-label="Workspace navigation">
-        <div className="workspace-sidebar__brand">
-          <DroplertMark compact showWordmark={!collapsed} />
-          <button
-            type="button"
-            className="workspace-icon-button workspace-sidebar__collapse"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            onClick={() => setCollapsed((value) => !value)}
-          >
-            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+    <div className="app">
+      <aside id="app-sidebar" className={`app-sidebar ${mobileOpen ? "is-open" : ""}`} aria-label="Workspace navigation">
+        <div className="app-sidebar__top">
+          <DroplertMark compact />
+          <button type="button" className="app-icon-btn app-sidebar__close" aria-label="Close navigation" onClick={() => setMobileOpen(false)}>
+            <X aria-hidden="true" size={16} />
           </button>
         </div>
 
-        {!collapsed ? <p className="workspace-sidebar__label">Workspace / owner view</p> : null}
-        <nav className="workspace-nav" aria-label="Workspace destinations">
-            {navigation.map(({ label, href, icon: Icon }) => {
-            const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
-            return (
-              <Link
-                key={href}
-                href={href}
-                className="workspace-nav__link"
-                aria-current={active ? "page" : undefined}
-                title={collapsed ? label : undefined}
-                onClick={() => setMobileOpen(false)}
-              >
-                <Icon aria-hidden="true" size={15} />
-                {!collapsed ? <span>{label}</span> : null}
-              </Link>
-            );
-          })}
+        <nav className="app-nav" aria-label="Workspace destinations">
+          <p className="app-nav__label">Workspace</p>
+          {navigation.map(navLink)}
+          <p className="app-nav__label">Account</p>
+          {navLink({ label: "Settings", href: "/profile", icon: Settings })}
         </nav>
 
-        {!collapsed ? (
-          <div className="workspace-sidebar__footer">
-            <div className="workspace-feed-status">
-              <span className="workspace-status-dot workspace-status-dot--active" aria-hidden="true" />
-              <div>
-                <p>HTTP feed ready</p>
-                <span>Verified destinations can receive published records.</span>
-              </div>
-            </div>
-            <div className="workspace-user workspace-user--sidebar">
-              <span className="workspace-avatar" aria-hidden="true">{initial}</span>
-              <span className="workspace-user__text">
-                <strong>{userName}</strong>
-                <small>{!hydrated || status === "loading" ? "Loading session" : "Owner workspace"}</small>
-              </span>
-            </div>
+        <div className="app-sidebar__bottom">
+          <div className="app-feed-status">
+            <span className="app-feed-status__dot" aria-hidden="true" />
+            Feed delivery online
           </div>
-        ) : null}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="app-account" aria-label="Open account menu">
+                <span className="app-avatar" aria-hidden="true">{initial}</span>
+                <span className="app-account__text">
+                  <strong>{userName}</strong>
+                  <small>{userEmail || "Owner workspace"}</small>
+                </span>
+                <ChevronsUpDown aria-hidden="true" size={14} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" sideOffset={8} className="app-menu app-menu--account">
+              <DropdownMenuLabel className="app-menu__label">{userEmail || userName}</DropdownMenuLabel>
+              <DropdownMenuItem asChild className="app-menu__item">
+                <Link href="/profile"><Settings aria-hidden="true" size={15} /> Settings</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="app-menu__separator" />
+              <DropdownMenuItem className="app-menu__item" onSelect={() => void signOut({ redirectTo: "/getstarted" })}>
+                <LogOut aria-hidden="true" size={15} /> Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </aside>
 
-      <div className={`workspace-main ${collapsed ? "workspace-main--collapsed" : ""}`}>
-        <header className="workspace-topbar">
-          <div className="workspace-topbar__left">
-            <button
-              type="button"
-              className="workspace-icon-button workspace-mobile-menu"
-              aria-expanded={mobileOpen}
-              aria-controls="workspace-mobile-navigation"
-              aria-label={mobileOpen ? "Close workspace navigation" : "Open workspace navigation"}
-              onClick={() => setMobileOpen((value) => !value)}
-            >
-              {mobileOpen ? <X size={16} /> : <Menu size={16} />}
-            </button>
-            <div className="workspace-mobile-brand"><DroplertMark compact /></div>
-            <div className="workspace-context">
-              <span>Droplert / workspace</span>
-              <ChevronRight aria-hidden="true" size={10} />
-              <strong>{currentContext}</strong>
-            </div>
-          </div>
-          <div className="workspace-topbar__right">
-            {!hideNewCampaign ? (
-              <Link className="workspace-button workspace-button--primary workspace-button--compact" href="/alert" aria-label="New campaign">
-                <BellPlus aria-hidden="true" size={13} />
-                <span>New campaign</span>
-              </Link>
-            ) : null}
-            <details className="workspace-account-menu">
-              <summary className="workspace-user workspace-user--trigger" aria-label="Open account menu">
-                <span className="workspace-avatar" aria-hidden="true">{initial}</span>
-                <span className="workspace-user__text"><strong>{userName}</strong><small>Account</small></span>
-              </summary>
-              <div className="workspace-account-popover">
-                <Link href="/profile"><Settings size={13} /> Profile settings</Link>
-                <button type="button" onClick={() => void signOut({ redirectTo: "/getstarted" })}><LogOut size={13} /> Sign out</button>
-              </div>
-            </details>
-          </div>
+      {mobileOpen ? <button type="button" className="app-scrim" aria-label="Close navigation" onClick={() => setMobileOpen(false)} /> : null}
+
+      <div className="app-main">
+        <header className="app-mobilebar">
+          <button
+            type="button"
+            className="app-icon-btn"
+            aria-label="Open navigation"
+            aria-expanded={mobileOpen}
+            aria-controls="app-sidebar"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu aria-hidden="true" size={17} />
+          </button>
+          <DroplertMark compact />
+          <span className="app-avatar" aria-hidden="true">{initial}</span>
         </header>
-
-        {mobileOpen ? (
-          <div id="workspace-mobile-navigation" className="workspace-mobile-navigation">
-            <nav aria-label="Mobile workspace destinations">
-              {navigation.map(({ label, href, icon: Icon }) => {
-                const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
-                return (
-                  <Link key={href} href={href} aria-label={label} aria-current={active ? "page" : undefined} onClick={() => setMobileOpen(false)} className="workspace-nav__link">
-                    <Icon aria-hidden="true" size={15} /><span className="workspace-mobile-nav-label">{label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-        ) : null}
-
         {children}
       </div>
     </div>

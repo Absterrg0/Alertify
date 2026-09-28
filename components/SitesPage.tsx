@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
-import VerifiedWebsiteManager, { type Website } from "@/components/WebsiteList";
+import VerifiedWebsiteManager, { SITE_LIMIT, type Website } from "@/components/WebsiteList";
+import { WebsiteAddition } from "@/components/Website-addition-dialog";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
+import { Card, EmptyState, LoadingRows, PageHeader } from "@/components/workspace/ui";
 
 export default function SitesPage() {
   const [websites, setWebsites] = useState<Website[]>([]);
@@ -33,10 +35,37 @@ export default function SitesPage() {
   }, [load]);
 
   return (
-    <WorkspaceShell context="Sites">
-      <main className="workspace-page workspace-page--sites">
-        <div className="workspace-page__intro"><div><span className="workspace-eyebrow">Sites / verification registry</span><h1>Own the destination before you publish.</h1><p>Register canonical origins, verify their DNS record, and keep the targetable surface explicit.</p></div></div>
-        {loading ? <section className="workspace-panel workspace-loading-panel" role="status"><RefreshCw className="animate-spin" size={17} /><span>Loading destination records…</span></section> : error ? <section className="workspace-panel workspace-empty workspace-empty--error"><AlertCircle size={17} /><div><strong>Sites could not be loaded.</strong><p>The registry request failed before any destination state was changed.</p></div><button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={() => void load()}>Retry <RefreshCw size={13} /></button></section> : <VerifiedWebsiteManager websites={websites} selectedWebsites={selected} onWebsitesChange={async (next) => { if (next) setWebsites(next); else await load(); }} onSelectedWebsitesChange={setSelected} />}
+    <WorkspaceShell>
+      <main className="app-page">
+        <PageHeader
+          title="Sites"
+          description="Verified origins that can receive campaigns. Each site gets a public ID for the SDK."
+          actions={loading || error ? null : (
+            <>
+              <span className="app-header-note">{websites.length} of {SITE_LIMIT} sites</span>
+              {websites.length < SITE_LIMIT ? <WebsiteAddition onAddition={() => void load()} /> : null}
+            </>
+          )}
+        />
+        {loading ? (
+          <Card><LoadingRows rows={4} label="sites" /></Card>
+        ) : error ? (
+          <Card>
+            <EmptyState
+              icon={<AlertCircle size={18} />}
+              title="Sites could not be loaded"
+              description="The request failed before anything was changed."
+              action={<button type="button" className="app-btn app-btn--secondary app-btn--sm" onClick={() => void load()}><RefreshCw size={13} /> Retry</button>}
+            />
+          </Card>
+        ) : (
+          <VerifiedWebsiteManager
+            websites={websites}
+            selectedWebsites={selected}
+            onWebsitesChange={async (next) => { if (next) setWebsites(next); else await load(); }}
+            onSelectedWebsitesChange={setSelected}
+          />
+        )}
       </main>
     </WorkspaceShell>
   );

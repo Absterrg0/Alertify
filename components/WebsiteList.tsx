@@ -11,7 +11,6 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
-  TerminalSquare,
   X,
 } from "lucide-react";
 
@@ -28,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge, Card, EmptyState, Tabs, type BadgeTone } from "@/components/workspace/ui";
 
 export type WebsiteStatus = "PENDING" | "ACTIVE" | "DEACTIVATED";
 
@@ -50,13 +50,13 @@ interface VerifiedWebsiteManagerProps {
   onSelectedWebsitesChange?: (selectedWebsites: Website[]) => void;
 }
 
-const statusCopy: Record<WebsiteStatus, { label: string; detail: string }> = {
-  ACTIVE: { label: "Active", detail: "Verified and targetable" },
-  PENDING: { label: "Pending", detail: "DNS record required" },
-  DEACTIVATED: { label: "Deactivated", detail: "No longer targetable" },
+const statusCopy: Record<WebsiteStatus, { label: string; detail: string; tone: BadgeTone }> = {
+  ACTIVE: { label: "Active", detail: "Verified and targetable", tone: "green" },
+  PENDING: { label: "Pending", detail: "DNS record required", tone: "amber" },
+  DEACTIVATED: { label: "Deactivated", detail: "Not targetable", tone: "neutral" },
 };
 
-const SITE_LIMIT = 6;
+export const SITE_LIMIT = 6;
 
 function hostname(url: string) {
   try {
@@ -183,38 +183,186 @@ export default function VerifiedWebsiteManager({
     }
   };
 
+  if (websites.length === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={<Globe2 size={18} />}
+          title="Add your first site"
+          description="Register an HTTPS origin and verify it with a DNS record before publishing campaigns."
+          action={<WebsiteAddition onAddition={() => void onWebsitesChange()} />}
+        />
+      </Card>
+    );
+  }
+
+  const statusOptions = [
+    { value: "ALL" as const, label: "All", count: websites.length },
+    { value: "ACTIVE" as const, label: "Active", count: activeSites.length },
+    { value: "PENDING" as const, label: "Pending", count: pendingSites.length },
+    { value: "DEACTIVATED" as const, label: "Deactivated", count: deactivatedSites.length },
+  ];
+
   return (
-    <div className="workspace-sites-registry">
-      <div className="workspace-site-metrics" aria-label="Site counts">
-        <button type="button" className={statusFilter === "ALL" ? "is-active" : ""} onClick={() => setStatusFilter("ALL")}><strong>{websites.length}</strong><span>All sites</span></button>
-        <button type="button" className={statusFilter === "ACTIVE" ? "is-active" : ""} onClick={() => setStatusFilter("ACTIVE")}><strong>{activeSites.length}</strong><span>Active</span></button>
-        <button type="button" className={statusFilter === "PENDING" ? "is-active" : ""} onClick={() => setStatusFilter("PENDING")}><strong>{pendingSites.length}</strong><span>Pending</span></button>
-        <button type="button" className={statusFilter === "DEACTIVATED" ? "is-active" : ""} onClick={() => setStatusFilter("DEACTIVATED")}><strong>{deactivatedSites.length}</strong><span>Deactivated</span></button>
-      </div>
-      <div className="workspace-panel workspace-sites-panel">
-        <div className="workspace-panel__header workspace-panel__header--inline">
-          <label className="workspace-search"><Search aria-hidden="true" size={15} /><span className="sr-only">Search sites</span><input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search site name or origin" /></label>
-          <div className="workspace-site-actions"><span>{websites.length} / {SITE_LIMIT} slots</span>{websites.length < SITE_LIMIT ? <WebsiteAddition onAddition={() => void onWebsitesChange()} /> : null}</div>
+    <>
+      <div className="app-toolbar">
+        <Tabs label="Filter by status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+        <div className="app-toolbar__end">
+          <label className="app-search">
+            <Search aria-hidden="true" size={15} />
+            <span className="sr-only">Search sites</span>
+            <input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search sites" />
+          </label>
         </div>
-        {filteredWebsites.length === 0 ? <div className="workspace-empty workspace-empty--large"><Globe2 size={19} /><div><strong>{websites.length ? "No sites match this view." : "Add your first site."}</strong><p>{websites.length ? "Try a different search or status filter." : "Register an HTTPS origin before publishing campaigns."}</p></div>{websites.length === 0 ? <WebsiteAddition onAddition={() => void onWebsitesChange()} /> : null}</div> : <>
-          <div className="workspace-sites-select-all">{onSelectedWebsitesChange ? <label><input type="checkbox" checked={allVisibleSelected} onChange={(event) => toggleAll(event.target.checked)} /> {targetableSelectedWebsites.length ? `${targetableSelectedWebsites.length} active target${targetableSelectedWebsites.length === 1 ? "" : "s"} selected` : "Select active sites to target"}</label> : <span>Active sites are the only targetable destinations.</span>}{onSelectedWebsitesChange && targetableSelectedWebsites.length > 0 ? <Link href={`/alert?sites=${targetableSelectedWebsites.map((site) => site.id).join(",")}`}>Compose with selected <ArrowRight size={13} /></Link> : <span>{onSelectedWebsitesChange ? "Choose a site to continue" : ""}</span>}</div>
-          <div className="workspace-site-list" role="list">
-            {filteredWebsites.map((site) => {
-              const targetable = site.status === "ACTIVE" && site.isVerified;
-              const selected = selectedIds.has(site.id);
-              const status = statusCopy[site.status];
-              return <article key={site.id} className={`workspace-site-row ${selectedId === site.id ? "is-focused" : ""} ${site.status === "DEACTIVATED" ? "is-deactivated" : ""}`} role="listitem" tabIndex={0} onClick={() => setSelectedId(site.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(site.id); } }}>
-                <div className="workspace-site-row__select">{onSelectedWebsitesChange ? <input type="checkbox" aria-label={`Select ${site.name}`} checked={selected} disabled={!targetable} onClick={(event) => event.stopPropagation()} onChange={() => toggleSite(site)} /> : <Globe2 size={17} />}</div>
-                <div className="workspace-site-row__identity"><strong>{site.name}</strong><a href={site.url} target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()}>{hostname(site.url)} <ExternalLink size={11} /></a></div>
-                <span className={`workspace-status-badge workspace-status-badge--${site.status.toLowerCase()}`}><i aria-hidden="true" /> {status.label}</span>
-                <span className="workspace-site-row__detail">{status.detail}</span>
-                <div className="workspace-site-row__action">{site.status === "PENDING" ? <button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={(event) => { event.stopPropagation(); if (site.verificationRecord) void copy(site.verificationRecord, "record"); }} disabled={!site.verificationRecord}><Copy size={13} /> TXT</button> : site.status === "ACTIVE" ? <AlertDialog><AlertDialogTrigger asChild><button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={(event) => event.stopPropagation()} disabled={isDeactivating === site.id}><X size={13} /> Deactivate</button></AlertDialogTrigger><AlertDialogContent className="workspace-dialog"><AlertDialogHeader><AlertDialogTitle>Deactivate {site.name}?</AlertDialogTitle><AlertDialogDescription>New campaigns will stop targeting this site. Existing records remain in the registry.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="workspace-button workspace-button--quiet">Cancel</AlertDialogCancel><AlertDialogAction className="workspace-button workspace-button--danger" onClick={() => void handleDeactivate(site)}>Deactivate</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : <AlertDialog><AlertDialogTrigger asChild><button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={(event) => event.stopPropagation()} disabled={isReactivating === site.id}><RefreshCw size={13} /> Reactivate</button></AlertDialogTrigger><AlertDialogContent className="workspace-dialog"><AlertDialogHeader><AlertDialogTitle>Reactivate {site.name}?</AlertDialogTitle><AlertDialogDescription>Droplert will restore this destination’s stored verification state. A previously verified site becomes targetable again; an unverified record returns to pending.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="workspace-button workspace-button--quiet">Cancel</AlertDialogCancel><AlertDialogAction className="workspace-button workspace-button--primary" onClick={() => void handleReactivate(site)}>Reactivate</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>}</div>
-              </article>;
-            })}
-          </div>
-        </>}
       </div>
-      {selectedSite ? <aside className="workspace-site-inspector" aria-label={`${selectedSite.name} details`}><div className="workspace-site-inspector__head"><div><span className="workspace-eyebrow">Destination record</span><h2>{selectedSite.name}</h2></div><span className={`workspace-status-badge workspace-status-badge--${selectedSite.status.toLowerCase()}`}><i aria-hidden="true" /> {statusCopy[selectedSite.status].label}</span></div><dl className="workspace-detail-list"><div><dt>Canonical origin</dt><dd><a href={selectedSite.url} target="_blank" rel="noopener noreferrer">{selectedSite.url} <ExternalLink size={11} /></a></dd></div><div><dt>Public site ID</dt><dd><button type="button" className="workspace-copy-value" onClick={() => void copy(selectedSite.publicId, "id")}>{selectedSite.publicId}<span>{copied === "id" ? <Check size={13} /> : <Copy size={13} />}</span></button></dd></div><div><dt>Verified time</dt><dd>{selectedSite.verifiedAt ? new Date(selectedSite.verifiedAt).toLocaleString() : "Not verified yet"}</dd></div></dl>{selectedSite.status === "PENDING" ? <div className="workspace-dns-card"><div><TerminalSquare size={15} /><strong>Publish this DNS TXT record</strong></div><p>Add the value at the root of the canonical origin, then recheck verification.</p><div className="workspace-dns-field"><span>_droplert-verification</span><button type="button" onClick={() => selectedSite.verificationRecord && void copy(selectedSite.verificationRecord, "record")} disabled={!selectedSite.verificationRecord}>{selectedSite.verificationRecord ?? "Unavailable"}{copied === "record" ? <Check size={13} /> : <Copy size={13} />}</button></div><button type="button" className="workspace-button workspace-button--primary workspace-button--full" disabled={isVerifying === selectedSite.id} onClick={() => void handleVerify(selectedSite)}>{isVerifying === selectedSite.id ? <RefreshCw className="animate-spin" size={14} /> : <ShieldCheck size={14} />} Recheck verification</button></div> : selectedSite.status === "ACTIVE" ? <div className="workspace-install-card"><div><ShieldCheck size={15} /><strong>SDK installation context</strong></div><p>Pass this public ID to <code>Droplert</code> from your verified app. The owner credential stays private.</p><code>siteId=&quot;{selectedSite.publicId}&quot;</code><Link href={`/alert?sites=${selectedSite.id}`} className="workspace-button workspace-button--quiet workspace-button--full">Target this site <ArrowRight size={13} /></Link></div> : <div className="workspace-site-inactive-note"><X size={15} /><p>This destination is deactivated and cannot receive new campaigns. Reactivate it from the registry when it should receive new campaigns again.</p></div>}</aside> : null}
-    </div>
+
+      <div className={`app-split ${selectedSite ? "" : "app-split--full"}`}>
+        <Card flush className="app-table-card">
+          {onSelectedWebsitesChange && targetableSelectedWebsites.length > 0 ? (
+            <div className="app-selection-bar">
+              <span>{targetableSelectedWebsites.length} site{targetableSelectedWebsites.length === 1 ? "" : "s"} selected</span>
+              <Link href={`/alert?sites=${targetableSelectedWebsites.map((site) => site.id).join(",")}`} className="app-btn app-btn--primary app-btn--sm">
+                Compose for selected <ArrowRight size={13} />
+              </Link>
+            </div>
+          ) : null}
+          {filteredWebsites.length === 0 ? (
+            <EmptyState compact icon={<Search size={18} />} title="No sites match" description="Try a different search or status." />
+          ) : (
+            <div className="app-table app-table--sites" role="list" aria-label="Sites">
+              <div className="app-table__head">
+                <span>
+                  {onSelectedWebsitesChange ? (
+                    <input type="checkbox" className="app-checkbox" aria-label="Select all visible active sites" checked={allVisibleSelected} disabled={visibleTargetable.length === 0} onChange={(event) => toggleAll(event.target.checked)} />
+                  ) : null}
+                </span>
+                <span>Site</span>
+                <span>Status</span>
+                <span>Verified</span>
+                <span className="is-numeric">Action</span>
+              </div>
+              {filteredWebsites.map((site) => {
+                const targetable = site.status === "ACTIVE" && site.isVerified;
+                const status = statusCopy[site.status];
+                return (
+                  <div key={site.id} role="listitem" className={`app-table__row ${selectedId === site.id ? "is-selected" : ""} ${site.status === "DEACTIVATED" ? "is-muted" : ""}`}>
+                    <button type="button" className="app-table__select" aria-pressed={selectedId === site.id} onClick={() => setSelectedId(site.id)}>
+                      <span className="sr-only">Inspect {site.name}</span>
+                    </button>
+                    <span className="app-table__raise">
+                      {onSelectedWebsitesChange ? (
+                        <input type="checkbox" className="app-checkbox" aria-label={`Select ${site.name}`} checked={selectedIds.has(site.id)} disabled={!targetable} onChange={() => toggleSite(site)} />
+                      ) : null}
+                    </span>
+                    <span className="app-table__primary">
+                      <span className="app-type-icon"><Globe2 size={15} /></span>
+                      <span>
+                        <strong>{site.name}</strong>
+                        <small className="app-mono">{hostname(site.url)}</small>
+                      </span>
+                    </span>
+                    <span><Badge tone={status.tone}>{status.label}</Badge></span>
+                    <span className="app-table__muted">{site.verifiedAt ? new Date(site.verifiedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—"}</span>
+                    <span className="is-numeric app-table__raise">
+                      {site.status === "PENDING" ? (
+                        <button type="button" className="app-btn app-btn--secondary app-btn--sm" onClick={() => site.verificationRecord && void copy(site.verificationRecord, "record")} disabled={!site.verificationRecord}>
+                          <Copy size={13} /> Copy TXT
+                        </button>
+                      ) : site.status === "ACTIVE" ? (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button type="button" className="app-btn app-btn--ghost app-btn--sm" disabled={isDeactivating === site.id}>Deactivate</button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="app-dialog">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Deactivate {site.name}?</AlertDialogTitle>
+                              <AlertDialogDescription>New campaigns will stop targeting this site. Existing records remain in the registry.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="app-btn app-btn--secondary">Cancel</AlertDialogCancel>
+                              <AlertDialogAction className="app-btn app-btn--danger" onClick={() => void handleDeactivate(site)}>Deactivate</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      ) : (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button type="button" className="app-btn app-btn--ghost app-btn--sm" disabled={isReactivating === site.id}><RefreshCw size={13} /> Reactivate</button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="app-dialog">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Reactivate {site.name}?</AlertDialogTitle>
+                              <AlertDialogDescription>Droplert restores this site&apos;s stored verification state. A previously verified site becomes targetable again; an unverified one returns to pending.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="app-btn app-btn--secondary">Cancel</AlertDialogCancel>
+                              <AlertDialogAction className="app-btn app-btn--primary" onClick={() => void handleReactivate(site)}>Reactivate</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+
+        {selectedSite ? (
+          <aside className="app-card app-inspector" aria-label={`${selectedSite.name} details`}>
+            <div className="app-inspector__head">
+              <div>
+                <Badge tone={statusCopy[selectedSite.status].tone}>{statusCopy[selectedSite.status].label}</Badge>
+                <h2>{selectedSite.name}</h2>
+              </div>
+              <button type="button" className="app-icon-btn" aria-label="Close site details" onClick={() => setSelectedId(null)}><X size={15} /></button>
+            </div>
+            <dl className="app-details">
+              <div><dt>Origin</dt><dd><a href={selectedSite.url} target="_blank" rel="noopener noreferrer" className="app-link">{hostname(selectedSite.url)} <ExternalLink size={12} /></a></dd></div>
+              <div>
+                <dt>Public ID</dt>
+                <dd>
+                  <button type="button" className="app-copy" onClick={() => void copy(selectedSite.publicId, "id")}>
+                    <span>{selectedSite.publicId}</span>
+                    {copied === "id" ? <Check size={13} /> : <Copy size={13} />}
+                  </button>
+                </dd>
+              </div>
+              <div><dt>Verified</dt><dd>{selectedSite.verifiedAt ? new Date(selectedSite.verifiedAt).toLocaleString() : "Not yet"}</dd></div>
+            </dl>
+
+            {selectedSite.status === "PENDING" ? (
+              <div className="app-callout app-callout--amber">
+                <strong>Add this DNS TXT record</strong>
+                <p>Publish the value at the root of the origin, then recheck. DNS changes can take a few minutes.</p>
+                <span className="app-callout__label">Name</span>
+                <code className="app-code app-code--inline">_droplert-verification</code>
+                <span className="app-callout__label">Value</span>
+                <button type="button" className="app-copy" onClick={() => selectedSite.verificationRecord && void copy(selectedSite.verificationRecord, "record")} disabled={!selectedSite.verificationRecord}>
+                  <span>{selectedSite.verificationRecord ?? "Unavailable"}</span>
+                  {copied === "record" ? <Check size={13} /> : <Copy size={13} />}
+                </button>
+                <button type="button" className="app-btn app-btn--primary app-btn--block" disabled={isVerifying === selectedSite.id} onClick={() => void handleVerify(selectedSite)}>
+                  {isVerifying === selectedSite.id ? <RefreshCw className="animate-spin" size={14} /> : <ShieldCheck size={14} />} Check verification
+                </button>
+              </div>
+            ) : selectedSite.status === "ACTIVE" ? (
+              <div className="app-callout">
+                <strong>Install on this site</strong>
+                <p>Pass the public ID to the Droplert component. It can only read this site&apos;s feed.</p>
+                <pre className="app-code"><code>{`<Droplert siteId="${selectedSite.publicId}" />`}</code></pre>
+                <Link href={`/alert?sites=${selectedSite.id}`} className="app-btn app-btn--secondary app-btn--block">Compose for this site <ArrowRight size={13} /></Link>
+              </div>
+            ) : (
+              <div className="app-callout">
+                <strong>Deactivated</strong>
+                <p>This site can&apos;t receive new campaigns. Reactivate it from the list when you need it again.</p>
+              </div>
+            )}
+          </aside>
+        ) : null}
+      </div>
+    </>
   );
 }

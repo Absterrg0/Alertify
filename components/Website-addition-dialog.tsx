@@ -44,19 +44,19 @@ export function WebsiteAddition({ onAddition }: WebsiteAdditionProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
-      <DialogTrigger asChild><button type="button" className="workspace-button workspace-button--primary workspace-button--compact"><Plus size={14} /> Add site</button></DialogTrigger>
-      <DialogContent className="workspace-dialog sm:max-w-lg">
+      <DialogTrigger asChild><button type="button" className="app-btn app-btn--primary"><Plus size={15} /> Add site</button></DialogTrigger>
+      <DialogContent className="app-dialog sm:max-w-md">
         <DialogHeader>
-          <div className="workspace-dialog__icon"><Globe2 size={18} /></div>
+          <div className="app-dialog__icon"><Globe2 size={17} /></div>
           <DialogTitle>{record ? "Verify domain control" : "Add a destination"}</DialogTitle>
           <DialogDescription>{record ? "Publish this TXT value at the root of your domain. DNS changes may take a few minutes to appear." : "Register one HTTPS origin. Paths, query strings, and credentials are intentionally rejected."}</DialogDescription>
         </DialogHeader>
         {record ? (
-          <div className="mt-2 grid gap-2"><Label>TXT record value</Label><button type="button" onClick={copyRecord} className="workspace-dialog__record"><span>{record}</span>{copied ? <Check size={15} /> : <Copy size={15} />}</button></div>
+          <div className="mt-2 grid gap-2"><Label className="app-label">TXT record value</Label><button type="button" onClick={copyRecord} className="app-copy app-copy--block"><span>{record}</span>{copied ? <Check size={15} /> : <Copy size={15} />}</button></div>
         ) : (
-          <div className="mt-2 grid gap-4"><div className="grid gap-2"><Label htmlFor="site-name">Site name</Label><Input id="site-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Marketing site" /></div><div className="grid gap-2"><Label htmlFor="site-origin">HTTPS origin</Label><Input id="site-origin" type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" /></div></div>
+          <div className="mt-2 grid gap-4"><div className="grid gap-2"><Label htmlFor="site-name" className="app-label">Site name</Label><Input id="site-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Marketing site" className="app-input" /></div><div className="grid gap-2"><Label htmlFor="site-origin" className="app-label">HTTPS origin</Label><Input id="site-origin" type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" className="app-input" /></div></div>
         )}
-        <DialogFooter className="mt-3">{record ? <button type="button" onClick={() => setIsOpen(false)} className="workspace-button workspace-button--primary">Done</button> : <button type="button" onClick={handleAddWebsite} disabled={loading || name.trim().length < 2 || !url.trim()} className="workspace-button workspace-button--primary">{loading ? <LoaderCircle size={15} className="animate-spin" /> : <Plus size={15} />} Add destination</button>}</DialogFooter>
+        <DialogFooter className="mt-3">{record ? <button type="button" onClick={() => setIsOpen(false)} className="app-btn app-btn--primary">Done</button> : <button type="button" onClick={handleAddWebsite} disabled={loading || name.trim().length < 2 || !url.trim()} className="app-btn app-btn--primary">{loading ? <LoaderCircle size={15} className="animate-spin" /> : <Plus size={15} />} Add destination</button>}</DialogFooter>
       </DialogContent>
     </Dialog>
   );
