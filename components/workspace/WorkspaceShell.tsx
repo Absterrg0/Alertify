@@ -16,9 +16,11 @@ import {
   Globe2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { DroplertMark } from "@/components/brand/DroplertMark";
+
+const subscribeNoop = () => () => {};
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -46,7 +48,10 @@ export function WorkspaceShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "Workspace member";
+  // The server never has the client session, so identity renders only after hydration.
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const sessionUser = hydrated ? session?.user : undefined;
+  const userName = sessionUser?.name || sessionUser?.email?.split("@")[0] || "Workspace member";
   const initial = userName.slice(0, 1).toUpperCase();
   const currentItem = navigation.find((item) => pathname === item.href);
   const currentContext = context ?? currentItem?.label ?? "Workspace";
@@ -99,7 +104,7 @@ export function WorkspaceShell({
               <span className="workspace-avatar" aria-hidden="true">{initial}</span>
               <span className="workspace-user__text">
                 <strong>{userName}</strong>
-                <small>{status === "loading" ? "Loading session" : "Owner workspace"}</small>
+                <small>{!hydrated || status === "loading" ? "Loading session" : "Owner workspace"}</small>
               </span>
             </div>
           </div>

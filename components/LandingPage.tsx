@@ -5,11 +5,15 @@ import Link from "next/link"
 import {
   ArrowRight,
   ArrowUpRight,
+  Bell,
   CalendarClock,
   Check,
-  ChevronDown,
   Globe2,
   Menu,
+  MessageSquare,
+  MousePointerClick,
+  PanelsTopLeft,
+  PenLine,
   Route,
   ShieldCheck,
   Sparkles,
@@ -17,329 +21,282 @@ import {
 } from "lucide-react"
 import { DroplertMark } from "@/components/brand/DroplertMark"
 
-const proofItems = [
-  { label: "Targeted routes", icon: Route },
-  { label: "Scheduled delivery", icon: CalendarClock },
-  { label: "No browser secrets", icon: ShieldCheck },
+const tickerItems = [
+  "Route-targeted",
+  "Scheduled windows",
+  "No browser secrets",
+  "Versioned HTTP feed",
+  "ETag revalidation",
+  "Verified origins",
+  "Impressions · clicks · dismissals",
 ] as const
 
-const outcomeCards = [
+const navLinks = [
+  { href: "#surfaces", label: "Surfaces" },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#features", label: "Features" },
+  { href: "#install", label: "Install" },
+] as const
+
+const stats = [
+  { value: "3", label: "surfaces", detail: "Inline alert, toast, and dialog" },
+  { value: "5", label: "presets", detail: "From minimal to neon" },
+  { value: "15m", label: "revalidation", detail: "Visible pages quietly refresh" },
+  { value: "0", label: "browser secrets", detail: "Only a public site ID ships" },
+] as const
+
+const surfaces = [
   {
     id: "01",
-    eyebrow: "RELEASE NOTES",
-    title: "Give the change a place to land.",
-    copy: "Keep a release update close to the page where customers feel the difference.",
+    tone: "yellow",
+    icon: PanelsTopLeft,
+    label: "Inline alert",
+    title: "Give release notes a place to land.",
+    copy: "Pin a change right next to the feature it touches, then let it expire on schedule.",
     href: "/alert",
-    linkLabel: "Preview an alert",
-    className: "briefing-outcome-card--release",
   },
   {
     id: "02",
-    eyebrow: "PLANNED MAINTENANCE",
-    title: "Set expectations before the window.",
-    copy: "A scheduled notice can arrive on the exact routes affected, then quietly expire.",
+    tone: "pink",
+    icon: Bell,
+    label: "Toast",
+    title: "Warn before the maintenance window.",
+    copy: "A short, dismissible heads-up on exactly the routes that will be affected.",
     href: "/toast",
-    linkLabel: "Preview a toast",
-    className: "briefing-outcome-card--maintenance",
   },
   {
     id: "03",
-    eyebrow: "ONBOARDING NUDGES",
-    title: "Help the next step feel obvious.",
-    copy: "Use a focused prompt to guide new customers without turning your product into a tour.",
+    tone: "blue",
+    icon: MessageSquare,
+    label: "Dialog",
+    title: "Make the next step feel obvious.",
+    copy: "Guide a new customer to one clear action without building a product tour.",
     href: "/alert_dialog",
-    linkLabel: "Preview a dialog",
-    className: "briefing-outcome-card--onboarding",
   },
 ] as const
 
-const flowSteps = [
-  {
-    number: "01",
-    label: "Compose",
-    copy: "Write the message and choose the surface it belongs on.",
-    icon: Sparkles,
-  },
-  {
-    number: "02",
-    label: "Target",
-    copy: "Match verified sites and routes to the people who need it.",
-    icon: Route,
-  },
-  {
-    number: "03",
-    label: "Publish",
-    copy: "Set a start or end window, then make the record available.",
-    icon: CalendarClock,
-  },
-  {
-    number: "04",
-    label: "Learn",
-    copy: "Read delivery and interaction events without guessing who saw what.",
-    icon: ShieldCheck,
-  },
+const steps = [
+  { number: "01", label: "Compose", copy: "Write the message, pick a surface, tune a preset.", icon: PenLine, tone: "yellow" },
+  { number: "02", label: "Target", copy: "Choose verified sites and the routes that matter.", icon: Route, tone: "pink" },
+  { number: "03", label: "Schedule", copy: "Publish now or set a start and end window.", icon: CalendarClock, tone: "green" },
+  { number: "04", label: "Measure", copy: "Read impressions, clicks, and dismissals per campaign.", icon: MousePointerClick, tone: "blue" },
 ] as const
-
-const installSnippet = `import { Droplert } from "droplert/react"
-import "droplert/styles.css"
-
-export default function AppLayout({ children }) {
-  return (
-    <>
-      {children}
-      <Droplert
-        siteId="site_public_id"
-        apiUrl="https://droplert.abstergo.dev"
-      />
-    </>
-  )
-}`
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
   const closeMenu = () => setMobileMenuOpen(false)
 
   return (
-    <div className="briefing-page">
-      <a className="briefing-skip-link" href="#outcomes">
+    <div className="lp">
+      <a className="lp-skip" href="#main">
         Skip to content
       </a>
 
-      <header className="briefing-header">
-        <div className="briefing-container briefing-header__inner">
-          <DroplertMark className="briefing-brand" />
+      <div className="lp-ticker" aria-hidden="true">
+        <div className="lp-ticker__track">
+          {[0, 1].map((copy) => (
+            <div className="lp-ticker__group" key={copy}>
+              {tickerItems.map((item) => (
+                <span key={item}>
+                  {item} <Sparkles size={14} />
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
-          <nav aria-label="Primary navigation" className="briefing-nav briefing-nav--desktop">
-            <a href="#outcomes">Product</a>
-            <a href="#how-it-works">How it works</a>
-            <a href="#install">Install</a>
+      <header className="lp-header">
+        <div className="lp-wrap lp-header__inner">
+          <DroplertMark />
+
+          <nav aria-label="Primary navigation" className="lp-nav">
+            {navLinks.map((link) => (
+              <a key={link.href} href={link.href}>
+                {link.label}
+              </a>
+            ))}
           </nav>
 
-          <div className="briefing-header__actions briefing-header__actions--desktop">
-            <Link className="briefing-signin" href="/getstarted">
+          <div className="lp-header__actions">
+            <Link className="lp-link" href="/getstarted">
               Sign in
             </Link>
-            <Link className="briefing-button briefing-button--primary briefing-button--small" href="/getstarted">
-              Start building <ArrowUpRight aria-hidden="true" size={15} />
+            <Link className="lp-btn lp-btn--ink lp-btn--sm" href="/getstarted">
+              Start building <ArrowUpRight aria-hidden="true" size={16} />
             </Link>
           </div>
 
           <button
             type="button"
-            className="briefing-menu-button"
+            className="lp-menu-button"
             aria-expanded={mobileMenuOpen}
-            aria-controls="briefing-mobile-navigation"
+            aria-controls="lp-mobile-nav"
             aria-label={mobileMenuOpen ? "Close navigation" : "Open navigation"}
             onClick={() => setMobileMenuOpen((open) => !open)}
           >
-            {mobileMenuOpen ? <X aria-hidden="true" size={19} /> : <Menu aria-hidden="true" size={19} />}
+            {mobileMenuOpen ? <X aria-hidden="true" size={20} /> : <Menu aria-hidden="true" size={20} />}
           </button>
         </div>
 
         {mobileMenuOpen ? (
-          <div id="briefing-mobile-navigation" className="briefing-mobile-panel">
-            <nav aria-label="Mobile navigation" className="briefing-container briefing-mobile-panel__nav">
-              <a href="#outcomes" onClick={closeMenu}>
-                Product <ArrowRight aria-hidden="true" size={16} />
+          <nav id="lp-mobile-nav" aria-label="Mobile navigation" className="lp-mobile-nav">
+            {navLinks.map((link) => (
+              <a key={link.href} href={link.href} onClick={closeMenu}>
+                {link.label} <ArrowRight aria-hidden="true" size={18} />
               </a>
-              <a href="#how-it-works" onClick={closeMenu}>
-                How it works <ArrowRight aria-hidden="true" size={16} />
-              </a>
-              <a href="#install" onClick={closeMenu}>
-                Install <ArrowRight aria-hidden="true" size={16} />
-              </a>
-              <div className="briefing-mobile-panel__actions">
-                <Link className="briefing-button briefing-button--secondary" href="/getstarted" onClick={closeMenu}>
-                  Sign in
-                </Link>
-                <Link className="briefing-button briefing-button--primary" href="/getstarted" onClick={closeMenu}>
-                  Start building <ArrowUpRight aria-hidden="true" size={15} />
-                </Link>
-              </div>
-            </nav>
-          </div>
+            ))}
+            <div className="lp-mobile-nav__actions">
+              <Link className="lp-btn lp-btn--white" href="/getstarted" onClick={closeMenu}>
+                Sign in
+              </Link>
+              <Link className="lp-btn lp-btn--yellow" href="/getstarted" onClick={closeMenu}>
+                Start building <ArrowUpRight aria-hidden="true" size={16} />
+              </Link>
+            </div>
+          </nav>
         ) : null}
       </header>
 
-      <main>
-        <section className="briefing-hero" aria-labelledby="hero-title">
-          <div className="briefing-container briefing-hero__grid">
-            <div className="briefing-hero__intro">
-              <p className="briefing-eyebrow">
-                <span className="briefing-eyebrow__dot" aria-hidden="true" /> IN-PRODUCT ANNOUNCEMENTS
+      <main id="main">
+        <section className="lp-hero" aria-labelledby="hero-title">
+          <div className="lp-wrap lp-hero__grid">
+            <div className="lp-hero__copy">
+              <p className="lp-chip lp-chip--green">
+                <span className="lp-pulse" aria-hidden="true" /> In-product announcements
               </p>
               <h1 id="hero-title">
-                <span className="briefing-hero__heading-line">Put the right</span>{" "}
-                <span className="briefing-hero__heading-line">update in front of</span>{" "}
-                <span className="briefing-hero__heading-line">the right customer.</span>
+                Put the <mark className="lp-hl lp-hl--yellow">right update</mark> in front of the{" "}
+                <mark className="lp-hl lp-hl--pink">right customer.</mark>
               </h1>
-              <p className="briefing-hero__copy">
-                Droplert helps product teams publish targeted announcements inside the pages where they matter. Set routes and a schedule once; a durable HTTP feed keeps the message available without a permanent browser connection.
+              <p className="lp-hero__lede">
+                Droplert publishes targeted announcements inside the pages where they matter. Pick the routes and the
+                schedule once — a durable HTTP feed does the rest, with no socket left open in your visitors&apos; browsers.
               </p>
-              <div className="briefing-hero__actions">
-                <Link className="briefing-button briefing-button--primary" href="/getstarted">
-                  Start building <ArrowRight aria-hidden="true" size={16} />
+              <div className="lp-hero__actions">
+                <Link className="lp-btn lp-btn--yellow lp-btn--lg" href="/getstarted">
+                  Start building <ArrowRight aria-hidden="true" size={18} />
                 </Link>
-                <a className="briefing-button briefing-button--secondary" href="#how-it-works">
-                  See how it works <ChevronDown aria-hidden="true" size={16} />
+                <a className="lp-btn lp-btn--white lp-btn--lg" href="#how-it-works">
+                  See how it works
                 </a>
               </div>
-              <ul className="briefing-proof" aria-label="Droplert product details">
-                {proofItems.map(({ label, icon: Icon }) => (
-                  <li key={label}>
-                    <Icon aria-hidden="true" size={14} />
-                    <span>{label}</span>
-                  </li>
-                ))}
-                <li className="briefing-proof__technical">
-                  <span className="briefing-proof__signal" aria-hidden="true" />
-                  <span>HTTP feed</span>
-                </li>
+              <ul className="lp-hero__proof" aria-label="Highlights">
+                <li><Check aria-hidden="true" size={15} /> Route targeting</li>
+                <li><Check aria-hidden="true" size={15} /> Scheduled windows</li>
+                <li><Check aria-hidden="true" size={15} /> No browser secrets</li>
               </ul>
             </div>
 
-            <div className="briefing-hero__visual">
-              <div className="briefing-scene" aria-label="A product page with an active targeted announcement and campaign controls">
-                <div className="briefing-scene__browserbar">
-                  <div className="briefing-scene__browser-dots" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="briefing-scene__address">
-                    <Globe2 aria-hidden="true" size={12} />
-                    yourapp.dev/changelog
-                  </div>
-                  <span className="briefing-scene__browser-status">preview</span>
+            <div className="lp-hero__stage" aria-label="Example: a product page showing a targeted Droplert announcement">
+              <div className="lp-window">
+                <div className="lp-window__bar">
+                  <span className="lp-dots" aria-hidden="true"><i /><i /><i /></span>
+                  <span className="lp-window__url"><Globe2 aria-hidden="true" size={12} /> yourapp.dev/changelog</span>
                 </div>
-
-                <div className="briefing-scene__body">
-                  <article className="briefing-product-page">
-                    <nav className="briefing-product-nav" aria-label="Example product page navigation">
-                      <span className="briefing-product-nav__brand"><i aria-hidden="true" /> yourapp</span>
-                      <span>Docs</span>
-                      <span>Releases</span>
-                      <span>Account</span>
-                    </nav>
-
-                    <div className="briefing-product-page__content">
-                      <p className="briefing-scene-label">RELEASES / 2.4</p>
-                      <h2>Make every release easier to follow.</h2>
-                      <p>One place for the notes, decisions, and details your team wants to share.</p>
-                      <div className="briefing-product-page__lines" aria-hidden="true">
-                        <span />
-                        <span />
-                        <span />
-                      </div>
-                      <div className="briefing-product-page__meta">
-                        <span>4 min read</span>
-                        <span>Updated today</span>
-                      </div>
-                    </div>
-
-                    <div className="briefing-announcement">
-                      <div className="briefing-announcement__top">
-                        <span className="briefing-announcement__tag"><i aria-hidden="true" /> Product update</span>
-                        <span>For changelog readers</span>
-                      </div>
+                <div className="lp-window__body">
+                  <div className="lp-fake-nav" aria-hidden="true">
+                    <b>yourapp</b>
+                    <span>Docs</span>
+                    <span>Releases</span>
+                    <span>Account</span>
+                  </div>
+                  <div className="lp-inline-alert">
+                    <span className="lp-inline-alert__icon"><Sparkles aria-hidden="true" size={16} /></span>
+                    <div>
                       <strong>Version 2.4 is ready to explore</strong>
                       <p>New routes, clearer handoffs, fewer things to remember.</p>
-                      <a href="/alert">
-                        Read release notes <ArrowUpRight aria-hidden="true" size={13} />
-                      </a>
                     </div>
-                  </article>
-
-                  <aside className="briefing-control-rail" aria-label="Active campaign controls">
-                    <div className="briefing-control-rail__head">
-                      <div>
-                        <p>CAMPAIGN</p>
-                        <strong>Release 2.4</strong>
-                      </div>
-                      <span className="briefing-live-state"><i aria-hidden="true" /> Live</span>
-                    </div>
-                    <div className="briefing-rule-list">
-                      <div>
-                        <span>Site</span>
-                        <strong>yourapp.dev</strong>
-                      </div>
-                      <div>
-                        <span>Route</span>
-                        <strong>/changelog</strong>
-                      </div>
-                      <div>
-                        <span>Window</span>
-                        <strong>Now → Fri</strong>
-                      </div>
-                      <div>
-                        <span>Surface</span>
-                        <strong>Inline alert</strong>
-                      </div>
-                    </div>
-                    <div className="briefing-control-rail__foot">
-                      <span><Check aria-hidden="true" size={13} /> verified site</span>
-                      <span>HTTP feed ready</span>
-                    </div>
-                  </aside>
+                    <span className="lp-inline-alert__cta">Read notes <ArrowUpRight aria-hidden="true" size={13} /></span>
+                  </div>
+                  <p className="lp-fake-kicker">Releases / 2.4</p>
+                  <p className="lp-fake-title">Make every release easier to follow.</p>
+                  <div className="lp-fake-lines" aria-hidden="true"><span /><span /><span /><span /></div>
                 </div>
               </div>
-              <div className="briefing-scene-caption">
-                <span><i aria-hidden="true" /> Rendered in your product</span>
-                <span>one route / one message</span>
+
+              <div className="lp-float lp-float--rules">
+                <div className="lp-float__head">
+                  <span>Campaign</span>
+                  <span className="lp-live"><i aria-hidden="true" /> Live</span>
+                </div>
+                <strong>Release 2.4</strong>
+                <dl>
+                  <div><dt>Route</dt><dd>/changelog</dd></div>
+                  <div><dt>Window</dt><dd>Now → Fri</dd></div>
+                  <div><dt>Surface</dt><dd>Inline</dd></div>
+                </dl>
+              </div>
+
+              <div className="lp-float lp-float--toast">
+                <CalendarClock aria-hidden="true" size={18} />
+                <div>
+                  <strong>Maintenance at 22:00 UTC</strong>
+                  <p>Back in 20 minutes.</p>
+                </div>
+                <X aria-hidden="true" size={14} />
+              </div>
+
+              <div className="lp-burst" aria-hidden="true">
+                <span>100%<br />HTTP</span>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="briefing-section briefing-outcomes" id="outcomes" aria-labelledby="outcomes-title">
-          <div className="briefing-container">
-            <div className="briefing-section-heading">
-              <div>
-                <p className="briefing-eyebrow"><span className="briefing-eyebrow__dot" aria-hidden="true" /> AFTER THE SHIP</p>
-                <h2 id="outcomes-title">Built for the moment after you ship.</h2>
+        <section className="lp-stats" aria-label="Droplert at a glance">
+          <div className="lp-wrap lp-stats__grid">
+            {stats.map((stat) => (
+              <div className="lp-stat" key={stat.label}>
+                <strong>{stat.value}</strong>
+                <span>{stat.label}</span>
+                <p>{stat.detail}</p>
               </div>
-              <p>Turn a finished product moment into a message that reaches people in context—without another dashboard to keep alive.</p>
+            ))}
+          </div>
+        </section>
+
+        <section className="lp-section" id="surfaces" aria-labelledby="surfaces-title">
+          <div className="lp-wrap">
+            <div className="lp-heading">
+              <p className="lp-chip lp-chip--pink">Surfaces</p>
+              <h2 id="surfaces-title">Three surfaces. Zero dashboards to babysit.</h2>
+              <p>Turn a finished product moment into a message that reaches people in context — then let it expire on its own.</p>
             </div>
 
-            <div className="briefing-outcomes__grid">
-              {outcomeCards.map((card) => (
-                <article className={`briefing-outcome-card ${card.className}`} key={card.id}>
-                  <div className="briefing-outcome-card__heading">
-                    <span>{card.id}</span>
-                    <p>{card.eyebrow}</p>
+            <div className="lp-surfaces">
+              {surfaces.map(({ id, tone, icon: Icon, label, title, copy, href }) => (
+                <article className={`lp-surface lp-surface--${tone}`} key={id}>
+                  <div className="lp-surface__top">
+                    <span className="lp-surface__label"><Icon aria-hidden="true" size={15} /> {label}</span>
+                    <span className="lp-surface__id">{id}</span>
                   </div>
-                  <div className="briefing-outcome-card__stage">
-                    {card.id === "01" ? (
-                      <div className="briefing-message briefing-message--release">
-                        <span>Release note</span>
-                        <strong>Version 2.4 is ready.</strong>
-                        <p>See what changed in the product you use every day.</p>
-                        <b>Read the update <ArrowUpRight aria-hidden="true" size={12} /></b>
+                  <div className="lp-surface__stage" aria-hidden="true">
+                    {id === "01" ? (
+                      <div className="lp-mini lp-mini--alert">
+                        <Sparkles size={14} />
+                        <div><b>Version 2.4 is ready</b><small>See what changed today.</small></div>
                       </div>
                     ) : null}
-                    {card.id === "02" ? (
-                      <div className="briefing-message briefing-message--maintenance">
-                        <div className="briefing-message__mini-nav"><i aria-hidden="true" /> yourapp <span>×</span></div>
-                        <div className="briefing-message__toast">
-                          <CalendarClock aria-hidden="true" size={15} />
-                          <div><strong>Maintenance starts at 22:00 UTC</strong><p>We&apos;ll be back shortly.</p></div>
-                        </div>
+                    {id === "02" ? (
+                      <div className="lp-mini lp-mini--toast">
+                        <CalendarClock size={14} />
+                        <div><b>Maintenance at 22:00</b><small>Back shortly.</small></div>
+                        <X size={12} />
                       </div>
                     ) : null}
-                    {card.id === "03" ? (
-                      <div className="briefing-message briefing-message--onboarding">
-                        <div className="briefing-message__dialog-top"><span>Welcome to your workspace</span><span>×</span></div>
-                        <strong>Start with one verified site.</strong>
-                        <p>Connect your first origin and publish a nudge when you&apos;re ready.</p>
-                        <span className="briefing-message__dialog-action">Add a site <ArrowRight aria-hidden="true" size={12} /></span>
+                    {id === "03" ? (
+                      <div className="lp-mini lp-mini--dialog">
+                        <b>Welcome aboard 👋</b>
+                        <small>Connect your first site to publish.</small>
+                        <span>Add a site →</span>
                       </div>
                     ) : null}
                   </div>
-                  <h3>{card.title}</h3>
-                  <p>{card.copy}</p>
-                  <Link className="briefing-text-link" href={card.href}>
-                    {card.linkLabel} <ArrowUpRight aria-hidden="true" size={14} />
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                  <Link className="lp-surface__link" href={href}>
+                    Try the {label.toLowerCase()} <ArrowUpRight aria-hidden="true" size={16} />
                   </Link>
                 </article>
               ))}
@@ -347,128 +304,137 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="briefing-section briefing-how" id="how-it-works" aria-labelledby="how-title">
-          <div className="briefing-container">
-            <div className="briefing-section-heading briefing-section-heading--compact">
-              <div>
-                <p className="briefing-eyebrow"><span className="briefing-eyebrow__dot" aria-hidden="true" /> HOW IT WORKS</p>
-                <h2 id="how-title">A small loop from message to meaning.</h2>
-              </div>
-              <p>Every campaign is a record you can inspect. Droplert serves it from a versioned HTTP feed, so the browser can fetch on load and revalidate later—no persistent client socket needed.</p>
+        <section className="lp-section lp-section--how" id="how-it-works" aria-labelledby="how-title">
+          <div className="lp-wrap">
+            <div className="lp-heading">
+              <p className="lp-chip lp-chip--yellow">How it works</p>
+              <h2 id="how-title">From message to meaning in four moves.</h2>
+              <p>Every campaign is an immutable record served from a versioned feed. Browsers fetch it on load and revalidate later.</p>
             </div>
 
-            <ol className="briefing-flow" aria-label="Droplert campaign workflow">
-              {flowSteps.map(({ number, label, copy, icon: Icon }, index) => (
-                <li className="briefing-flow__step" key={label}>
-                  <div className="briefing-flow__top">
-                    <span>{number}</span>
-                    <span className="briefing-flow__icon"><Icon aria-hidden="true" size={16} /></span>
+            <ol className="lp-steps">
+              {steps.map(({ number, label, copy, icon: Icon, tone }) => (
+                <li className={`lp-step lp-step--${tone}`} key={label}>
+                  <div className="lp-step__top">
+                    <span className="lp-step__num">{number}</span>
+                    <span className="lp-step__icon"><Icon aria-hidden="true" size={20} /></span>
                   </div>
                   <h3>{label}</h3>
                   <p>{copy}</p>
-                  {index < flowSteps.length - 1 ? <span className="briefing-flow__connector" aria-hidden="true" /> : null}
                 </li>
               ))}
             </ol>
+          </div>
+        </section>
 
-            <div className="briefing-feed-note">
-              <ShieldCheck aria-hidden="true" size={18} />
-              <p><strong>Durable by default.</strong> A published revision stays available to the next page load, with ETag revalidation keeping unchanged fetches lightweight.</p>
-              <span>HTTP / VERSIONED / CACHEABLE</span>
+        <section className="lp-section" id="features" aria-labelledby="features-title">
+          <div className="lp-wrap">
+            <div className="lp-heading">
+              <p className="lp-chip lp-chip--blue">Features</p>
+              <h2 id="features-title">Control the where, the when, and the who.</h2>
+            </div>
+
+            <div className="lp-bento">
+              <article className="lp-tile lp-tile--green lp-tile--wide">
+                <Route aria-hidden="true" size={22} />
+                <h3>Route rules that read like paths.</h3>
+                <p>Exact matches or trailing wildcards, evaluated by the installed client. No regex required.</p>
+                <div className="lp-codechips" aria-label="Example route rules">
+                  <code>{"/*"}</code>
+                  <code>/pricing</code>
+                  <code>/dashboard/*</code>
+                  <code>/changelog</code>
+                </div>
+              </article>
+
+              <article className="lp-tile lp-tile--yellow">
+                <CalendarClock aria-hidden="true" size={22} />
+                <h3>Scheduling windows.</h3>
+                <p>Start later, end automatically.</p>
+                <div className="lp-timeline" aria-hidden="true">
+                  <span>Mon</span><span className="is-on">Tue</span><span className="is-on">Wed</span><span className="is-on">Thu</span><span>Fri</span>
+                </div>
+              </article>
+
+              <article className="lp-tile lp-tile--white">
+                <ShieldCheck aria-hidden="true" size={22} />
+                <h3>Verified origins.</h3>
+                <p>Prove ownership with a DNS TXT record before anything ships.</p>
+                <code className="lp-tile__code">_droplert-verification</code>
+              </article>
+
+              <article className="lp-tile lp-tile--pink">
+                <Globe2 aria-hidden="true" size={22} />
+                <h3>A durable feed.</h3>
+                <p>Cacheable, versioned, and cheap to revalidate.</p>
+                <code className="lp-tile__code">304 Not Modified</code>
+              </article>
+
+              <article className="lp-tile lp-tile--blue">
+                <MousePointerClick aria-hidden="true" size={22} />
+                <h3>Real delivery events.</h3>
+                <p>Impressions, clicks, and dismissals, stored per campaign.</p>
+                <div className="lp-bars" aria-hidden="true">
+                  <span style={{ height: "45%" }} /><span style={{ height: "70%" }} /><span style={{ height: "55%" }} /><span style={{ height: "90%" }} /><span style={{ height: "65%" }} />
+                </div>
+              </article>
             </div>
           </div>
         </section>
 
-        <section className="briefing-section briefing-control" id="control" aria-labelledby="control-title">
-          <div className="briefing-container briefing-control__grid">
-            <div className="briefing-control__copy">
-              <p className="briefing-eyebrow"><span className="briefing-eyebrow__dot" aria-hidden="true" /> CONTROL THE MOMENT</p>
-              <h2 id="control-title">Give every update a place, a route, and a window.</h2>
-              <p>Keep the campaign decision-making close to the product context. Verify the origin, choose the routes, set the timing, and pick an accessible surface—all before the message reaches a customer.</p>
-              <Link className="briefing-text-link" href="/dashboard">
-                Open the campaign workspace <ArrowUpRight aria-hidden="true" size={14} />
+        <section className="lp-install" id="install" aria-labelledby="install-title">
+          <div className="lp-wrap lp-install__grid">
+            <div className="lp-install__copy">
+              <p className="lp-chip lp-chip--yellow">Install</p>
+              <h2 id="install-title">Three steps. One component.</h2>
+              <ol className="lp-install__steps">
+                <li><span>1</span><div><strong>Add a verified site</strong><p>Confirm the exact origin that will receive announcements.</p></div></li>
+                <li><span>2</span><div><strong>Mount the reader</strong><p>Drop in the component with your public site ID.</p></div></li>
+                <li><span>3</span><div><strong>Publish a campaign</strong><p>Choose route, surface, and window from the workspace.</p></div></li>
+              </ol>
+            </div>
+
+            <div className="lp-code">
+              <div className="lp-code__bar">
+                <span className="lp-dots" aria-hidden="true"><i /><i /><i /></span>
+                <span>app/layout.tsx</span>
+              </div>
+              <pre aria-label="Droplert React installation example"><code>
+                <span className="t-k">import</span> {"{ "}<span className="t-v">Droplert</span>{" }"} <span className="t-k">from</span> <span className="t-s">&quot;droplert/react&quot;</span>{"\n"}
+                <span className="t-k">import</span> <span className="t-s">&quot;droplert/styles.css&quot;</span>{"\n\n"}
+                <span className="t-k">export default function</span> <span className="t-f">AppLayout</span>{"({ children }) {\n"}
+                {"  "}<span className="t-k">return</span>{" (\n    <>\n      {children}\n      <"}<span className="t-v">Droplert</span>{"\n        "}<span className="t-a">siteId</span>=<span className="t-s">&quot;site_public_id&quot;</span>{"\n        "}<span className="t-a">apiUrl</span>=<span className="t-s">&quot;https://droplert.abstergo.dev&quot;</span>{"\n      />\n    </>\n  )\n}"}
+              </code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section className="lp-final" aria-labelledby="final-title">
+          <div className="lp-wrap">
+            <div className="lp-final__card">
+              <span className="lp-final__shape lp-final__shape--a" aria-hidden="true" />
+              <span className="lp-final__shape lp-final__shape--b" aria-hidden="true" />
+              <h2 id="final-title">Make the next product moment impossible to miss.</h2>
+              <Link className="lp-btn lp-btn--ink lp-btn--lg" href="/getstarted">
+                Start building — it&apos;s quick <ArrowRight aria-hidden="true" size={18} />
               </Link>
             </div>
-
-            <div className="briefing-rule-sheet" aria-label="Campaign rule sheet">
-              <div className="briefing-rule-sheet__head">
-                <div><span>CAMPAIGN RULES</span><strong>Release 2.4</strong></div>
-                <span className="briefing-ready-state"><i aria-hidden="true" /> Ready</span>
-              </div>
-              <div className="briefing-rule-sheet__body">
-                <div className="briefing-rule-sheet__row">
-                  <span><Globe2 aria-hidden="true" size={15} /> Verified site</span>
-                  <strong>yourapp.dev <Check aria-hidden="true" size={14} /></strong>
-                </div>
-                <div className="briefing-rule-sheet__row">
-                  <span><Route aria-hidden="true" size={15} /> Route rules</span>
-                  <strong>/changelog <small>exact match</small></strong>
-                </div>
-                <div className="briefing-rule-sheet__row">
-                  <span><CalendarClock aria-hidden="true" size={15} /> Schedule</span>
-                  <strong>Now → 18:00 UTC</strong>
-                </div>
-                <div className="briefing-rule-sheet__surfaces">
-                  <div><span>Accessible surfaces</span><small>choose the lightest interruption</small></div>
-                  <div className="briefing-surface-options" aria-label="Selected notification surface">
-                    <span className="briefing-surface-option">Toast</span>
-                    <span className="briefing-surface-option briefing-surface-option--selected">Inline</span>
-                    <span className="briefing-surface-option">Dialog</span>
-                  </div>
-                </div>
-              </div>
-              <div className="briefing-rule-sheet__foot"><span>PUBLIC READ</span><span>NO BROWSER SECRET</span></div>
-            </div>
-          </div>
-        </section>
-
-        <section className="briefing-install" id="install" aria-labelledby="install-title">
-          <div className="briefing-container">
-            <div className="briefing-section-heading briefing-section-heading--install">
-              <div>
-                <p className="briefing-eyebrow"><span className="briefing-eyebrow__dot" aria-hidden="true" /> INSTALL</p>
-                <h2 id="install-title">Three small steps to put it in your app.</h2>
-              </div>
-              <p>The reader stays lightweight and the public contract stays explicit. Add a verified site, mount the reader, then publish your first campaign.</p>
-            </div>
-
-            <div className="briefing-install__grid">
-              <ol className="briefing-install__steps">
-                <li><span>01</span><div><strong>Add a verified site</strong><p>Confirm the exact origin that will receive the announcement.</p></div></li>
-                <li><span>02</span><div><strong>Mount the reader</strong><p>Use the public site ID and the Droplert API origin in your app.</p></div></li>
-                <li><span>03</span><div><strong>Publish a campaign</strong><p>Choose the route, surface, and delivery window from your workspace.</p></div></li>
-              </ol>
-
-              <div className="briefing-code-block">
-                <div className="briefing-code-block__head"><span>app/layout.tsx</span><span>REACT / PUBLIC CONFIG</span></div>
-                <pre aria-label="Droplert React installation example"><code>{installSnippet}</code></pre>
-                <div className="briefing-code-block__foot"><span>VERSIONED HTTP FEED</span><span>ORIGIN ONLY</span></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="briefing-final" aria-labelledby="final-title">
-          <div className="briefing-container briefing-final__inner">
-            <div>
-              <p className="briefing-eyebrow"><span className="briefing-eyebrow__dot" aria-hidden="true" /> READY WHEN THE MESSAGE IS</p>
-              <h2 id="final-title">Make the next product moment findable.</h2>
-            </div>
-            <Link className="briefing-button briefing-button--primary" href="/getstarted">
-              Start building <ArrowUpRight aria-hidden="true" size={16} />
-            </Link>
           </div>
         </section>
       </main>
 
-      <footer className="briefing-footer">
-        <div className="briefing-container briefing-footer__inner">
-          <DroplertMark compact className="briefing-brand" />
-          <div className="briefing-footer__links">
-            <Link href="/getstarted">Sign in</Link>
-            <Link href="/dashboard">Dashboard</Link>
-            <span><ShieldCheck aria-hidden="true" size={14} /> HTTP feed delivery</span>
+      <footer className="lp-footer">
+        <div className="lp-wrap">
+          <div className="lp-footer__top">
+            <DroplertMark compact />
+            <nav aria-label="Footer navigation">
+              <Link href="/getstarted">Sign in</Link>
+              <Link href="/dashboard">Dashboard</Link>
+              <a href="#install">Install</a>
+            </nav>
           </div>
+          <p className="lp-footer__word" aria-hidden="true">Droplert</p>
+          <p className="lp-footer__note">Durable, scheduled in-product campaigns · by Abstergo</p>
         </div>
       </footer>
     </div>

@@ -19,6 +19,12 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
+// Display face for headlines (SIL OFL, see fonts/BricolageGrotesque-OFL.txt).
+const bricolage = localFont({
+  src: "./fonts/BricolageGrotesqueVF.woff2",
+  variable: "--font-display",
+  weight: "200 800",
+});
 
 // Metadata Configuration for SEO and Open Graph
 export const metadata: Metadata = {
@@ -84,17 +90,17 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: '#07090d',
+  themeColor: '#fff4df',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} antialiased`}>
       <ThemeProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="light"
+      forcedTheme="light"
       disableTransitionOnChange
       >
         <SessionProvider>

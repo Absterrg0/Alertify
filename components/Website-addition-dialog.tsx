@@ -5,7 +5,6 @@ import { Check, Copy, Globe2, LoaderCircle, Plus } from "lucide-react";
 
 import { toast } from "@/hooks/use-toast";
 import type { Website } from "./WebsiteList";
-import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -45,19 +44,19 @@ export function WebsiteAddition({ onAddition }: WebsiteAdditionProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
-      <DialogTrigger asChild><Button type="button" variant="outline" className="h-9 border-white/10 bg-white/[0.03] px-3 text-xs text-[#d9ded8] hover:border-[#70f0c0]/40 hover:bg-[#70f0c0]/[0.07] hover:text-[#70f0c0]"><Plus size={14} className="mr-1.5" /> Add site</Button></DialogTrigger>
-      <DialogContent className="border-white/10 bg-[#0d1118] text-[#f3f3ee] sm:max-w-lg">
+      <DialogTrigger asChild><button type="button" className="workspace-button workspace-button--primary workspace-button--compact"><Plus size={14} /> Add site</button></DialogTrigger>
+      <DialogContent className="workspace-dialog sm:max-w-lg">
         <DialogHeader>
-          <div className="mb-3 grid size-10 place-items-center rounded-lg border border-[#70f0c0]/20 bg-[#70f0c0]/10 text-[#70f0c0]"><Globe2 size={18} /></div>
-          <DialogTitle className="text-xl tracking-[-.03em]">{record ? "Verify domain control" : "Add a destination"}</DialogTitle>
-          <DialogDescription className="leading-6 text-white/45">{record ? "Publish this TXT value at the root of your domain. DNS changes may take a few minutes to appear." : "Register one HTTPS origin. Paths, query strings, and credentials are intentionally rejected."}</DialogDescription>
+          <div className="workspace-dialog__icon"><Globe2 size={18} /></div>
+          <DialogTitle>{record ? "Verify domain control" : "Add a destination"}</DialogTitle>
+          <DialogDescription>{record ? "Publish this TXT value at the root of your domain. DNS changes may take a few minutes to appear." : "Register one HTTPS origin. Paths, query strings, and credentials are intentionally rejected."}</DialogDescription>
         </DialogHeader>
         {record ? (
-          <div className="mt-4 space-y-3"><p className="font-mono text-[10px] uppercase tracking-[.14em] text-white/40">TXT record value</p><button type="button" onClick={copyRecord} className="flex w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#080a0f] p-4 text-left font-mono text-xs text-[#70f0c0] hover:border-[#70f0c0]/35"><span className="min-w-0 break-all">{record}</span>{copied ? <Check size={15} /> : <Copy size={15} />}</button></div>
+          <div className="mt-2 grid gap-2"><Label>TXT record value</Label><button type="button" onClick={copyRecord} className="workspace-dialog__record"><span>{record}</span>{copied ? <Check size={15} /> : <Copy size={15} />}</button></div>
         ) : (
-          <div className="mt-4 grid gap-4"><div className="space-y-2"><Label htmlFor="site-name" className="text-xs text-white/55">Site name</Label><Input id="site-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Marketing site" className="border-white/10 bg-white/[.04] text-white placeholder:text-white/25 focus-visible:ring-[#70f0c0]" /></div><div className="space-y-2"><Label htmlFor="site-origin" className="text-xs text-white/55">HTTPS origin</Label><Input id="site-origin" type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" className="border-white/10 bg-white/[.04] text-white placeholder:text-white/25 focus-visible:ring-[#70f0c0]" /></div></div>
+          <div className="mt-2 grid gap-4"><div className="grid gap-2"><Label htmlFor="site-name">Site name</Label><Input id="site-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Marketing site" /></div><div className="grid gap-2"><Label htmlFor="site-origin">HTTPS origin</Label><Input id="site-origin" type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" /></div></div>
         )}
-        <DialogFooter className="mt-5">{record ? <Button type="button" onClick={() => setIsOpen(false)} className="bg-[#70f0c0] text-[#07100c] hover:bg-[#8affd1]">Done</Button> : <Button type="button" onClick={handleAddWebsite} disabled={loading || name.trim().length < 2 || !url.trim()} className="bg-[#70f0c0] text-[#07100c] hover:bg-[#8affd1]">{loading ? <LoaderCircle size={15} className="mr-2 animate-spin" /> : <Plus size={15} className="mr-2" />} Add destination</Button>}</DialogFooter>
+        <DialogFooter className="mt-3">{record ? <button type="button" onClick={() => setIsOpen(false)} className="workspace-button workspace-button--primary">Done</button> : <button type="button" onClick={handleAddWebsite} disabled={loading || name.trim().length < 2 || !url.trim()} className="workspace-button workspace-button--primary">{loading ? <LoaderCircle size={15} className="animate-spin" /> : <Plus size={15} />} Add destination</button>}</DialogFooter>
       </DialogContent>
     </Dialog>
   );
