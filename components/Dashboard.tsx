@@ -4,19 +4,19 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
+  Activity,
   AlertCircle,
   ArrowRight,
+  BellRing,
+  CalendarClock,
   Check,
   CheckCircle2,
-  Clock3,
-  FileText,
   Globe2,
-  Radio,
   RefreshCw,
-  TerminalSquare,
 } from "lucide-react";
 
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
+import { Badge, Card, EmptyState, LoadingRows, NewCampaignMenu, PageHeader, Stat, type BadgeTone } from "@/components/workspace/ui";
 
 const DASHBOARD_REFERENCE_TIME = Date.now();
 const subscribeNoop = () => () => {};
@@ -79,40 +79,35 @@ type ResourceState<T> = {
 
 const emptyResource = <T,>(data: T): ResourceState<T> => ({ data, loading: true, error: false });
 
+const typeLabels = { ALERT: "Inline alert", TOAST: "Toast", ALERT_DIALOG: "Dialog" } as const;
+
 function formatDate(value: string | Date) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function campaignLabel(campaign: CampaignSummary) {
-  const revision = campaign.revisions[0];
-  return revision?.title || "Untitled campaign";
+function campaignState(campaign: CampaignSummary): { label: string; tone: BadgeTone } {
+  if (campaign.status === "ARCHIVED") return { label: "Archived", tone: "neutral" };
+  if (campaign.status === "DRAFT") return { label: "Draft", tone: "blue" };
+  return new Date(campaign.startsAt).getTime() > Date.now() ? { label: "Scheduled", tone: "amber" } : { label: "Live", tone: "green" };
 }
 
-function campaignState(campaign: CampaignSummary) {
-  if (campaign.status === "ARCHIVED") return "Archived";
-  if (campaign.status === "DRAFT") return "Draft";
-  return new Date(campaign.startsAt).getTime() > Date.now() ? "Scheduled" : "Published";
+function eventTone(name?: string) {
+  const value = (name ?? "").toLowerCase();
+  return value === "click" ? "click" : value === "dismiss" ? "dismiss" : value === "impression" ? "impression" : "other";
 }
 
 function ResourceError({ label, onRetry }: { label: string; onRetry: () => void }) {
   return (
-    <div className="workspace-empty workspace-empty--error">
-      <AlertCircle aria-hidden="true" size={17} />
-      <div>
-        <strong>{label} could not be loaded.</strong>
-        <p>Try the request again to refresh this part of the workspace.</p>
-      </div>
-      <button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" onClick={onRetry}>
-        <RefreshCw size={13} /> Retry
-      </button>
-    </div>
+    <EmptyState
+      compact
+      icon={<AlertCircle size={18} />}
+      title={`${label} could not be loaded`}
+      description="Nothing was changed. Try the request again."
+      action={<button type="button" className="app-btn app-btn--secondary app-btn--sm" onClick={onRetry}><RefreshCw size={13} /> Retry</button>}
+    />
   );
-}
-
-function ResourceLoading({ label }: { label: string }) {
-  return <div className="workspace-loading" role="status" aria-label={`Loading ${label}`}><span /><span /><span /></div>;
 }
 
 function Checklist({ websites, campaigns, storageKey }: { websites: Website[]; campaigns: CampaignSummary[]; storageKey: string | null }) {
@@ -154,33 +149,59 @@ function Checklist({ websites, campaigns, storageKey }: { websites: Website[]; c
   const hasPublishedCampaign = campaigns.some((campaign) => campaign.status === "PUBLISHED");
   const steps = [
     { label: "Add a site", detail: "Register the exact HTTPS origin.", complete: websites.length > 0, href: "/sites" },
-    { label: "Publish the DNS TXT record", detail: "Prove ownership for a pending origin.", complete: websites.length > 0 && !hasPending, href: "/sites" },
+    { label: "Publish the DNS TXT record", detail: "Prove ownership of every pending origin.", complete: websites.length > 0 && !hasPending, href: "/sites" },
     { label: "Verify the origin", detail: "Recheck until the site is active.", complete: activeSites.length > 0, href: "/sites" },
-    { label: "Install the SDK", detail: "Confirm locally after mounting Droplert with a public site ID.", complete: sdkConfirmed, href: "/sites" },
-    { label: "Publish a campaign", detail: "Send the first durable record to a verified site.", complete: hasPublishedCampaign, href: "/campaigns" },
+    { label: "Install the SDK", detail: "Mount Droplert with a public site ID. Confirmed in this browser.", complete: sdkConfirmed, href: "/sites" },
+    { label: "Publish a campaign", detail: "Send the first record to a verified site.", complete: hasPublishedCampaign, href: "/campaigns" },
   ];
   const completeCount = steps.filter((step) => step.complete).length;
 
   if (completeCount === steps.length) {
-    return <section className="workspace-success-strip"><CheckCircle2 size={18} /><div><strong>Workspace is ready.</strong><span>Sites, your SDK installation confirmation, and the first campaign are in place.</span></div><div className="workspace-success-strip__actions"><button type="button" className="workspace-button workspace-button--quiet workspace-button--compact" aria-label="Undo browser-local SDK confirmation" onClick={toggleSdkConfirmation}>Undo SDK confirmation · browser-local</button><Link href="/campaigns">Open registry <ArrowRight size={14} /></Link></div></section>;
+    return (
+      <div className="app-banner app-banner--success">
+        <CheckCircle2 aria-hidden="true" size={18} />
+        <div>
+          <strong>Your workspace is set up</strong>
+          <span>Sites are verified, the SDK is installed, and a campaign is live.</span>
+        </div>
+        <button type="button" className="app-btn app-btn--ghost app-btn--sm" aria-label="Undo browser-local SDK confirmation" onClick={toggleSdkConfirmation}>
+          Undo SDK confirmation
+        </button>
+      </div>
+    );
   }
 
   return (
-    <section className="workspace-panel workspace-checklist" aria-labelledby="setup-title">
-      <div className="workspace-panel__header">
-        <div><span className="workspace-eyebrow">First-run path / {completeCount} of {steps.length}</span><h2 id="setup-title">Prepare a destination for delivery.</h2><p>Droplert verifies site and campaign state here; the SDK step is a manual confirmation stored in this browser.</p></div>
-        <TerminalSquare aria-hidden="true" size={18} />
-      </div>
-      <ol className="workspace-checklist__items">
+    <Card
+      title="Get set up"
+      titleId="setup-title"
+      description={`${completeCount} of ${steps.length} steps complete`}
+      action={<div className="app-progress" aria-hidden="true"><span style={{ width: `${(completeCount / steps.length) * 100}%` }} /></div>}
+      flush
+    >
+      <ol className="app-checklist">
         {steps.map((step, index) => (
-          <li key={step.label} className={step.complete ? "is-complete" : ""}>
-            <span className="workspace-checklist__number">{step.complete ? <Check size={13} /> : String(index + 1).padStart(2, "0")}</span>
-            <div><strong>{step.label}</strong><span>{step.detail}</span></div>
-            {index === 3 ? <button type="button" className="workspace-checklist__manual" aria-pressed={step.complete} onClick={toggleSdkConfirmation} disabled={!storageKey}>{step.complete ? "Undo confirmation" : "I've installed the reader"}</button> : !step.complete ? <Link href={step.href} aria-label={`Open ${step.label}`}>Open <ArrowRight size={13} /></Link> : <span className="workspace-checklist__done">done</span>}
+          <li key={step.label} className={step.complete ? "is-complete" : undefined}>
+            <span className="app-checklist__mark">{step.complete ? <Check size={12} strokeWidth={3} /> : index + 1}</span>
+            <div className="app-checklist__text">
+              <strong>{step.label}</strong>
+              <span>{step.detail}</span>
+            </div>
+            {index === 3 ? (
+              <button type="button" className="app-btn app-btn--secondary app-btn--sm" aria-pressed={step.complete} onClick={toggleSdkConfirmation} disabled={!storageKey}>
+                {step.complete ? "Undo" : "Mark installed"}
+              </button>
+            ) : step.complete ? (
+              <span className="app-checklist__done">Done</span>
+            ) : (
+              <Link href={step.href} className="app-btn app-btn--secondary app-btn--sm" aria-label={`Open ${step.label}`}>
+                Open
+              </Link>
+            )}
           </li>
         ))}
       </ol>
-    </section>
+    </Card>
   );
 }
 
@@ -235,53 +256,104 @@ export default function DashboardPage() {
 
   const activeSites = websites.data.filter((site) => site.status === "ACTIVE" && site.isVerified);
   const pendingSites = websites.data.filter((site) => site.status === "PENDING");
-  const publishedCount = campaigns.data.filter((campaign) => campaign.status === "PUBLISHED" && new Date(campaign.startsAt).getTime() <= DASHBOARD_REFERENCE_TIME).length;
+  const liveCount = campaigns.data.filter((campaign) => campaign.status === "PUBLISHED" && new Date(campaign.startsAt).getTime() <= DASHBOARD_REFERENCE_TIME).length;
   const scheduledCount = campaigns.data.filter((campaign) => campaign.status === "PUBLISHED" && new Date(campaign.startsAt).getTime() > DASHBOARD_REFERENCE_TIME).length;
-  const latestCampaigns = useMemo(() => campaigns.data.slice(0, 3), [campaigns.data]);
-  const latestLog = logs.data[0];
-  const recommendedHref = activeSites.length === 0 ? "/sites" : publishedCount === 0 ? "/campaigns" : "/analytics";
-  const recommendedLabel = activeSites.length === 0 ? "Verify a site" : publishedCount === 0 ? "Compose your first campaign" : "Inspect delivery";
+  const latestCampaigns = useMemo(() => campaigns.data.slice(0, 5), [campaigns.data]);
+  const latestLogs = useMemo(() => logs.data.slice(0, 6), [logs.data]);
   // The server has no client session; read it only after hydration so markup matches.
   const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
   const sessionUser = hydrated ? session?.user : undefined;
   const sdkIdentity = sessionUser?.id ?? sessionUser?.email?.toLowerCase() ?? null;
   const sdkConfirmationStorageKey = sdkIdentity ? `droplert:sdk-reader-installed:${sdkIdentity}` : null;
+  const firstName = sessionUser?.name?.split(" ")[0];
+  const publicId = activeSites[0]?.publicId;
 
   return (
-    <WorkspaceShell hideNewCampaign>
-      <main className="workspace-page workspace-page--overview">
-        <div className="workspace-page__intro">
-          <div><span className="workspace-eyebrow">Overview / durable delivery</span><h1>Keep the next product moment moving.</h1><p>One concise view of destinations, campaign records, and the latest delivery signal.</p></div>
-          <Link className="workspace-button workspace-button--primary" href="/alert"><FileText size={15} /> New campaign <ArrowRight size={14} /></Link>
-        </div>
+    <WorkspaceShell>
+      <main className="app-page">
+        <PageHeader
+          title={firstName ? `Welcome back, ${firstName}` : "Overview"}
+          description="Your sites, campaigns, and the latest delivery activity."
+          actions={<NewCampaignMenu />}
+        />
 
-        <section className="workspace-metric-grid" aria-label="Workspace summary">
-          <article className="workspace-metric"><div><span>Active sites</span><Globe2 size={15} /></div><strong>{websites.loading ? "—" : activeSites.length}</strong><small>{websites.loading ? "Loading destinations" : `${pendingSites.length} pending / ${websites.data.length} total`}</small></article>
-          <article className="workspace-metric"><div><span>Published</span><CheckCircle2 size={15} /></div><strong>{campaigns.loading ? "—" : publishedCount}</strong><small>{campaigns.loading ? "Loading campaigns" : `${scheduledCount} scheduled`}</small></article>
-          <article className="workspace-metric"><div><span>Recorded events</span><Radio size={15} /></div><strong>{logs.loading ? "—" : logs.data.length}</strong><small>{logs.loading ? "Loading event feed" : "Latest returned events"}</small></article>
-          <article className="workspace-metric workspace-metric--signal"><div><span>Next action</span><Clock3 size={15} /></div><strong className="workspace-metric__action">{recommendedLabel}</strong><small><Link href={recommendedHref}>Open destination <ArrowRight size={12} /></Link></small></article>
+        <section className="app-stats" aria-label="Workspace summary">
+          <Stat label="Active sites" icon={<Globe2 size={15} />} value={websites.loading ? "—" : activeSites.length} hint={websites.loading ? "Loading" : `${pendingSites.length} pending · ${websites.data.length} total`} />
+          <Stat label="Live campaigns" icon={<BellRing size={15} />} value={campaigns.loading ? "—" : liveCount} hint={campaigns.loading ? "Loading" : `${campaigns.data.length} total records`} />
+          <Stat label="Scheduled" icon={<CalendarClock size={15} />} value={campaigns.loading ? "—" : scheduledCount} hint="Waiting for their start time" />
+          <Stat label="Delivery events" icon={<Activity size={15} />} value={logs.loading ? "—" : logs.data.length} hint="Most recent recorded" />
         </section>
 
-        <div className="workspace-overview-grid">
-          <div className="workspace-overview-main">
-            {websites.error || campaigns.error || logs.error ? (
-              <section className="workspace-panel workspace-panel--notice"><span className="workspace-eyebrow">Resource status</span><h2>Some workspace data needs another read.</h2><p>Independent resources can be retried without losing the rest of the overview.</p><div className="workspace-retry-row">{websites.error ? <button type="button" onClick={() => void loadWebsites()}>Retry sites</button> : null}{campaigns.error ? <button type="button" onClick={() => void loadCampaigns()}>Retry campaigns</button> : null}{logs.error ? <button type="button" onClick={() => void loadLogs()}>Retry events</button> : null}</div></section>
+        <div className="app-grid app-grid--main-side">
+          <div className="app-stack">
+            {websites.error ? (
+              <Card><ResourceError label="Sites" onRetry={() => void loadWebsites()} /></Card>
             ) : null}
-            <Checklist websites={websites.data} campaigns={campaigns.data} storageKey={sdkConfirmationStorageKey} />
+            {websites.loading || campaigns.loading ? null : websites.error || campaigns.error ? null : (
+              <Checklist websites={websites.data} campaigns={campaigns.data} storageKey={sdkConfirmationStorageKey} />
+            )}
 
-            <section className="workspace-panel workspace-panel--compact" aria-labelledby="recent-campaigns-title">
-              <div className="workspace-panel__header workspace-panel__header--inline"><div><span className="workspace-eyebrow">Campaign registry</span><h2 id="recent-campaigns-title">Recent campaigns</h2></div><Link href="/campaigns">View all <ArrowRight size={13} /></Link></div>
-              {campaigns.loading ? <ResourceLoading label="campaigns" /> : campaigns.error ? <ResourceError label="Campaigns" onRetry={() => void loadCampaigns()} /> : latestCampaigns.length === 0 ? <div className="workspace-empty"><FileText size={17} /><div><strong>No campaigns have been published.</strong><p>Choose a surface and create the first durable record.</p></div><Link href="/alert" className="workspace-button workspace-button--quiet workspace-button--compact">Start composing <ArrowRight size={13} /></Link></div> : <div className="workspace-list workspace-list--campaigns">{latestCampaigns.map((campaign) => <Link key={campaign.id} href="/campaigns" className="workspace-list__row"><span className="workspace-list__marker" aria-hidden="true" /><span className="workspace-list__body"><strong>{campaignLabel(campaign)}</strong><small>{campaign.revisions[0]?.type.replace("_", " ") ?? "Campaign"} · {campaign.targets.length} site{campaign.targets.length === 1 ? "" : "s"}</small></span><span className="workspace-list__meta"><b>{campaignState(campaign)}</b><small>rev {campaign.currentRevision}</small></span><ArrowRight size={14} /></Link>)}</div>}
-            </section>
+            <Card title="Recent campaigns" titleId="recent-campaigns-title" action={<Link href="/campaigns" className="app-link">View all</Link>} flush>
+              {campaigns.loading ? (
+                <div className="app-card__body"><LoadingRows label="campaigns" /></div>
+              ) : campaigns.error ? (
+                <div className="app-card__body"><ResourceError label="Campaigns" onRetry={() => void loadCampaigns()} /></div>
+              ) : latestCampaigns.length === 0 ? (
+                <EmptyState icon={<BellRing size={18} />} title="No campaigns yet" description="Compose your first campaign and publish it to a verified site." action={<NewCampaignMenu />} />
+              ) : (
+                <ul className="app-rows">
+                  {latestCampaigns.map((campaign) => {
+                    const revision = campaign.revisions[0];
+                    const state = campaignState(campaign);
+                    return (
+                      <li key={campaign.id}>
+                        <Link href="/campaigns" className="app-row">
+                          <span className="app-row__main">
+                            <strong>{revision?.title || "Untitled campaign"}</strong>
+                            <small>{revision ? typeLabels[revision.type] : "Campaign"} · {campaign.targets.length} site{campaign.targets.length === 1 ? "" : "s"}</small>
+                          </span>
+                          <Badge tone={state.tone}>{state.label}</Badge>
+                          <span className="app-row__meta">{formatDate(campaign.startsAt)}</span>
+                          <ArrowRight aria-hidden="true" size={15} className="app-row__arrow" />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </Card>
           </div>
 
-          <aside className="workspace-overview-side">
-            <section className="workspace-panel workspace-panel--compact" aria-labelledby="signal-title">
-              <div className="workspace-panel__header workspace-panel__header--inline"><div><span className="workspace-eyebrow">Latest signal</span><h2 id="signal-title">Delivery event</h2></div><Link href="/analytics" aria-label="Open analytics"><ArrowRight size={15} /></Link></div>
-              {logs.loading ? <ResourceLoading label="delivery events" /> : logs.error ? <ResourceError label="Delivery events" onRetry={() => void loadLogs()} /> : latestLog ? <div className="workspace-signal"><span className="workspace-signal__icon"><Radio size={16} /></span><div><strong>{latestLog.name || "Recorded delivery event"}</strong><p>{latestLog.endpoint}</p><small>{formatDate(latestLog.timestamp)}</small></div><span className="workspace-signal__status">recorded</span></div> : <div className="workspace-empty workspace-empty--small"><Radio size={16} /><div><strong>No delivery events yet.</strong><p>Events appear when a published campaign reaches a visitor.</p></div></div>}
-            </section>
-            <section className="workspace-panel workspace-panel--compact workspace-install-note"><span className="workspace-eyebrow">Installation context</span><h2>Public reader, private publishing.</h2><p>The SDK uses a public site ID. Workspace authorization and campaign records stay on the owner side.</p><Link href="/sites">View install context <ArrowRight size={13} /></Link></section>
-          </aside>
+          <div className="app-stack">
+            <Card title="Latest activity" titleId="activity-title" action={<Link href="/analytics" className="app-link">Analytics</Link>} flush>
+              {logs.loading ? (
+                <div className="app-card__body"><LoadingRows label="delivery events" /></div>
+              ) : logs.error ? (
+                <div className="app-card__body"><ResourceError label="Delivery events" onRetry={() => void loadLogs()} /></div>
+              ) : latestLogs.length === 0 ? (
+                <EmptyState compact icon={<Activity size={18} />} title="No events yet" description="Events appear when a live campaign reaches a visitor." />
+              ) : (
+                <ul className="app-feed">
+                  {latestLogs.map((log) => (
+                    <li key={log.id}>
+                      <span className={`app-dot app-dot--${eventTone(log.name)}`} aria-hidden="true" />
+                      <span className="app-feed__text">
+                        <strong>{log.name || "Event"}</strong>
+                        <small>{log.endpoint}</small>
+                      </span>
+                      <time dateTime={log.timestamp}>{formatDate(log.timestamp)}</time>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+
+            <Card title="Install the reader" titleId="install-title">
+              <p className="app-muted">Mount the component in your app with a site&apos;s public ID. Publishing stays private to this workspace.</p>
+              <pre className="app-code"><code>{`<Droplert siteId="${publicId ?? "site_public_id"}" />`}</code></pre>
+              <Link href="/sites" className="app-link">Find site IDs <ArrowRight aria-hidden="true" size={13} /></Link>
+            </Card>
+          </div>
         </div>
       </main>
     </WorkspaceShell>

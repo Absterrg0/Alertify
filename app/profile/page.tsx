@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { Check, LoaderCircle, LockKeyhole, ShieldCheck } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
+import { Check, KeyRound, LoaderCircle, LockKeyhole, LogOut, ShieldCheck } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 
 import { toast } from "@/hooks/use-toast";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
+import { Card, LoadingRows, PageHeader } from "@/components/workspace/ui";
+
+const subscribeNoop = () => () => {};
 
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isPending, startTransition] = useTransition();
+  // The server has no client session, so hold the loading state until hydration.
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   /* eslint-disable react-hooks/set-state-in-effect -- session hydration is the external source of truth for these fields. */
   useEffect(() => {
@@ -32,14 +37,59 @@ export default function ProfilePage() {
     }
   });
 
+  const dirty = name.trim() !== (session?.user?.name ?? "") || email.trim() !== (session?.user?.email ?? "");
+  const valid = name.trim().length >= 2 && email.includes("@");
+
   return (
-    <WorkspaceShell context="Settings">
-      <main className="workspace-page workspace-page--profile">
-        <div className="workspace-page__intro"><div><span className="workspace-eyebrow">Settings / workspace identity</span><h1>Keep the owner record current.</h1><p>Your identity is attached to campaign history and publishing authorization. Provider credentials are handled by authentication.</p></div></div>
-        <div className="workspace-profile-grid">
-          <section className="workspace-panel workspace-profile-form" aria-labelledby="profile-details-title"><div className="workspace-panel__header"><div><span className="workspace-eyebrow">Account details</span><h2 id="profile-details-title">Workspace member</h2><p>Used in the owner workspace and authentication session.</p></div><span className="workspace-profile-icon"><ShieldCheck size={18} /></span></div>{status === "loading" ? <div className="workspace-loading" role="status"><span /><span /><span /></div> : <div className="workspace-form-grid"><label><span>Display name</span><input value={name} onChange={(event) => setName(event.target.value)} minLength={2} maxLength={80} autoComplete="name" /></label><label><span>Email</span><input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" /></label><div className="workspace-form-actions"><button type="button" className="workspace-button workspace-button--primary" onClick={save} disabled={isPending || name.trim().length < 2 || !email.includes("@")} >{isPending ? <LoaderCircle className="animate-spin" size={15} /> : <Check size={15} />} Save changes</button></div></div>}</section>
-          <aside className="workspace-panel workspace-security-card"><LockKeyhole size={18} /><span className="workspace-eyebrow">Session boundary</span><h2>Publishing stays owner-side.</h2><p>Droplert does not expose or rotate a browser API key. Public site IDs read only the verified origin feed.</p><dl><div><dt>Credential exposure</dt><dd>None in browser</dd></div><div><dt>Workspace session</dt><dd>OAuth provider</dd></div></dl></aside>
-        </div>
+    <WorkspaceShell>
+      <main className="app-page app-page--narrow">
+        <PageHeader title="Settings" description="Manage the identity attached to your workspace and campaign history." />
+
+        <Card title="Profile" titleId="profile-title" description="Shown in the workspace and recorded on the campaigns you publish.">
+          {!hydrated || status === "loading" ? (
+            <LoadingRows rows={2} label="profile" />
+          ) : (
+            <form
+              className="app-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (valid && dirty) save();
+              }}
+            >
+              <label className="app-field">
+                <span className="app-label">Display name</span>
+                <input className="app-input" value={name} onChange={(event) => setName(event.target.value)} minLength={2} maxLength={80} autoComplete="name" />
+              </label>
+              <label className="app-field">
+                <span className="app-label">Email</span>
+                <input className="app-input" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" />
+              </label>
+              <div className="app-form__footer">
+                <span className="app-muted">{dirty ? "You have unsaved changes." : "Up to date."}</span>
+                <button type="submit" className="app-btn app-btn--primary" disabled={isPending || !valid || !dirty}>
+                  {isPending ? <LoaderCircle className="animate-spin" size={15} /> : <Check size={15} />} Save changes
+                </button>
+              </div>
+            </form>
+          )}
+        </Card>
+
+        <Card title="Security" titleId="security-title" description="How publishing and delivery are separated.">
+          <dl className="app-details">
+            <div><dt><LockKeyhole size={14} /> Sign-in</dt><dd>OAuth provider (Google or GitHub)</dd></div>
+            <div><dt><KeyRound size={14} /> Browser credentials</dt><dd>None — the SDK only receives a public site ID</dd></div>
+            <div><dt><ShieldCheck size={14} /> Publishing</dt><dd>Only signed-in owners can publish or archive</dd></div>
+          </dl>
+        </Card>
+
+        <Card title="Session" titleId="session-title">
+          <div className="app-inline-row">
+            <p className="app-muted">Sign out of Droplert on this device.</p>
+            <button type="button" className="app-btn app-btn--secondary" onClick={() => void signOut({ redirectTo: "/getstarted" })}>
+              <LogOut size={14} /> Sign out
+            </button>
+          </div>
+        </Card>
       </main>
     </WorkspaceShell>
   );

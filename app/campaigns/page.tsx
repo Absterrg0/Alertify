@@ -43,5 +43,5 @@ export default async function CampaignsPage() {
     deliveryEventCount: campaign._count.deliveryEvents,
   }));
 
-  return <WorkspaceShell hideNewCampaign><CampaignRegistry campaigns={records} /></WorkspaceShell>;
+  return <WorkspaceShell><CampaignRegistry campaigns={records} /></WorkspaceShell>;
 }

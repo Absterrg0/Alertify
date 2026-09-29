@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Archive, LoaderCircle } from "lucide-react";
 import type { MouseEvent } from "react";
 
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -46,19 +45,19 @@ export function ArchiveCampaignButton({ campaignId, onClick }: { campaignId: str
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button onClick={onClick} disabled={pending} size="sm" variant="ghost" className="workspace-archive-button">
-          {pending ? <LoaderCircle className="mr-2 animate-spin" size={14} /> : <Archive className="mr-2" size={14} />}
+        <button type="button" onClick={onClick} disabled={pending} className="app-btn app-btn--ghost app-btn--sm app-btn--danger-text">
+          {pending ? <LoaderCircle className="animate-spin" size={14} /> : <Archive size={14} />}
           Archive
-        </Button>
+        </button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="workspace-dialog">
+      <AlertDialogContent className="app-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>Archive this campaign?</AlertDialogTitle>
           <AlertDialogDescription>Archiving removes the record from active site feeds. Its immutable revision and recorded events remain available in the registry.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="workspace-button workspace-button--quiet">Cancel</AlertDialogCancel>
-          <AlertDialogAction className="workspace-button workspace-button--danger" onClick={() => void archive()}>Archive campaign</AlertDialogAction>
+          <AlertDialogCancel className="app-btn app-btn--secondary">Cancel</AlertDialogCancel>
+          <AlertDialogAction className="app-btn app-btn--danger" onClick={() => void archive()}>Archive campaign</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
